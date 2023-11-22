@@ -1,0 +1,17 @@
+app = "interledger-pay"
+primary_region = "lhr"
+
+[build]
+
+[[mounts]]
+  source = "data"
+  destination = "/data"
+  auto_extend_size_threshold = 0
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]

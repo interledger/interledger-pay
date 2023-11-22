@@ -1,0 +1,10 @@
+node_modules
+.env
+build
+/public/build
+/.vscode
+prisma/sqlite.db
+prisma/sqlite.db-journal
+Dockerfile
+.dockerignore
+.git
