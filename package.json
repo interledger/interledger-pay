@@ -1,51 +1,54 @@
 {
-	"name": "interledger-pay",
-	"private": true,
-	"sideEffects": false,
-	"type": "module",
-	"scripts": {
-		"build": "remix build",
-		"fly:start": "npx prisma migrate deploy && pnpm start",
-		"fly:deploy": "fly deploy --remote-only --ha=false",
-		"dev": "remix dev",
-		"start": "remix-serve ./build/index.js",
-		"typecheck": "tsc"
-	},
-	"dependencies": {
-		"@conform-to/react": "^0.9.1",
-		"@conform-to/zod": "^0.9.1",
-		"@interledger/open-payments": "6.1.1",
-		"@paralleldrive/cuid2": "^2.2.2",
-		"@prisma/client": "5.6.0",
-		"@radix-ui/react-label": "^2.0.2",
-		"@radix-ui/react-slot": "^1.0.2",
-		"@remix-run/css-bundle": "^2.3.0",
-		"@remix-run/node": "^2.3.0",
-		"@remix-run/react": "^2.3.0",
-		"@remix-run/serve": "^2.3.0",
-		"class-variance-authority": "^0.7.0",
-		"clsx": "^2.0.0",
-		"isbot": "^3.6.8",
-		"prisma": "^5.6.0",
-		"react": "^18.2.0",
-		"react-dom": "^18.2.0",
-		"tailwind-merge": "^2.0.0",
-		"tailwindcss-animate": "^1.0.7",
-		"zod": "^3.22.4"
-	},
-	"devDependencies": {
-		"@flydotio/dockerfile": "^0.4.10",
-		"@remix-run/dev": "^2.3.0",
-		"@remix-run/eslint-config": "^2.3.0",
-		"@types/react": "^18.2.20",
-		"@types/react-dom": "^18.2.7",
-		"dotenv": "^16.3.1",
-		"eslint": "^8.38.0",
-		"tailwindcss": "^3.3.5",
-		"tsx": "^4.2.0",
-		"typescript": "^5.1.6"
-	},
-	"engines": {
-		"node": ">=18.0.0"
-	}
+  "name": "interledger-pay",
+  "private": true,
+  "sideEffects": false,
+  "type": "module",
+  "scripts": {
+    "build": "remix build",
+    "fly:start": "npx prisma migrate deploy && pnpm start",
+    "fly:deploy": "fly deploy --remote-only --ha=false",
+    "dev": "remix dev",
+    "start": "remix-serve ./build/index.js",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@conform-to/react": "^0.9.1",
+    "@conform-to/zod": "^0.9.1",
+    "@headlessui/react": "^1.7.18",
+    "@interledger/open-payments": "6.1.1",
+    "@paralleldrive/cuid2": "^2.2.2",
+    "@prisma/client": "5.6.0",
+    "@radix-ui/react-label": "^2.0.2",
+    "@radix-ui/react-slot": "^1.0.2",
+    "@remix-run/css-bundle": "^2.8.1",
+    "@remix-run/node": "^2.8.1",
+    "@remix-run/react": "^2.8.1",
+    "@remix-run/serve": "^2.8.1",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.0",
+    "dom@0.9.1": "link:conform-to/dom@0.9.1",
+    "isbot": "^3.8.0",
+    "prisma": "^5.10.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "remix": "^2.8.1",
+    "tailwind-merge": "^2.2.1",
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@flydotio/dockerfile": "^0.4.11",
+    "@remix-run/dev": "^2.8.1",
+    "@remix-run/eslint-config": "^2.8.1",
+    "@types/react": "^18.2.65",
+    "@types/react-dom": "^18.2.21",
+    "dotenv": "^16.4.5",
+    "eslint": "^8.57.0",
+    "tailwindcss": "^3.4.1",
+    "tsx": "^4.7.1",
+    "typescript": "^5.4.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
 }
