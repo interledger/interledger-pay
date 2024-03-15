@@ -1,6 +1,7 @@
-import { type InputHTMLAttributes, useId } from "react";
+import { type InputHTMLAttributes, useId, type ReactNode } from "react";
 import { Input } from "./input";
 import { Label } from "./label";
+import { cx } from "class-variance-authority";
 
 type Errors = Array<string | null | undefined> | null | undefined;
 
@@ -11,7 +12,7 @@ export function ErrorList({ id, errors }: { errors?: Errors; id?: string }) {
   return (
     <ul id={id} className="flex flex-col gap-1">
       {filteredErrors.map((e) => (
-        <li key={e} className="text-destructive text-[12px]">
+        <li key={e} className="text-destructive text-sm">
           {e}
         </li>
       ))}
@@ -23,22 +24,36 @@ interface FieldProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string;
   errors?: Errors;
   className?: string;
+  variant?: "default" | "info" | "highlight";
+  trailing?: ReactNode;
 }
 
-export const Field = ({ label, errors, className, ...props }: FieldProps) => {
+export const Field = ({
+  label,
+  errors,
+  className,
+  variant,
+  trailing,
+  ...props
+}: FieldProps) => {
   const fallbackId = useId();
   const id = props.id ?? fallbackId;
   const errorId = errors?.length ? `${id}-error` : undefined;
+
   return (
-    <div className={className}>
-      <Label htmlFor={id}>{label}</Label>
+    <div className={cx(className, "flex flex-col gap-3")}>
+      <Label className="pl-2" htmlFor={id}>
+        {label}
+      </Label>
       <Input
         id={id}
         aria-invalid={errorId ? true : undefined}
         aria-describedby={errorId}
+        variant={variant ? variant : "default"}
+        trailing={trailing}
         {...props}
       />
-      <div className="min-h-[16px] px-4 pb-3 pt-1">
+      <div className="pb-3">
         {errorId ? <ErrorList id={errorId} errors={errors} /> : null}
       </div>
     </div>

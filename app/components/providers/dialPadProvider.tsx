@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react";
+import { type ReactNode, useState } from "react";
 import { DialPadContext } from "~/lib/context/dialpad";
 import { getCurrencySymbol } from "~/utils/helpers";
 

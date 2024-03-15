@@ -79,7 +79,7 @@ export const Select = ({
             as={Input}
             id={id}
             required={required}
-            className="bg-green-3 text-xs border-none rounded-full py-0 h-7"
+            className="bg-green-2 text-xs border-none rounded-full py-0 h-7"
             displayValue={(option: SelectOption) => option.label}
             onChange={(event) => setSearchTerm(event.target.value)}
             placeholder={placeholder}
@@ -102,7 +102,7 @@ export const Select = ({
           leaveTo="opacity-0"
           afterLeave={() => setSearchTerm("")}
         >
-          <Combobox.Options className="absolute mt-1 max-h-60 w-16 text-xs overflow-auto rounded-md bg-green-3 shadow-lg focus:outline-none">
+          <Combobox.Options className="absolute mt-1 max-h-60 w-16 text-xs overflow-auto rounded-md bg-green-2 shadow-lg focus:outline-none">
             {filteredOptions.length === 0 && searchTerm !== "" ? (
               <div className="select-none py-2 px-4">Nothing found.</div>
             ) : (

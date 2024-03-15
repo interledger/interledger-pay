@@ -1,20 +1,51 @@
 import { cn } from "~/lib/cn";
-import { type InputHTMLAttributes, forwardRef } from "react";
+import { type InputHTMLAttributes, forwardRef, type ReactNode } from "react";
+import { type VariantProps, cva, cx } from "class-variance-authority";
 
-export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {}
+const inputVariants = cva(
+  "flex w-full aria-[invalid]:border-destructive rounded-lg text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-placeholder placeholder:font-light disabled:cursor-not-allowed",
+  {
+    variants: {
+      variant: {
+        default:
+          "h-10 px-3 py-2 border border-input bg-background ring-offset-background disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        info: "h-4 bg-foreground disabled cursor-default focus:outline-none pl-2",
+        highlight:
+          "bg-green-2 h-10 px-3 disabled cursor-default focus:outline-none",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+);
+
+type InputProps = InputHTMLAttributes<HTMLInputElement> &
+  VariantProps<typeof inputVariants> & {
+    trailing?: ReactNode;
+  };
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, ...props }, ref) => {
+  ({ className, variant, type, trailing, ...props }, ref) => {
     return (
-      <input
-        type={type}
-        className={cn(
-          "flex h-10 w-full aria-[invalid]:border-destructive rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-          className
-        )}
-        ref={ref}
-        {...props}
-      />
+      <>
+        <div className="flex">
+          <input
+            type={type}
+            className={cx(
+              trailing && "rounded-r-none",
+              cn(inputVariants({ variant, className }))
+            )}
+            ref={ref}
+            {...props}
+          />
+          {trailing ? (
+            <span className="inline-flex items-center whitespace-pre rounded-r-lg bg-green-2 px-3">
+              {trailing}
+            </span>
+          ) : null}
+        </div>
+      </>
     );
   }
 );

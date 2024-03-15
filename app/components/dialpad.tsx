@@ -4,7 +4,7 @@ import { Select } from "./ui/form/select";
 
 export const DialPad = () => {
   return (
-    <div className="flex flex-col gap-6 text-xl w-2/3">
+    <div className="flex flex-col gap-10 text-xl w-2/3">
       <AmountDisplay />
       <div className="w-full flex justify-center items-center">
         <AssetSelect />
@@ -99,10 +99,10 @@ const AssetSelect = () => {
 };
 AssetSelect.displayName = "AssetSelect";
 
-const AmountDisplay = () => {
+export const AmountDisplay = () => {
   const { amountValue, assetCode } = useDialPadContext();
   return (
-    <div className="w-full whitespace-nowrap flex items-center justify-center text-5xl">
+    <div className="w-full whitespace-nowrap flex items-center justify-center text-5xl text-green-1">
       {assetCode} {amountValue}
     </div>
   );

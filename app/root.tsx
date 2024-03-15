@@ -32,13 +32,12 @@ export default function App() {
       </head>
       <body className="bg-background text-primary">
         <div className="flex h-screen items-center justify-center">
-          <div className="bg-foreground py-4 px-6 w-full h-full md:w-2/3 md:h-2/3 shadow-md rounded-sm">
+          <div className="bg-foreground py-4 px-6 w-full h-full md:w-3/4 md:h-5/6 shadow-md rounded-sm">
             <DialPadProvider>
               <Outlet />
             </DialPadProvider>
           </div>
         </div>
-
         <ScrollRestoration />
         <Scripts />
         <LiveReload />

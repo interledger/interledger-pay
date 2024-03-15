@@ -1,6 +1,7 @@
 import { Button } from "~/components/ui/button";
 import { DialPad } from "~/components/dialpad";
 import { Header } from "~/components/header";
+import { Link } from "@remix-run/react";
 
 export default function Ilpay() {
   return (
@@ -10,16 +11,11 @@ export default function Ilpay() {
         <div className="h-2/3 items-center justify-center flex flex-col gap-10 w-full max-w-sm">
           <DialPad />
           <div className="flex justify-evenly gap-2">
-            <Button
-              aria-label="request"
-              type="submit"
-              variant="outline"
-              size="sm"
-            >
-              Request
+            <Button aria-label="request" variant="outline" size="sm">
+              <Link to="/request">Request</Link>
             </Button>
-            <Button aria-label="pay" type="submit" size={"sm"}>
-              Pay
+            <Button aria-label="pay" size={"sm"}>
+              <Link to="/pay">Pay</Link>
             </Button>
           </div>
         </div>

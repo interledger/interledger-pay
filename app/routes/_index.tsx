@@ -1,6 +1,13 @@
-import { Link } from "@remix-run/react";
+import { Link, type MetaFunction } from "@remix-run/react";
 import { Button } from "~/components/ui/button";
 import { Header } from "~/components/header";
+
+export const meta: MetaFunction = () => {
+  return [
+    { title: "Interledger Pay" },
+    { name: "description", content: "Welcome to Interledger Pay!" },
+  ];
+};
 
 export default function Index() {
   return (
