@@ -46,9 +46,11 @@ export default function ShareRequest() {
           <Button variant="outline" size="xl">
             Share payment link
           </Button>
-          <Button className="mt-8" size="xl">
-            <Link to="/">Close</Link>
-          </Button>
+          <Link to="/">
+            <Button className="mt-8" size="xl">
+              Close
+            </Button>
+          </Link>
         </div>
       </div>
     </>

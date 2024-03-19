@@ -56,3 +56,11 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
+
+#nprogress {
+  @apply pointer-events-none;
+}
+
+#nprogress .bar {
+  @apply fixed right-0 top-0 z-[1000] h-1.5 w-full bg-green-1;
+}

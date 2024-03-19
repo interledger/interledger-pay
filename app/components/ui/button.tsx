@@ -11,6 +11,8 @@ const buttonVariants = cva(
         default: "bg-green-1 text-white hover:bg-green-3 hover:text-green-4",
         outline:
           "border border-green-1 text-green-1 bg-foreground hover:bg-green-3 hover:text-green-4 hover:border-green-3",
+        outline_destructive:
+          "border border-destructive text-destructive bg-foreground hover:bg-destructive hover:text-white",
         input: "hover:bg-green-3 hover:text-green-4",
       },
       size: {

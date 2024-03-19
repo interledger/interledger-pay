@@ -67,7 +67,9 @@ const DialPadKey = ({ label, id }: DialPadKeyProps) => {
             `${amountValue.substring(0, amountValue.length - 1)}${label}`
           );
         } else if (
-          (id === "dot" && amountValue.indexOf(".") === -1) ||
+          (id === "dot" &&
+            amountValue.indexOf(".") === -1 &&
+            amountValue.length !== 0) ||
           id !== "dot"
         ) {
           setAmountValue(`${amountValue}${label}`);

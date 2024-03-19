@@ -16,6 +16,7 @@ specifiers:
   '@remix-run/node': ^2.8.1
   '@remix-run/react': ^2.8.1
   '@remix-run/serve': ^2.8.1
+  '@types/nprogress': ^0.2.3
   '@types/react': ^18.2.65
   '@types/react-dom': ^18.2.21
   class-variance-authority: ^0.7.0
@@ -24,6 +25,7 @@ specifiers:
   dotenv: ^16.4.5
   eslint: ^8.57.0
   isbot: ^3.8.0
+  nprogress: ^0.2.0
   prisma: ^5.10.2
   react: ^18.2.0
   react-dom: ^18.2.0
@@ -52,6 +54,7 @@ dependencies:
   clsx: 2.1.0
   dom@0.9.1: link:conform-to/dom@0.9.1
   isbot: 3.8.0
+  nprogress: 0.2.0
   prisma: 5.10.2
   react: 18.2.0
   react-dom: 18.2.0_react@18.2.0
@@ -64,6 +67,7 @@ devDependencies:
   '@flydotio/dockerfile': 0.4.11
   '@remix-run/dev': 2.8.1_2bzg7i5qyks74us5dwth4dcjeu
   '@remix-run/eslint-config': 2.8.1_3itoh7o7cc3icupjxo5536bk24
+  '@types/nprogress': 0.2.3
   '@types/react': 18.2.65
   '@types/react-dom': 18.2.21
   dotenv: 16.4.5
@@ -1800,6 +1804,10 @@ packages:
     resolution: {integrity: sha512-YwOMmyhNnAWijOBQweOJnQPl068Oqd4K3OFbTc6AHJwzweUwwWG3GIFY74OKks2PJUDkQPeddOQES9mLn1CTEQ==}
     dependencies:
       undici-types: 5.26.5
+    dev: true
+
+  /@types/nprogress/0.2.3:
+    resolution: {integrity: sha512-k7kRA033QNtC+gLc4VPlfnue58CM1iQLgn1IMAU8VPHGOj7oIHPp9UlhedEnD/Gl8evoCjwkZjlBORtZ3JByUA==}
     dev: true
 
   /@types/prop-types/15.7.11:
@@ -5416,6 +5424,10 @@ packages:
     dependencies:
       path-key: 3.1.1
     dev: true
+
+  /nprogress/0.2.0:
+    resolution: {integrity: sha512-I19aIingLgR1fmhftnbWWO3dXc0hSxqHQHQb3H8m+K3TnEn/iSeTZZOyvKXWqQESMwuUVnatlCnZdLBZZt2VSA==}
+    dev: false
 
   /object-assign/4.1.1:
     resolution: {integrity: sha512-rJgTQnkUnH1sFw8yT6VSU3zD3sWmu6sZhIseY8VX+GRu3P6F7Fu+JNDoXfklElbLJSnc3FUQHVe4cU5hj+BcUg==}

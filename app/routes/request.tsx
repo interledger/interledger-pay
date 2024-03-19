@@ -1,13 +1,22 @@
 import { conform, useForm } from "@conform-to/react";
 import { getFieldsetConstraint, parse } from "@conform-to/zod";
 import { json, type LoaderFunctionArgs } from "@remix-run/node";
-import { Form, Link, useActionData } from "@remix-run/react";
+import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
 import { z } from "zod";
 import { AmountDisplay } from "~/components/dialpad";
 import { Header } from "~/components/header";
 import { Button } from "~/components/ui/button";
 import { Field } from "~/components/ui/form/form";
 import { useDialPadContext } from "~/lib/context/dialpad";
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  const searchParams = new URL(request.url).searchParams;
+  const walletAddress = searchParams.get("walletaddress") || "";
+
+  return json({
+    walletAddress: atob(walletAddress),
+  } as const);
+}
 
 const schema = z.object({
   walletAddress: z.string(),
@@ -17,6 +26,7 @@ const schema = z.object({
 });
 
 export default function Request() {
+  const data = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const { amountValue, assetCode } = useDialPadContext();
   const [form, fields] = useForm({
@@ -37,10 +47,10 @@ export default function Request() {
               <Field
                 type="text"
                 label="Wallet Address"
-                placeholder="Enter your wallet address"
-                autoFocus={true}
+                variant="highlight"
                 {...conform.input(fields.walletAddress)}
-                errors={fields.walletAddress.errors}
+                value={data.walletAddress}
+                readOnly
               />
               <Field
                 label="Request note"
@@ -58,14 +68,16 @@ export default function Request() {
                 {...conform.input(fields.assetCode)}
                 value={assetCode}
               />
-              <Button
-                aria-label="pay"
-                type="submit"
-                variant="outline"
-                size="xl"
-              >
-                <Link to="/shareRequest">Create Request</Link>
-              </Button>
+              <Link to="/shareRequest">
+                <Button
+                  aria-label="pay"
+                  type="submit"
+                  variant="outline"
+                  size="xl"
+                >
+                  Create Request
+                </Button>
+              </Link>
             </div>
           </Form>
         </div>

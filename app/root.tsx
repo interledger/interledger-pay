@@ -7,9 +7,13 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useNavigation,
 } from "@remix-run/react";
 import stylesheet from "~/tailwind.css";
 import { DialPadProvider } from "./components/providers/dialPadProvider";
+import Nprogress from "nprogress";
+import nprogressStyles from "nprogress/nprogress.css";
+import { useEffect } from "react";
 
 export const links: LinksFunction = () => [
   {
@@ -18,10 +22,21 @@ export const links: LinksFunction = () => [
     type: "image/svg+xml",
   },
   { rel: "stylesheet", href: stylesheet },
+  { rel: "stylesheet", href: nprogressStyles },
   ...(cssBundleHref ? [{ rel: "stylesheet", href: cssBundleHref }] : []),
 ];
 
 export default function App() {
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    if (navigation.state === "loading" || navigation.state === "submitting") {
+      Nprogress.start();
+    } else {
+      Nprogress.done();
+    }
+  }, [navigation.state]);
+
   return (
     <html lang="en" className="h-full overflow-x-hidden">
       <head>
