@@ -1,10 +1,15 @@
 import {
+  type AuthenticatedClient,
+  type PendingGrant,
+  type Quote,
+  type WalletAddress,
   createAuthenticatedClient,
   isPendingGrant,
 } from "@interledger/open-payments";
 import { prisma } from "./db.server";
 import { type Payment } from "@prisma/client";
 import { createId } from "@paralleldrive/cuid2";
+import { randomUUID } from "crypto";
 
 async function createClient() {
   return await createAuthenticatedClient({
@@ -21,129 +26,41 @@ export async function initializePayment(args: {
   assetCode: string;
   note: string;
 }) {
-  const client = await createClient();
-  let walletAddress;
+  const opClient = await createClient();
+  const walletAddress = await getWalletAddress(args.walletAddress, opClient);
+  const receiver = await getWalletAddress(args.receiver, opClient);
 
-  // try {
-  walletAddress = await client.walletAddress.get({
-    url: args.walletAddress,
+  const incomingPaymentGrant = await getNonInteractiveGrant(
+    receiver.authServer,
+    opClient
+  );
+
+  const incomingPayment = await createIncomingPayment({
+    accessToken: incomingPaymentGrant.access_token.value,
+    walletAddress: receiver,
+    senderWalletAddress: walletAddress,
+    amount: args.amount,
+    note: args.note,
+    opClient,
   });
-  // } catch (error) {
-  //   return;
-  // }
 
-  const receiver = await client.walletAddress.get({
-    url: args.receiver,
+  const quote = await createQuote({
+    walletAddress: walletAddress,
+    receiver: incomingPayment.id,
+    opClient,
   });
 
-  const amountObj = {
-    value: BigInt(args.amount * 10 ** walletAddress.assetScale).toString(),
-    assetCode: walletAddress.assetCode,
-    assetScale: walletAddress.assetScale,
-  };
-
-  const incomingPaymentGrant = await client.grant.request(
-    {
-      url: receiver.authServer,
-    },
-    {
-      access_token: {
-        access: [
-          {
-            type: "incoming-payment",
-            actions: ["read", "create"],
-          },
-        ],
-      },
-    }
-  );
-
-  if (isPendingGrant(incomingPaymentGrant)) {
-    throw new Error("Expected non-interactive grant");
-  }
-
-  const incomingPayment = await client.incomingPayment.create(
-    {
-      url: new URL(receiver.id).origin,
-      accessToken: incomingPaymentGrant.access_token.value,
-    },
-    {
-      walletAddress: receiver.id,
-      incomingAmount: amountObj,
-      metadata: {
-        description: args.note,
-      },
-      expiresAt: new Date(Date.now() + 6000 * 60 * 5).toISOString(),
-    }
-  );
-
-  const quoteGrant = await client.grant.request(
-    {
-      url: walletAddress.authServer,
-    },
-    {
-      access_token: {
-        access: [
-          {
-            type: "quote",
-            actions: ["create", "read"],
-          },
-        ],
-      },
-    }
-  );
-
-  if (isPendingGrant(quoteGrant)) {
-    throw new Error("Expected non-interactive grant");
-  }
-
-  const quote = await client.quote.create(
-    {
-      url: new URL(walletAddress.id).origin,
-      accessToken: quoteGrant.access_token.value,
-    },
-    {
-      method: "ilp",
-      walletAddress: walletAddress.id,
-      receiver: incomingPayment.id,
-    }
-  );
-
-  const nonce = "random string"; // crypto.randomUUID();
+  const clientNonce = randomUUID();
   const paymentId = createId();
 
-  const outgoingPaymentGrant = await client.grant.request(
-    {
-      url: walletAddress.authServer,
-    },
-    {
-      access_token: {
-        access: [
-          {
-            identifier: walletAddress.id,
-            type: "outgoing-payment",
-            actions: ["create"],
-            limits: {
-              debitAmount: quote.debitAmount,
-              receiveAmount: quote.receiveAmount,
-            },
-          },
-        ],
-      },
-      interact: {
-        start: ["redirect"],
-        finish: {
-          method: "redirect",
-          uri: `${process.env.REDIRECT_URL}?paymentId=${paymentId}`,
-          nonce,
-        },
-      },
-    }
-  );
-
-  if (!isPendingGrant(outgoingPaymentGrant)) {
-    throw new Error("Expected interactive grant");
-  }
+  const outgoingPaymentGrant = await createOutgoingPaymentGrant({
+    walletAddress: walletAddress,
+    debitAmount: quote.debitAmount,
+    receiveAmount: quote.receiveAmount,
+    nonce: clientNonce,
+    paymentId: paymentId,
+    opClient,
+  });
 
   await prisma.payment.create({
     data: {
@@ -158,13 +75,214 @@ export async function initializePayment(args: {
   return outgoingPaymentGrant;
 }
 
+async function getWalletAddress(url: string, opClient: AuthenticatedClient) {
+  const walletAddress = await opClient.walletAddress
+    .get({
+      url: url,
+    })
+    .catch(() => {
+      throw new Error("Invalid payment pointer.");
+    });
+
+  return walletAddress;
+}
+
+async function getNonInteractiveGrant(
+  url: string,
+  opClient: AuthenticatedClient
+) {
+  const nonInteractiveGrant = await opClient.grant.request(
+    {
+      url: url,
+    },
+    {
+      access_token: {
+        access: [
+          {
+            type: "incoming-payment",
+            actions: ["read", "create"],
+          },
+        ],
+      },
+    }
+  );
+
+  if (isPendingGrant(nonInteractiveGrant)) {
+    throw new Error("Expected non-interactive grant");
+  }
+
+  return nonInteractiveGrant;
+}
+
+type CreateIncomingPaymentParams = {
+  walletAddress: WalletAddress;
+  senderWalletAddress: WalletAddress;
+  accessToken: string;
+  amount: number;
+  note: string;
+  opClient: AuthenticatedClient;
+};
+
+async function createIncomingPayment({
+  walletAddress,
+  senderWalletAddress,
+  accessToken,
+  amount,
+  note,
+  opClient,
+}: CreateIncomingPaymentParams) {
+  const amountObj = {
+    value: BigInt(amount * 10 ** senderWalletAddress.assetScale).toString(),
+    assetCode: senderWalletAddress.assetCode,
+    assetScale: senderWalletAddress.assetScale,
+  };
+
+  return await opClient.incomingPayment
+    .create(
+      {
+        url: new URL(walletAddress.id).origin,
+        accessToken: accessToken,
+      },
+      {
+        expiresAt: new Date(Date.now() + 6000 * 60 * 5).toISOString(),
+        walletAddress: walletAddress.id,
+        incomingAmount: amountObj,
+        metadata: {
+          description: note,
+        },
+      }
+    )
+    .catch(() => {
+      throw new Error("Unable to create incoming payment.");
+    });
+}
+
+type CreateQuoteParams = {
+  walletAddress: WalletAddress;
+  receiver: string;
+  opClient: AuthenticatedClient;
+};
+
+async function createQuote({
+  walletAddress,
+  receiver,
+  opClient,
+}: CreateQuoteParams): Promise<Quote> {
+  const quoteGrant = await opClient.grant
+    .request(
+      {
+        url: walletAddress.authServer,
+      },
+      {
+        access_token: {
+          access: [
+            {
+              type: "quote",
+              actions: ["create", "read"],
+            },
+          ],
+        },
+      }
+    )
+    .catch(() => {
+      throw new Error("Could not retrieve quote grant.");
+    });
+
+  if (isPendingGrant(quoteGrant)) {
+    throw new Error("Expected non-interactive grant");
+  }
+
+  return await opClient.quote
+    .create(
+      {
+        url: new URL(walletAddress.id).origin,
+        accessToken: quoteGrant.access_token.value,
+      },
+      {
+        method: "ilp",
+        walletAddress: walletAddress.id,
+        receiver: receiver,
+      }
+    )
+    .catch(() => {
+      throw new Error(`Could not create quote for receiver ${receiver}.`);
+    });
+}
+
+interface Amount {
+  value: string;
+  assetCode: string;
+  assetScale: number;
+}
+
+type CreateOutgoingPaymentParams = {
+  walletAddress: WalletAddress;
+  debitAmount: Amount;
+  receiveAmount: Amount;
+  nonce: string;
+  paymentId: string;
+  opClient: AuthenticatedClient;
+};
+
+async function createOutgoingPaymentGrant(
+  params: CreateOutgoingPaymentParams
+): Promise<PendingGrant> {
+  const {
+    walletAddress,
+    debitAmount,
+    receiveAmount,
+    nonce,
+    paymentId,
+    opClient,
+  } = params;
+
+  const grant = await opClient.grant
+    .request(
+      {
+        url: walletAddress.authServer,
+      },
+      {
+        access_token: {
+          access: [
+            {
+              identifier: walletAddress.id,
+              type: "outgoing-payment",
+              actions: ["create", "read", "list"],
+              limits: {
+                debitAmount: debitAmount,
+                receiveAmount: receiveAmount,
+              },
+            },
+          ],
+        },
+        interact: {
+          start: ["redirect"],
+          finish: {
+            method: "redirect",
+            uri: `${process.env.REDIRECT_URL}?paymentId=${paymentId}`,
+            nonce: nonce,
+          },
+        },
+      }
+    )
+    .catch(() => {
+      throw new Error("Could not retrieve outgoing payment grant.");
+    });
+
+  if (!isPendingGrant(grant)) {
+    throw new Error("Expected interactive outgoing payment grant.");
+  }
+
+  return grant;
+}
+
 export async function send(
   payment: Payment,
   interactRef: string
 ): Promise<void> {
-  const client = await createClient();
+  const opClient = await createClient();
 
-  const continuation = await client.grant.continue(
+  const continuation = await opClient.grant.continue(
     {
       accessToken: payment.continueToken,
       url: payment.continueUri,
@@ -174,7 +292,7 @@ export async function send(
     }
   );
 
-  await client.outgoingPayment.create(
+  await opClient.outgoingPayment.create(
     {
       url: new URL(payment.walletAddress).origin,
       accessToken: continuation.access_token.value,

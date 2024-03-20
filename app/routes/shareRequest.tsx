@@ -1,14 +1,33 @@
-import { Link } from "@remix-run/react";
+import { json, type LoaderFunctionArgs } from "@remix-run/node";
+import { Link, useLoaderData } from "@remix-run/react";
 import { AmountDisplay } from "~/components/dialpad";
 import { Header } from "~/components/header";
+import { BackNav } from "~/components/icons";
 import { Button } from "~/components/ui/button";
 import { CopyButton } from "~/components/ui/copyButton";
 import { Field } from "~/components/ui/form/form";
 
+export async function loader({ request }: LoaderFunctionArgs) {
+  const searchParams = new URL(request.url).searchParams;
+  const walletAddress = searchParams.get("walletaddress") || "";
+
+  return json({
+    walletAddress: walletAddress,
+  } as const);
+}
+
 export default function ShareRequest() {
+  const data = useLoaderData<typeof loader>();
   return (
     <>
       <Header />
+      <Link
+        to={`/request?walletaddress=${data.walletAddress}`}
+        className="flex gap-2 items-center justify-end"
+      >
+        <BackNav />
+        <span className="hover:text-green-1">Request payment</span>
+      </Link>
       <div className="flex h-full flex-col justify-center gap-10">
         <AmountDisplay />
         <div className="mx-auto w-full max-w-sm">

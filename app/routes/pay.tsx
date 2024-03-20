@@ -1,10 +1,11 @@
 import { conform, useForm } from "@conform-to/react";
 import { getFieldsetConstraint, parse } from "@conform-to/zod";
 import { json, redirect, type LoaderFunctionArgs } from "@remix-run/node";
-import { Form, useActionData, useLoaderData } from "@remix-run/react";
+import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
 import { z } from "zod";
 import { AmountDisplay } from "~/components/dialpad";
 import { Header } from "~/components/header";
+import { BackNav } from "~/components/icons";
 import { Button } from "~/components/ui/button";
 import { Field } from "~/components/ui/form/form";
 import { TogglePayment } from "~/components/ui/form/togglePayment";
@@ -16,13 +17,16 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const walletAddress = searchParams.get("walletaddress") || "";
 
   return json({
-    walletAddress: atob(walletAddress),
+    walletAddress: walletAddress,
   } as const);
 }
 
 const schema = z.object({
   walletAddress: z.string(),
-  receiver: z.string(),
+  receiver: z
+    .string()
+    .transform((val) => val.replace("$", "https://"))
+    .pipe(z.string().url({ message: "Invalid wallet address." })),
   amount: z.coerce.number(),
   assetCode: z.string(),
   note: z.string(),
@@ -43,6 +47,13 @@ export default function Pay() {
   return (
     <>
       <Header />
+      <Link
+        to={`/ilpay?walletaddress=${data.walletAddress}`}
+        className="flex gap-2 items-center justify-end"
+      >
+        <BackNav />
+        <span className="hover:text-green-1">Amount</span>
+      </Link>
       <div className="flex h-full flex-col justify-center gap-10">
         <AmountDisplay />
         <div className="mx-auto w-full max-w-sm">
@@ -61,7 +72,7 @@ export default function Pay() {
                 label="Pay from"
                 variant="highlight"
                 {...conform.input(fields.walletAddress)}
-                value={data.walletAddress}
+                value={atob(data.walletAddress)}
                 readOnly
               />
               <Field

@@ -16,7 +16,10 @@ export const meta: MetaFunction = () => {
 };
 
 const schema = z.object({
-  walletAddress: z.string(),
+  walletAddress: z
+    .string()
+    .transform((val) => val.replace("$", "https://"))
+    .pipe(z.string().url({ message: "Invalid wallet address." })),
 });
 
 export default function Index() {

@@ -5,6 +5,7 @@ import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
 import { z } from "zod";
 import { AmountDisplay } from "~/components/dialpad";
 import { Header } from "~/components/header";
+import { BackNav } from "~/components/icons";
 import { Button } from "~/components/ui/button";
 import { Field } from "~/components/ui/form/form";
 import { useDialPadContext } from "~/lib/context/dialpad";
@@ -14,7 +15,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const walletAddress = searchParams.get("walletaddress") || "";
 
   return json({
-    walletAddress: atob(walletAddress),
+    walletAddress: walletAddress,
   } as const);
 }
 
@@ -39,6 +40,13 @@ export default function Request() {
   return (
     <>
       <Header />
+      <Link
+        to={`/ilpay?walletaddress=${data.walletAddress}`}
+        className="flex gap-2 items-center justify-end"
+      >
+        <BackNav />
+        <span className="hover:text-green-1">Amount</span>
+      </Link>
       <div className="flex h-full flex-col justify-center gap-10">
         <AmountDisplay />
         <div className="mx-auto w-full max-w-sm">
@@ -49,7 +57,7 @@ export default function Request() {
                 label="Wallet Address"
                 variant="highlight"
                 {...conform.input(fields.walletAddress)}
-                value={data.walletAddress}
+                value={atob(data.walletAddress)}
                 readOnly
               />
               <Field
@@ -68,7 +76,7 @@ export default function Request() {
                 {...conform.input(fields.assetCode)}
                 value={assetCode}
               />
-              <Link to="/shareRequest">
+              <Link to={`/shareRequest?walletaddress=${data.walletAddress}`}>
                 <Button
                   aria-label="pay"
                   type="submit"
