@@ -10,14 +10,15 @@ import { Button } from "~/components/ui/button";
 import { Field } from "~/components/ui/form/form";
 import { TogglePayment } from "~/components/ui/form/togglePayment";
 import { useDialPadContext } from "~/lib/context/dialpad";
-import { initializePayment } from "~/lib/open-payments.server";
+import { fetchQuote } from "~/lib/open-payments.server";
+import { commitSession, getSession } from "~/session";
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const searchParams = new URL(request.url).searchParams;
-  const walletAddress = searchParams.get("walletaddress") || "";
+  const session = await getSession(request.headers.get("Cookie"));
+  const walletAddress = session.get("wallet-address");
 
   return json({
-    walletAddress: walletAddress,
+    walletAddress: walletAddress.walletAddress,
   } as const);
 }
 
@@ -28,7 +29,6 @@ const schema = z.object({
     .transform((val) => val.replace("$", "https://"))
     .pipe(z.string().url({ message: "Invalid wallet address." })),
   amount: z.coerce.number(),
-  assetCode: z.string(),
   note: z.string(),
   paymentType: z.string(),
 });
@@ -36,7 +36,7 @@ const schema = z.object({
 export default function Pay() {
   const data = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
-  const { amountValue, assetCode } = useDialPadContext();
+  const { amountValue } = useDialPadContext();
   const [form, fields] = useForm({
     id: "pay-form",
     constraint: getFieldsetConstraint(schema),
@@ -72,7 +72,7 @@ export default function Pay() {
                 label="Pay from"
                 variant="highlight"
                 {...conform.input(fields.walletAddress)}
-                value={atob(data.walletAddress)}
+                value={data.walletAddress}
                 readOnly
               />
               <Field
@@ -95,11 +95,6 @@ export default function Pay() {
               />
               <input
                 type="hidden"
-                {...conform.input(fields.assetCode)}
-                value={assetCode}
-              />
-              <input
-                type="hidden"
                 {...conform.input(fields.paymentType)}
                 defaultValue="send"
               />
@@ -115,6 +110,8 @@ export default function Pay() {
 }
 
 export async function action({ request }: LoaderFunctionArgs) {
+  const session = await getSession(request.headers.get("Cookie"));
+
   const formData = await request.formData();
   const submission = await parse(formData, {
     schema,
@@ -125,7 +122,10 @@ export async function action({ request }: LoaderFunctionArgs) {
     return json(submission);
   }
 
-  const grant = await initializePayment(submission.value);
+  const quote = await fetchQuote(submission.value);
+  session.set("quote", quote);
 
-  return redirect(grant.interact.redirect);
+  return redirect(`/quote`, {
+    headers: { "Set-Cookie": await commitSession(session) },
+  });
 }

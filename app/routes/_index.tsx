@@ -7,6 +7,8 @@ import { Header } from "~/components/header";
 import { Button } from "~/components/ui/button";
 import { Field } from "~/components/ui/form/form";
 import { useDialPadContext } from "~/lib/context/dialpad";
+import { getWalletAddress } from "~/lib/open-payments.server";
+import { commitSession, getSession } from "~/session";
 
 export const meta: MetaFunction = () => {
   return [
@@ -61,6 +63,7 @@ export default function Index() {
 }
 
 export async function action({ request }: LoaderFunctionArgs) {
+  const session = await getSession(request.headers.get("Cookie"));
   const formData = await request.formData();
   const submission = await parse(formData, {
     schema,
@@ -71,9 +74,13 @@ export async function action({ request }: LoaderFunctionArgs) {
     return json(submission);
   }
 
-  // const grant = await initializePayment(submission.value);
+  const walletAddress = await getWalletAddress(submission.value.walletAddress);
 
-  return redirect(
-    `/ilpay?walletaddress=${btoa(submission.value.walletAddress.trim())}`
-  );
+  session.set("wallet-address", {
+    walletAddress: submission.value.walletAddress.trim(),
+    assetCode: walletAddress.assetCode,
+  });
+  return redirect("/ilpay", {
+    headers: { "Set-Cookie": await commitSession(session) },
+  });
 }

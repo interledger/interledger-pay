@@ -1,4 +1,4 @@
-import { json, type LoaderFunctionArgs } from "@remix-run/node";
+import { json, redirect, type LoaderFunctionArgs } from "@remix-run/node";
 import { Link, useLoaderData } from "@remix-run/react";
 import { AmountDisplay } from "~/components/dialpad";
 import { Header } from "~/components/header";
@@ -6,13 +6,28 @@ import { BackNav } from "~/components/icons";
 import { Button } from "~/components/ui/button";
 import { CopyButton } from "~/components/ui/copyButton";
 import { Field } from "~/components/ui/form/form";
+import { destroySession, getSession } from "~/session";
+import { formatAmount, formatDate } from "~/utils/helpers";
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const searchParams = new URL(request.url).searchParams;
-  const walletAddress = searchParams.get("walletaddress") || "";
+  const session = await getSession(request.headers.get("Cookie"));
+  const incomingPayment = session.get("incoming-payment");
+
+  const requestAmount = formatAmount({
+    value: incomingPayment.incomingAmount.value,
+    assetCode: incomingPayment.incomingAmount.assetCode,
+    assetScale: incomingPayment.incomingAmount.assetScale,
+  });
+
+  const dateRequested = formatDate({
+    date: incomingPayment.createdAt,
+  });
 
   return json({
-    walletAddress: walletAddress,
+    requestAmount: requestAmount,
+    dateRequested: dateRequested,
+    note: incomingPayment.metadata.description,
+    url: incomingPayment.id,
   } as const);
 }
 
@@ -21,34 +36,31 @@ export default function ShareRequest() {
   return (
     <>
       <Header />
-      <Link
-        to={`/request?walletaddress=${data.walletAddress}`}
-        className="flex gap-2 items-center justify-end"
-      >
+      <Link to={`/request`} className="flex gap-2 items-center justify-end">
         <BackNav />
         <span className="hover:text-green-1">Request payment</span>
       </Link>
       <div className="flex h-full flex-col justify-center gap-10">
         <AmountDisplay />
         <div className="mx-auto w-full max-w-sm">
-          <Field label="Amount requested" value="kkkkk" variant="info"></Field>
+          <Field
+            label="Amount requested"
+            value={data.requestAmount.amount}
+            variant="info"
+          ></Field>
           <Field
             label="Date requested"
-            value="December 31, 2023"
+            value={data.dateRequested}
             variant="info"
           ></Field>
-          <Field
-            label="Request note"
-            value="Kukac money"
-            variant="info"
-          ></Field>
+          <Field label="Request note" value={data.note} variant="info"></Field>
           <div className="mb-6 mx-4 flex gap-4 font-light text-sm justify-center items-center before:content-[''] after:content-[''] before:border after:border before:border-input after:border-inout before:flex-1 after:flex-1 before:border-solid after:border-solid">
             Share link
           </div>
           <Field
             label="Payment link"
             variant="highlight"
-            value="khdkjbdkajh dksjahdjhas"
+            value={data.url}
             className="flex-1 -z-1"
             trailing={
               <>
@@ -56,7 +68,7 @@ export default function ShareRequest() {
                   aria-label="copy payment link"
                   className="h-7 w-7"
                   size="sm"
-                  value="cruel cruel world"
+                  value={data.url}
                   variant="input"
                 ></CopyButton>
               </>
@@ -74,4 +86,14 @@ export default function ShareRequest() {
       </div>
     </>
   );
+}
+
+export async function action({ request }: LoaderFunctionArgs) {
+  const session = await getSession(request.headers.get("Cookie"));
+
+  return redirect("/", {
+    headers: {
+      "Set-Cookie": await destroySession(session),
+    },
+  });
 }

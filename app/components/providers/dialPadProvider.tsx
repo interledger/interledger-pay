@@ -1,6 +1,5 @@
 import { type ReactNode, useState } from "react";
 import { DialPadContext } from "~/lib/context/dialpad";
-import { getCurrencySymbol } from "~/utils/helpers";
 
 type DialPadProviderProps = {
   children: ReactNode;
@@ -8,7 +7,7 @@ type DialPadProviderProps = {
 
 export const DialPadProvider = ({ children }: DialPadProviderProps) => {
   const [amountValue, setAmountValue] = useState("0");
-  const [assetCode, setAssetCode] = useState(getCurrencySymbol("USD"));
+  const [assetCode, setAssetCode] = useState("USD");
 
   return (
     <DialPadContext.Provider

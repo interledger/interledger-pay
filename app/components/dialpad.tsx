@@ -1,14 +1,11 @@
 import { cn } from "~/lib/cn";
 import { useDialPadContext } from "~/lib/context/dialpad";
-import { Select } from "./ui/form/select";
+import { getCurrencySymbol } from "~/utils/helpers";
 
 export const DialPad = () => {
   return (
     <div className="flex flex-col gap-10 text-xl w-2/3">
       <AmountDisplay />
-      <div className="w-full flex justify-center items-center">
-        <AssetSelect />
-      </div>
       <DialPadRow first="1" second="2" third="3" />
       <DialPadRow first="4" second="5" third="6" />
       <DialPadRow first="7" second="8" third="9" />
@@ -82,30 +79,11 @@ const DialPadKey = ({ label, id }: DialPadKeyProps) => {
 };
 DialPadKey.displayName = "DialPadKey";
 
-const AssetSelect = () => {
-  const assets = [
-    { label: "USD", value: "USD" },
-    { label: "EUR", value: "EUR" },
-    { label: "RON", value: "RON" },
-  ];
-  return (
-    <Select
-      options={assets.map((asset) => ({
-        value: asset.value,
-        label: asset.label,
-      }))}
-      name="asset"
-      defaultValue={{ label: "USD", value: "USD" }}
-    />
-  );
-};
-AssetSelect.displayName = "AssetSelect";
-
 export const AmountDisplay = () => {
   const { amountValue, assetCode } = useDialPadContext();
   return (
     <div className="w-full whitespace-nowrap flex items-center justify-center text-5xl text-green-1">
-      {assetCode} {amountValue}
+      {getCurrencySymbol(assetCode)} {amountValue}
     </div>
   );
 };

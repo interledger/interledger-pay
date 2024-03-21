@@ -34,7 +34,10 @@ export default {
           3: "hsl(var(--light-green))",
           4: "hsl(var(--dark-green-text))",
         },
-        destructive: "hsl(var(--destructive))",
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          1: "hsl(var(--destructive-light))",
+        },
         muted: "hsl(var(--muted))",
       },
       borderRadius: {

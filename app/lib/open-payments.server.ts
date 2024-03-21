@@ -19,11 +19,10 @@ async function createClient() {
   });
 }
 
-export async function initializePayment(args: {
+export async function fetchQuote(args: {
   walletAddress: string;
   receiver: string;
   amount: number;
-  assetCode: string;
   note: string;
 }) {
   const opClient = await createClient();
@@ -38,7 +37,6 @@ export async function initializePayment(args: {
   const incomingPayment = await createIncomingPayment({
     accessToken: incomingPaymentGrant.access_token.value,
     walletAddress: receiver,
-    senderWalletAddress: walletAddress,
     amount: args.amount,
     note: args.note,
     opClient,
@@ -50,13 +48,22 @@ export async function initializePayment(args: {
     opClient,
   });
 
+  return quote;
+}
+
+export async function initializePayment(args: {
+  walletAddress: string;
+  quote: Quote;
+}) {
+  const opClient = await createClient();
+  const walletAddress = await getWalletAddress(args.walletAddress, opClient);
   const clientNonce = randomUUID();
   const paymentId = createId();
 
   const outgoingPaymentGrant = await createOutgoingPaymentGrant({
     walletAddress: walletAddress,
-    debitAmount: quote.debitAmount,
-    receiveAmount: quote.receiveAmount,
+    debitAmount: args.quote.debitAmount,
+    receiveAmount: args.quote.receiveAmount,
     nonce: clientNonce,
     paymentId: paymentId,
     opClient,
@@ -68,14 +75,58 @@ export async function initializePayment(args: {
       walletAddress: walletAddress.id,
       continueToken: outgoingPaymentGrant.continue.access_token.value,
       continueUri: outgoingPaymentGrant.continue.uri,
-      quote: quote.id,
+      quote: args.quote.id,
     },
   });
 
   return outgoingPaymentGrant;
 }
 
-async function getWalletAddress(url: string, opClient: AuthenticatedClient) {
+export async function createRequestPayment(args: {
+  walletAddress: string;
+  amount: number;
+  note: string;
+}) {
+  const opClient = await createClient();
+  const walletAddress = await getWalletAddress(args.walletAddress, opClient);
+
+  const amountObj = {
+    value: BigInt(args.amount * 10 ** walletAddress.assetScale).toString(),
+    assetCode: walletAddress.assetCode,
+    assetScale: walletAddress.assetScale,
+  };
+
+  const incomingPaymentGrant = await getNonInteractiveGrant(
+    walletAddress.authServer,
+    opClient
+  );
+
+  return await opClient.incomingPayment
+    .create(
+      {
+        url: new URL(walletAddress.id).origin,
+        accessToken: incomingPaymentGrant.access_token.value,
+      },
+      {
+        expiresAt: new Date(Date.now() + 6000 * 60 * 5).toISOString(),
+        walletAddress: walletAddress.id,
+        incomingAmount: amountObj,
+        metadata: {
+          description: args.note,
+        },
+      }
+    )
+    .catch(() => {
+      throw new Error("Unable to create incoming payment for request.");
+    });
+}
+
+export async function getWalletAddress(
+  url: string,
+  opClient?: AuthenticatedClient
+) {
+  opClient = opClient ? opClient : await createClient();
+
   const walletAddress = await opClient.walletAddress
     .get({
       url: url,
@@ -116,7 +167,6 @@ async function getNonInteractiveGrant(
 
 type CreateIncomingPaymentParams = {
   walletAddress: WalletAddress;
-  senderWalletAddress: WalletAddress;
   accessToken: string;
   amount: number;
   note: string;
@@ -124,17 +174,16 @@ type CreateIncomingPaymentParams = {
 };
 
 async function createIncomingPayment({
-  walletAddress,
-  senderWalletAddress,
   accessToken,
+  walletAddress,
   amount,
   note,
   opClient,
 }: CreateIncomingPaymentParams) {
   const amountObj = {
-    value: BigInt(amount * 10 ** senderWalletAddress.assetScale).toString(),
-    assetCode: senderWalletAddress.assetCode,
-    assetScale: senderWalletAddress.assetScale,
+    value: BigInt(amount * 10 ** walletAddress.assetScale).toString(),
+    assetCode: walletAddress.assetCode,
+    assetScale: walletAddress.assetScale,
   };
 
   return await opClient.incomingPayment
@@ -209,7 +258,7 @@ async function createQuote({
     });
 }
 
-interface Amount {
+export interface Amount {
   value: string;
   assetCode: string;
   assetScale: number;

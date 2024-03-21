@@ -1,6 +1,6 @@
 import { conform, useForm } from "@conform-to/react";
 import { getFieldsetConstraint, parse } from "@conform-to/zod";
-import { json, type LoaderFunctionArgs } from "@remix-run/node";
+import { json, redirect, type LoaderFunctionArgs } from "@remix-run/node";
 import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
 import { z } from "zod";
 import { AmountDisplay } from "~/components/dialpad";
@@ -9,27 +9,28 @@ import { BackNav } from "~/components/icons";
 import { Button } from "~/components/ui/button";
 import { Field } from "~/components/ui/form/form";
 import { useDialPadContext } from "~/lib/context/dialpad";
+import { createRequestPayment } from "~/lib/open-payments.server";
+import { commitSession, getSession } from "~/session";
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const searchParams = new URL(request.url).searchParams;
-  const walletAddress = searchParams.get("walletaddress") || "";
+  const session = await getSession(request.headers.get("Cookie"));
+  const walletAddress = session.get("wallet-address");
 
   return json({
-    walletAddress: walletAddress,
+    walletAddress: walletAddress.walletAddress,
   } as const);
 }
 
 const schema = z.object({
   walletAddress: z.string(),
   amount: z.coerce.number(),
-  assetCode: z.string(),
   note: z.string(),
 });
 
 export default function Request() {
   const data = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
-  const { amountValue, assetCode } = useDialPadContext();
+  const { amountValue } = useDialPadContext();
   const [form, fields] = useForm({
     id: "request-form",
     constraint: getFieldsetConstraint(schema),
@@ -57,7 +58,7 @@ export default function Request() {
                 label="Wallet Address"
                 variant="highlight"
                 {...conform.input(fields.walletAddress)}
-                value={atob(data.walletAddress)}
+                value={data.walletAddress}
                 readOnly
               />
               <Field
@@ -71,21 +72,14 @@ export default function Request() {
                 {...conform.input(fields.amount)}
                 value={amountValue}
               />
-              <input
-                type="hidden"
-                {...conform.input(fields.assetCode)}
-                value={assetCode}
-              />
-              <Link to={`/shareRequest?walletaddress=${data.walletAddress}`}>
-                <Button
-                  aria-label="pay"
-                  type="submit"
-                  variant="outline"
-                  size="xl"
-                >
-                  Create Request
-                </Button>
-              </Link>
+              <Button
+                aria-label="pay"
+                type="submit"
+                variant="outline"
+                size="xl"
+              >
+                Create Request
+              </Button>
             </div>
           </Form>
         </div>
@@ -95,6 +89,8 @@ export default function Request() {
 }
 
 export async function action({ request }: LoaderFunctionArgs) {
+  const session = await getSession(request.headers.get("Cookie"));
+
   const formData = await request.formData();
   const submission = await parse(formData, {
     schema,
@@ -105,7 +101,10 @@ export async function action({ request }: LoaderFunctionArgs) {
     return json(submission);
   }
 
-  //   const grant = await initializePayment(submission.value);
+  const incomingPayment = await createRequestPayment(submission.value);
+  session.set("incoming-payment", incomingPayment);
 
-  //   return redirect(grant.interact.redirect);
+  return redirect("/shareRequest", {
+    headers: { "Set-Cookie": await commitSession(session) },
+  });
 }

@@ -3,21 +3,24 @@ import { DialPad } from "~/components/dialpad";
 import { Header } from "~/components/header";
 import { Link, useLoaderData } from "@remix-run/react";
 import { useDialPadContext } from "~/lib/context/dialpad";
-import { json, type LoaderFunctionArgs } from "@remix-run/node";
 import { BackNav } from "~/components/icons";
+import { json, type LoaderFunctionArgs } from "@remix-run/node";
+import { getSession } from "~/session";
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const searchParams = new URL(request.url).searchParams;
-  const walletAddress = searchParams.get("walletaddress") || "";
+  const session = await getSession(request.headers.get("Cookie"));
+  const walletAddress = session.get("wallet-address");
 
   return json({
-    walletAddress: walletAddress,
+    assetCode: walletAddress.assetCode,
   } as const);
 }
 
 export default function Ilpay() {
-  const { amountValue } = useDialPadContext();
   const data = useLoaderData<typeof loader>();
+  const { amountValue, setAssetCode } = useDialPadContext();
+
+  setAssetCode(data.assetCode);
 
   return (
     <>
@@ -30,7 +33,7 @@ export default function Ilpay() {
         <div className="h-2/3 items-center justify-center flex flex-col gap-10 w-full max-w-sm">
           <DialPad />
           <div className="flex gap-2">
-            <Link to={`/request?walletaddress=${data.walletAddress}`}>
+            <Link to={`/request`}>
               <Button
                 aria-label="request"
                 variant="outline"
@@ -44,7 +47,7 @@ export default function Ilpay() {
                 Request
               </Button>
             </Link>
-            <Link to={`/pay?walletaddress=${data.walletAddress}`}>
+            <Link to={`/pay`}>
               <Button
                 aria-label="pay"
                 size={"sm"}
