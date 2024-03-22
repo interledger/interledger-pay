@@ -52,16 +52,22 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+
+    #nprogress {
+      @apply pointer-events-none;
+    }
+
+    #nprogress .bar {
+      @apply fixed right-0 top-0 z-[1000] h-1.5 w-full bg-green;
+    }
+
+    #nprogress .spinner-icon {
+      @apply border-t-green;
+      @apply border-l-green;
+    }
   }
-}
-
-#nprogress {
-  @apply pointer-events-none;
-}
-
-#nprogress .bar {
-  @apply fixed right-0 top-0 z-[1000] h-1.5 w-full bg-green-1;
 }

@@ -73,6 +73,8 @@ export default function Quote() {
               type="submit"
               size="xl"
               className="mb-5"
+              value="CONFIRM"
+              name="action"
             >
               Confirm payment
             </Button>
@@ -81,6 +83,8 @@ export default function Quote() {
               type="submit"
               size="xl"
               variant="destructive"
+              value="CANCEL"
+              name="action"
             >
               Cancel payment
             </Button>
@@ -93,15 +97,23 @@ export default function Quote() {
 
 export async function action({ request }: LoaderFunctionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
-  const quote: Quote = session.get("quote");
-  const walletAddress = session.get("wallet-address");
+  const formData = await request.formData();
 
-  const grant = await initializePayment({
-    walletAddress: walletAddress.walletAddress,
-    quote: quote,
-  });
+  let redirectUrl = "/";
 
-  return redirect(grant.interact.redirect, {
+  if (formData.get("action") === "CONFIRM") {
+    const quote: Quote = session.get("quote");
+    const walletAddress = session.get("wallet-address");
+
+    const grant = await initializePayment({
+      walletAddress: walletAddress.walletAddress,
+      quote: quote,
+    });
+
+    redirectUrl = grant.interact.redirect;
+  }
+
+  return redirect(redirectUrl, {
     headers: {
       "Set-Cookie": await destroySession(session),
     },
