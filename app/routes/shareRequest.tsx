@@ -36,7 +36,7 @@ export default function ShareRequest() {
   return (
     <>
       <Header />
-      <Link to={`/request`} className="flex gap-2 items-center justify-end">
+      <Link to="/request" className="flex gap-2 items-center justify-end">
         <BackNav />
         <span className="hover:text-green-1">Request payment</span>
       </Link>

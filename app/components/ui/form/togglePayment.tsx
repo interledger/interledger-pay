@@ -1,6 +1,6 @@
 import { Switch } from "@headlessui/react";
 import { cx } from "class-variance-authority";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 const PAYMENT_RECEIVE = "receive";
 const PAYMENT_SEND = "send";
@@ -10,31 +10,16 @@ const TYPES = {
   receive: { text: "text-green-1", bg: "bg-green-1" },
 } as const;
 
-type ToggleTypes = keyof typeof TYPES;
-
 type ToggleProps = {
-  type: ToggleTypes;
-  disabled?: boolean;
   onChange?: (value: boolean) => void;
 };
 
-export const TogglePayment = ({
-  type,
-  disabled = false,
-  onChange,
-}: ToggleProps) => {
-  const value = type !== PAYMENT_SEND;
-  const [enabled, setEnabled] = useState(value);
-
-  useEffect(() => {
-    setEnabled(value);
-  }, [value]);
+export const TogglePayment = ({ onChange }: ToggleProps) => {
+  const [enabled, setEnabled] = useState(false);
 
   const handleOnChange = () => {
-    if (!disabled) {
-      setEnabled(!enabled);
-      onChange && onChange(!enabled);
-    }
+    setEnabled(!enabled);
+    onChange && onChange(!enabled);
   };
 
   return (
@@ -45,17 +30,17 @@ export const TogglePayment = ({
         </Switch.Label>
         <Switch
           id="sendReceive"
-          checked={enabled || disabled}
+          checked={enabled}
           onChange={handleOnChange}
           className={cx(
             "relative inline-flex h-5 w-10 items-center rounded-full outline-none",
-            TYPES[type].bg
+            TYPES[enabled ? "receive" : "send"].bg
           )}
         >
           <span
             className={cx(
               "inline-block h-4 w-4 transform rounded-full bg-white transition",
-              enabled || disabled ? "translate-x-5" : "translate-x-1"
+              enabled ? "translate-x-5" : "translate-x-1"
             )}
           />
         </Switch>

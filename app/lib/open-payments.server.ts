@@ -24,6 +24,7 @@ export async function fetchQuote(args: {
   receiver: string;
   amount: number;
   note: string;
+  paymentType: string;
 }) {
   const opClient = await createClient();
   const walletAddress = await getWalletAddress(args.walletAddress, opClient);

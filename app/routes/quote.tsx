@@ -47,10 +47,7 @@ export default function Quote() {
   return (
     <>
       <Header />
-      <Link
-        to={`/ilpay?walletaddress=`}
-        className="flex gap-2 items-center justify-end"
-      >
+      <Link to="/pay" className="flex gap-2 items-center justify-end">
         <BackNav />
         <span className="hover:text-green-1">Pay</span>
       </Link>

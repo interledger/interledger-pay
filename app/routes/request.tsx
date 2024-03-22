@@ -41,10 +41,7 @@ export default function Request() {
   return (
     <>
       <Header />
-      <Link
-        to={`/ilpay?walletaddress=${data.walletAddress}`}
-        className="flex gap-2 items-center justify-end"
-      >
+      <Link to="/ilpay" className="flex gap-2 items-center justify-end">
         <BackNav />
         <span className="hover:text-green-1">Amount</span>
       </Link>

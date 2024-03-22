@@ -2,6 +2,7 @@ import { conform, useForm } from "@conform-to/react";
 import { getFieldsetConstraint, parse } from "@conform-to/zod";
 import { json, redirect, type LoaderFunctionArgs } from "@remix-run/node";
 import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
+import { useState } from "react";
 import { z } from "zod";
 import { AmountDisplay } from "~/components/dialpad";
 import { Header } from "~/components/header";
@@ -43,14 +44,12 @@ export default function Pay() {
     lastSubmission: actionData,
     shouldRevalidate: "onSubmit",
   });
+  const [sendType, setSendType] = useState("send");
 
   return (
     <>
       <Header />
-      <Link
-        to={`/ilpay?walletaddress=${data.walletAddress}`}
-        className="flex gap-2 items-center justify-end"
-      >
+      <Link to="/ilpay" className="flex gap-2 items-center justify-end">
         <BackNav />
         <span className="hover:text-green-1">Amount</span>
       </Link>
@@ -60,12 +59,9 @@ export default function Pay() {
           <Form method="POST" {...form.props}>
             <div className="flex flex-col gap-4">
               <TogglePayment
-                type="send"
-                // onChange={(newValue) => {
-                //   setValue("paymentType, newValue)
-                //     // ? "receive"
-                //     // : "send";
-                // }}
+                onChange={(newValue) => {
+                  setSendType(newValue ? "receive" : "send");
+                }}
               />
               <Field
                 type="text"
@@ -96,7 +92,7 @@ export default function Pay() {
               <input
                 type="hidden"
                 {...conform.input(fields.paymentType)}
-                defaultValue="send"
+                value={sendType}
               />
               <Button aria-label="pay" type="submit" size="xl">
                 Pay with Interledger Pay
