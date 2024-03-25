@@ -28,7 +28,7 @@ const schema = z.object({
     .transform((val) => val.replace("$", "https://"))
     .pipe(z.string().url({ message: "Invalid wallet address." })),
   amount: z.coerce.number(),
-  note: z.string(),
+  note: z.string().optional(),
 });
 
 export default function Pay() {

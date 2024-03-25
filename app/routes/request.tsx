@@ -24,7 +24,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 const schema = z.object({
   walletAddress: z.string(),
   amount: z.coerce.number(),
-  note: z.string(),
+  note: z.string().optional(),
 });
 
 export default function Request() {

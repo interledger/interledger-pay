@@ -23,7 +23,7 @@ export async function fetchQuote(args: {
   walletAddress: string;
   receiver: string;
   amount: number;
-  note: string;
+  note?: string;
 }) {
   const opClient = await createClient();
   const walletAddress = await getWalletAddress(args.walletAddress, opClient);
@@ -38,8 +38,7 @@ export async function fetchQuote(args: {
   const incomingPayment = await createIncomingPayment({
     accessToken: incomingPaymentGrant.access_token.value,
     walletAddress: receiver,
-    amount: args.amount,
-    note: args.note,
+    note: args.note || "",
     opClient,
   });
 
@@ -88,7 +87,7 @@ export async function initializePayment(args: {
 export async function createRequestPayment(args: {
   walletAddress: string;
   amount: number;
-  note: string;
+  note?: string;
 }) {
   const opClient = await createClient();
   const walletAddress = await getWalletAddress(args.walletAddress, opClient);
@@ -171,7 +170,6 @@ async function getNonInteractiveGrant(
 type CreateIncomingPaymentParams = {
   walletAddress: WalletAddress;
   accessToken: string;
-  amount: number;
   note: string;
   opClient: AuthenticatedClient;
 };
@@ -179,7 +177,6 @@ type CreateIncomingPaymentParams = {
 async function createIncomingPayment({
   accessToken,
   walletAddress,
-  amount,
   note,
   opClient,
 }: CreateIncomingPaymentParams) {
