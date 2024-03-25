@@ -2,14 +2,12 @@ import { conform, useForm } from "@conform-to/react";
 import { getFieldsetConstraint, parse } from "@conform-to/zod";
 import { json, redirect, type LoaderFunctionArgs } from "@remix-run/node";
 import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
-import { useState } from "react";
 import { z } from "zod";
 import { AmountDisplay } from "~/components/dialpad";
 import { Header } from "~/components/header";
 import { BackNav } from "~/components/icons";
 import { Button } from "~/components/ui/button";
 import { Field } from "~/components/ui/form/form";
-import { TogglePayment } from "~/components/ui/form/togglePayment";
 import { useDialPadContext } from "~/lib/context/dialpad";
 import { fetchQuote } from "~/lib/open-payments.server";
 import { commitSession, getSession } from "~/session";
@@ -31,7 +29,6 @@ const schema = z.object({
     .pipe(z.string().url({ message: "Invalid wallet address." })),
   amount: z.coerce.number(),
   note: z.string(),
-  paymentType: z.string(),
 });
 
 export default function Pay() {
@@ -44,7 +41,6 @@ export default function Pay() {
     lastSubmission: actionData,
     shouldRevalidate: "onSubmit",
   });
-  const [sendType, setSendType] = useState("send");
 
   return (
     <>
@@ -58,11 +54,6 @@ export default function Pay() {
         <div className="mx-auto w-full max-w-sm">
           <Form method="POST" {...form.props}>
             <div className="flex flex-col gap-4">
-              <TogglePayment
-                onChange={(newValue) => {
-                  setSendType(newValue ? "receive" : "send");
-                }}
-              />
               <Field
                 type="text"
                 label="Pay from"
@@ -88,11 +79,6 @@ export default function Pay() {
                 type="hidden"
                 {...conform.input(fields.amount)}
                 value={Number(amountValue)}
-              />
-              <input
-                type="hidden"
-                {...conform.input(fields.paymentType)}
-                value={sendType}
               />
               <Button aria-label="pay" type="submit" size="xl">
                 Pay with Interledger Pay

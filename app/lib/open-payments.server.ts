@@ -24,7 +24,6 @@ export async function fetchQuote(args: {
   receiver: string;
   amount: number;
   note: string;
-  paymentType: string;
 }) {
   const opClient = await createClient();
   const walletAddress = await getWalletAddress(args.walletAddress, opClient);
@@ -35,6 +34,7 @@ export async function fetchQuote(args: {
     opClient
   );
 
+  // create incoming payment without incoming amount
   const incomingPayment = await createIncomingPayment({
     accessToken: incomingPaymentGrant.access_token.value,
     walletAddress: receiver,
@@ -43,9 +43,11 @@ export async function fetchQuote(args: {
     opClient,
   });
 
+  // create quote with debit amount, you don't care how much money receiver gets
   const quote = await createQuote({
     walletAddress: walletAddress,
     receiver: incomingPayment.id,
+    amount: args.amount,
     opClient,
   });
 
@@ -181,12 +183,6 @@ async function createIncomingPayment({
   note,
   opClient,
 }: CreateIncomingPaymentParams) {
-  const amountObj = {
-    value: BigInt(amount * 10 ** walletAddress.assetScale).toString(),
-    assetCode: walletAddress.assetCode,
-    assetScale: walletAddress.assetScale,
-  };
-
   return await opClient.incomingPayment
     .create(
       {
@@ -196,7 +192,6 @@ async function createIncomingPayment({
       {
         expiresAt: new Date(Date.now() + 6000 * 60 * 5).toISOString(),
         walletAddress: walletAddress.id,
-        incomingAmount: amountObj,
         metadata: {
           description: note,
         },
@@ -210,14 +205,22 @@ async function createIncomingPayment({
 type CreateQuoteParams = {
   walletAddress: WalletAddress;
   receiver: string;
+  amount: number;
   opClient: AuthenticatedClient;
 };
 
 async function createQuote({
   walletAddress,
   receiver,
+  amount,
   opClient,
 }: CreateQuoteParams): Promise<Quote> {
+  const amountObj = {
+    value: BigInt(amount * 10 ** walletAddress.assetScale).toString(),
+    assetCode: walletAddress.assetCode,
+    assetScale: walletAddress.assetScale,
+  };
+
   const quoteGrant = await opClient.grant
     .request(
       {
@@ -252,6 +255,7 @@ async function createQuote({
         method: "ilp",
         walletAddress: walletAddress.id,
         receiver: receiver,
+        debitAmount: amountObj,
       }
     )
     .catch(() => {

@@ -1,4 +1,3 @@
-import { type Quote } from "@interledger/open-payments";
 import { type Amount } from "~/lib/open-payments.server";
 
 export const getCurrencySymbol = (assetCode: string): string => {
@@ -56,15 +55,4 @@ export const formatAmount = (args: FormatAmountArgs): FormattedAmount => {
     amount,
     symbol,
   };
-};
-
-export const getFee = (quote: Quote): FormattedAmount => {
-  const fee =
-    BigInt(quote.debitAmount.value) - BigInt(quote.receiveAmount.value);
-
-  return formatAmount({
-    assetCode: quote.debitAmount.assetCode,
-    assetScale: quote.debitAmount.assetScale,
-    value: fee.toString(),
-  });
 };

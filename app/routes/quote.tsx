@@ -8,7 +8,7 @@ import { Button } from "~/components/ui/button";
 import { Field } from "~/components/ui/form/form";
 import { initializePayment } from "~/lib/open-payments.server";
 import { destroySession, getSession } from "~/session";
-import { formatAmount, getFee } from "~/utils/helpers";
+import { formatAmount } from "~/utils/helpers";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
@@ -26,10 +26,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     assetScale: quote.debitAmount.assetScale,
   });
 
-  const fee = getFee(quote);
-
   return json({
-    fee: fee.amount,
     receiveAmount: receiveAmount.amount,
     debitAmount: debitAmount.amount,
   } as const);
@@ -64,7 +61,6 @@ export default function Quote() {
               value={data.receiveAmount}
               variant="info"
             ></Field>
-            <Field label="Fee" value={data.fee} variant="info"></Field>
             <Button
               aria-label="confirm-pay"
               type="submit"
