@@ -19,12 +19,14 @@ async function createClient() {
   });
 }
 
+type QuoteResponse = Quote & { incomingPaymentGrantToken: string };
+
 export async function fetchQuote(args: {
   walletAddress: string;
   receiver: string;
   amount: number;
   note?: string;
-}) {
+}): Promise<QuoteResponse> {
   const opClient = await createClient();
   const walletAddress = await getWalletAddress(args.walletAddress, opClient);
   const receiver = await getWalletAddress(args.receiver, opClient);
@@ -50,7 +52,12 @@ export async function fetchQuote(args: {
     opClient,
   });
 
-  return quote;
+  const response = {
+    incomingPaymentGrantToken: incomingPaymentGrant.access_token.value,
+    ...quote,
+  };
+
+  return response;
 }
 
 export async function initializePayment(args: {
@@ -153,7 +160,7 @@ async function getNonInteractiveGrant(
         access: [
           {
             type: "incoming-payment",
-            actions: ["read", "create"],
+            actions: ["read", "create", "complete"],
           },
         ],
       },
@@ -187,7 +194,7 @@ async function createIncomingPayment({
         accessToken: accessToken,
       },
       {
-        expiresAt: new Date(Date.now() + 6000 * 60 * 5).toISOString(),
+        expiresAt: new Date(Date.now() + 6000 * 60).toISOString(),
         walletAddress: walletAddress.id,
         metadata: {
           description: note,
@@ -329,7 +336,9 @@ async function createOutgoingPaymentGrant(
 
 export async function send(
   payment: Payment,
-  interactRef: string
+  interactRef: string,
+  accessToken: string,
+  receiver: string
 ): Promise<void> {
   const opClient = await createClient();
 
@@ -343,19 +352,33 @@ export async function send(
     }
   );
 
-  await opClient.outgoingPayment.create(
-    {
-      url: new URL(payment.walletAddress).origin,
-      accessToken: continuation.access_token.value,
-    },
-    {
-      walletAddress: payment.walletAddress,
-      quoteId: payment.quote,
-      metadata: {
-        description: "Payment at Interledger Pay",
+  await opClient.outgoingPayment
+    .create(
+      {
+        url: new URL(payment.walletAddress).origin,
+        accessToken: continuation.access_token.value,
       },
-    }
-  );
+      {
+        walletAddress: payment.walletAddress,
+        quoteId: payment.quote,
+        metadata: {
+          description: "Payment at Interledger Pay",
+        },
+      }
+    )
+    .catch(() => {
+      throw new Error("Could not create outgoing payment.");
+    });
+
+  // complete incoming payment created without receive amount
+  await opClient.incomingPayment
+    .complete({
+      url: receiver,
+      accessToken: accessToken,
+    })
+    .catch(() => {
+      throw new Error("Could not complete incoming payment.");
+    });
 
   await prisma.payment.update({
     where: {
@@ -365,4 +388,22 @@ export async function send(
       processedAt: new Date(),
     },
   });
+}
+
+export async function getPaymentDetails(
+  paymentUrl: string,
+  accessToken: string
+) {
+  const opClient = await createClient();
+
+  const paymentDetails = await opClient.incomingPayment
+    .get({
+      url: paymentUrl,
+      accessToken: accessToken,
+    })
+    .catch(() => {
+      throw new Error("Could not retrieve payment details.");
+    });
+
+  return paymentDetails;
 }

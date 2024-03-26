@@ -1,10 +1,12 @@
+import { useForm } from "@conform-to/react";
 import { type LoaderFunctionArgs, json, redirect } from "@remix-run/node";
-import { Link, useLoaderData } from "@remix-run/react";
+import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
 import { Header } from "~/components/header";
 import { FinishCheck, FinishError } from "~/components/icons";
 import { Button } from "~/components/ui/button";
 import { prisma } from "~/lib/db.server";
 import { send } from "~/lib/open-payments.server";
+import { destroySession, getSession } from "~/session";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const searchParams = new URL(request.url).searchParams;
@@ -43,7 +45,15 @@ export async function loader({ request }: LoaderFunctionArgs) {
     } as const);
   }
 
-  await send(payment, interactRef);
+  const session = await getSession(request.headers.get("Cookie"));
+  const quote = session.get("quote");
+
+  await send(
+    payment,
+    interactRef,
+    quote.incomingPaymentGrantToken,
+    quote.receiver
+  );
 
   return json({
     isRejected: false,
@@ -55,6 +65,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function Finish() {
   const data = useLoaderData<typeof loader>();
+  const actionData = useActionData<typeof action>();
+  const [form] = useForm({
+    id: "finish-form",
+    lastSubmission: actionData,
+  });
 
   return (
     <>
@@ -83,11 +98,11 @@ export default function Finish() {
             <div className="text-destructive uppercase sm:text-2xl font-medium text-center">
               {data.message}
             </div>{" "}
-            <Link to="/">
-              <Button variant="outline" size="sm">
+            <Form method="POST" {...form.props}>
+              <Button variant="outline" size="sm" type="submit">
                 Home
               </Button>
-            </Link>
+            </Form>
           </>
         ) : (
           <>
@@ -95,14 +110,22 @@ export default function Finish() {
             <div className="text-green-1 uppercase sm:text-2xl font-medium text-center">
               {data.message}
             </div>
-            <Link to="/">
-              <Button variant="outline" size="sm">
+            <Form method="POST" {...form.props}>
+              <Button variant="outline" size="sm" type="submit">
                 Home
               </Button>
-            </Link>
+            </Form>
           </>
         )}
       </div>
     </>
   );
+}
+
+export async function action({ request }: LoaderFunctionArgs) {
+  const session = await getSession(request.headers.get("Cookie"));
+
+  return redirect("/", {
+    headers: { "Set-Cookie": await destroySession(session) },
+  });
 }

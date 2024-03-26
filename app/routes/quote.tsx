@@ -7,7 +7,7 @@ import { BackNav } from "~/components/icons";
 import { Button } from "~/components/ui/button";
 import { Field } from "~/components/ui/form/form";
 import { initializePayment } from "~/lib/open-payments.server";
-import { destroySession, getSession } from "~/session";
+import { getSession } from "~/session";
 import { formatAmount } from "~/utils/helpers";
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -95,7 +95,7 @@ export async function action({ request }: LoaderFunctionArgs) {
   let redirectUrl = "/";
 
   if (formData.get("action") === "CONFIRM") {
-    const quote: Quote = session.get("quote");
+    const quote = session.get("quote");
     const walletAddress = session.get("wallet-address");
 
     const grant = await initializePayment({
@@ -106,9 +106,5 @@ export async function action({ request }: LoaderFunctionArgs) {
     redirectUrl = grant.interact.redirect;
   }
 
-  return redirect(redirectUrl, {
-    headers: {
-      "Set-Cookie": await destroySession(session),
-    },
-  });
+  return redirect(redirectUrl);
 }
