@@ -4,6 +4,7 @@ import { Form, useActionData, useLoaderData } from "@remix-run/react";
 import { Header } from "~/components/header";
 import { FinishCheck, FinishError } from "~/components/icons";
 import { Button } from "~/components/ui/button";
+import { useDialogContext } from "~/lib/context/dialog";
 import { prisma } from "~/lib/db.server";
 import { finishPayment } from "~/lib/open-payments.server";
 import { destroySession, getSession } from "~/session";
@@ -68,10 +69,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export default function Finish() {
   const data = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
+
   const [form] = useForm({
     id: "finish-form",
     lastSubmission: actionData,
   });
+
+  const { setOpen } = useDialogContext();
+  setOpen(false);
 
   return (
     <>

@@ -16,9 +16,10 @@ import stylesheet from "~/tailwind.css";
 import { DialPadProvider } from "./components/providers/dialPadProvider";
 import Nprogress from "nprogress";
 import nprogressStyles from "nprogress/nprogress.css";
-import { ReactNode, useEffect } from "react";
+import { type ReactNode, useEffect } from "react";
 import { Button } from "./components/ui/button";
 import { FinishError } from "./components/icons";
+import { DialogProvider } from "./components/providers/dialogProvider";
 
 export const links: LinksFunction = () => [
   {
@@ -50,12 +51,15 @@ export default function App() {
         <Meta />
         <Links />
       </head>
+
       <body className="bg-background text-primary">
         <div className="flex h-screen items-center justify-center">
           <div className="bg-foreground py-4 px-6 w-full h-full md:w-3/4 md:h-5/6 shadow-md rounded-sm">
-            <DialPadProvider>
-              <Outlet />
-            </DialPadProvider>
+            <DialogProvider>
+              <DialPadProvider>
+                <Outlet />
+              </DialPadProvider>
+            </DialogProvider>
           </div>
         </div>
         <ScrollRestoration />

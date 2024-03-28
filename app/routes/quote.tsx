@@ -1,11 +1,13 @@
 import { useForm } from "@conform-to/react";
+import { Dialog, Transition } from "@headlessui/react";
 import { type Quote } from "@interledger/open-payments";
 import { json, redirect, type LoaderFunctionArgs } from "@remix-run/node";
-import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
+import { Form, useActionData, useLoaderData } from "@remix-run/react";
+import { Fragment } from "react/jsx-runtime";
 import { Header } from "~/components/header";
-import { BackNav } from "~/components/icons";
 import { Button } from "~/components/ui/button";
 import { Field } from "~/components/ui/form/form";
+import { useDialogContext } from "~/lib/context/dialog";
 import { initializePayment } from "~/lib/open-payments.server";
 import { destroySession, getSession } from "~/session";
 import { formatAmount } from "~/utils/helpers";
@@ -33,6 +35,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export default function Quote() {
+  const { open, setOpen } = useDialogContext();
+
   const data = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const [form] = useForm({
@@ -42,49 +46,75 @@ export default function Quote() {
   });
 
   return (
-    <>
-      <Header />
-      <Link to="/pay" className="flex gap-2 items-center justify-end">
-        <BackNav />
-        <span className="hover:text-green-1">Pay</span>
-      </Link>
-      <div className="flex h-full flex-col justify-center gap-10">
-        <div className="mx-auto w-full max-w-sm">
-          <Form method="POST" {...form.props}>
-            <Field
-              label="You send exactly"
-              value={data.debitAmount}
-              variant="info"
-            ></Field>
-            <Field
-              label="Recepient gets"
-              value={data.receiveAmount}
-              variant="info"
-            ></Field>
-            <Button
-              aria-label="confirm-pay"
-              type="submit"
-              size="xl"
-              className="mb-5"
-              value="CONFIRM"
-              name="action"
+    <Transition.Root show={open} as={Fragment}>
+      <Dialog as="div" className="relative z-10" onClose={() => setOpen(false)}>
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-300"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-200"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div className="fixed inset-0 bg-background-dark transition-opacity" />
+        </Transition.Child>
+        <div className="fixed inset-0 z-10 overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-4">
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0 translate-y-4"
+              enterTo="opacity-100 translate-y-0"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100 translate-y-0"
+              leaveTo="opacity-0 translate-y-4"
             >
-              Confirm payment
-            </Button>
-            <Button
-              aria-label="cancel-pay"
-              type="submit"
-              size="xl"
-              variant="destructive"
-              value="CANCEL"
-              name="action"
-            >
-              Cancel payment
-            </Button>
-          </Form>
+              <Dialog.Panel className="relative w-full max-w-sm space-y-4 overflow-hidden rounded-lg px-4 py-8 shadow-xl bg-foreground">
+                <Header />
+                <div className="flex h-full flex-col justify-center gap-10 pt-5">
+                  <div className="mx-auto w-full max-w-sm">
+                    <Form method="POST" {...form.props}>
+                      <Field
+                        label="You send exactly"
+                        value={data.debitAmount}
+                        variant="info"
+                      ></Field>
+                      <Field
+                        label="Recepient gets"
+                        value={data.receiveAmount}
+                        variant="info"
+                      ></Field>
+                      <Button
+                        aria-label="confirm-pay"
+                        type="submit"
+                        size="xl"
+                        className="mb-5"
+                        value="CONFIRM"
+                        name="action"
+                      >
+                        Confirm payment
+                      </Button>
+                      <Button
+                        aria-label="cancel-pay"
+                        type="submit"
+                        size="xl"
+                        variant="destructive"
+                        value="CANCEL"
+                        name="action"
+                        onClick={() => setOpen(false)}
+                      >
+                        Cancel payment
+                      </Button>
+                    </Form>
+                  </div>
+                </div>
+              </Dialog.Panel>
+            </Transition.Child>
+          </div>
         </div>
-      </div>
-    </>
+      </Dialog>
+    </Transition.Root>
   );
 }
 

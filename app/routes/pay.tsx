@@ -8,6 +8,7 @@ import { Header } from "~/components/header";
 import { BackNav } from "~/components/icons";
 import { Button } from "~/components/ui/button";
 import { Field } from "~/components/ui/form/form";
+import { useDialogContext } from "~/lib/context/dialog";
 import { useDialPadContext } from "~/lib/context/dialpad";
 import { fetchQuote } from "~/lib/open-payments.server";
 import { commitSession, getSession } from "~/session";
@@ -35,6 +36,7 @@ export default function Pay() {
   const data = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const { amountValue } = useDialPadContext();
+  const { setOpen } = useDialogContext();
   const [form, fields] = useForm({
     id: "pay-form",
     constraint: getFieldsetConstraint(schema),
@@ -80,7 +82,12 @@ export default function Pay() {
                 {...conform.input(fields.amount)}
                 value={Number(amountValue)}
               />
-              <Button aria-label="pay" type="submit" size="xl">
+              <Button
+                aria-label="pay"
+                type="submit"
+                size="xl"
+                onClick={() => setOpen(true)}
+              >
                 Pay with Interledger Pay
               </Button>
             </div>
