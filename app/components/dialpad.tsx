@@ -79,11 +79,20 @@ const DialPadKey = ({ label, id }: DialPadKeyProps) => {
 };
 DialPadKey.displayName = "DialPadKey";
 
-export const AmountDisplay = () => {
+type AmountDisplayProps = {
+  displayAmount?: string;
+};
+
+export const AmountDisplay = (args: AmountDisplayProps) => {
   const { amountValue, assetCode } = useDialPadContext();
+
+  const value = args.displayAmount
+    ? args.displayAmount
+    : `${getCurrencySymbol(assetCode)} ${amountValue}`;
+
   return (
     <div className="w-full whitespace-nowrap flex items-center justify-center text-5xl text-green-1">
-      {getCurrencySymbol(assetCode)} {amountValue}
+      {value}
     </div>
   );
 };

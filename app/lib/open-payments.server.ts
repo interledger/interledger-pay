@@ -31,7 +31,13 @@ export async function fetchQuote(args: {
   const walletAddress = await getWalletAddress(args.walletAddress, opClient);
   const receiver = await getWalletAddress(args.receiver, opClient);
 
-  const incomingPaymentGrant = await getNonInteractiveGrant(
+  const amountObj = {
+    value: BigInt(args.amount * 10 ** walletAddress.assetScale).toString(),
+    assetCode: walletAddress.assetCode,
+    assetScale: walletAddress.assetScale,
+  };
+
+  const incomingPaymentGrant = await getIncomingPaymentGrant(
     receiver.authServer,
     opClient
   );
@@ -44,13 +50,32 @@ export async function fetchQuote(args: {
     opClient,
   });
 
-  // create quote with debit amount, you don't care how much money receiver gets
-  const quote = await createQuote({
-    walletAddress: walletAddress,
-    receiver: incomingPayment.id,
-    amount: args.amount,
-    opClient,
+  const quoteGrant = await getQuoteGrant({
+    authServer: walletAddress.authServer,
+    opClient: opClient,
   });
+
+  if (isPendingGrant(quoteGrant)) {
+    throw new Error("Expected non-interactive grant");
+  }
+
+  // create quote with debit amount, you don't care how much money receiver gets
+  const quote = await opClient.quote
+    .create(
+      {
+        url: new URL(walletAddress.id).origin,
+        accessToken: quoteGrant.access_token.value,
+      },
+      {
+        method: "ilp",
+        walletAddress: walletAddress.id,
+        receiver: incomingPayment.id,
+        debitAmount: amountObj,
+      }
+    )
+    .catch(() => {
+      throw new Error(`Could not create quote for receiver ${receiver}.`);
+    });
 
   const response = {
     incomingPaymentGrantToken: incomingPaymentGrant.access_token.value,
@@ -58,6 +83,123 @@ export async function fetchQuote(args: {
   };
 
   return response;
+}
+
+export async function fetchRequestQuote(args: {
+  walletAddress: string;
+  incomingPaymentUrl: string;
+  amount: number;
+}) {
+  const opClient = await createClient();
+  const walletAddress = await getWalletAddress(args.walletAddress, opClient);
+
+  const amountObj = {
+    value: BigInt(args.amount * 10 ** walletAddress.assetScale).toString(),
+    assetCode: walletAddress.assetCode,
+    assetScale: walletAddress.assetScale,
+  };
+
+  const quoteGrant = await getQuoteGrant({
+    authServer: walletAddress.authServer,
+    opClient: opClient,
+  });
+
+  if (isPendingGrant(quoteGrant)) {
+    throw new Error("Expected non-interactive grant");
+  }
+
+  // create quote with receive amount, you care how much money the other person gets
+  const quote = await opClient.quote
+    .create(
+      {
+        url: new URL(walletAddress.id).origin,
+        accessToken: quoteGrant.access_token.value,
+      },
+      {
+        method: "ilp",
+        walletAddress: walletAddress.id,
+        receiver: args.incomingPaymentUrl,
+        receiveAmount: amountObj,
+      }
+    )
+    .catch(() => {
+      throw new Error(`Could not create quote for request payment.`);
+    });
+
+  return quote;
+}
+
+type CreateIncomingPaymentParams = {
+  accessToken: string;
+  walletAddress: WalletAddress;
+  note: string;
+  opClient: AuthenticatedClient;
+};
+
+async function createIncomingPayment({
+  accessToken,
+  walletAddress,
+  note,
+  opClient,
+}: CreateIncomingPaymentParams) {
+  // create incoming payment without amount
+  return await opClient.incomingPayment
+    .create(
+      {
+        url: new URL(walletAddress.id).origin,
+        accessToken: accessToken,
+      },
+      {
+        expiresAt: new Date(Date.now() + 6000 * 60).toISOString(),
+        walletAddress: walletAddress.id,
+        metadata: {
+          description: note,
+        },
+      }
+    )
+    .catch(() => {
+      throw new Error("Unable to create incoming payment.");
+    });
+}
+
+export async function createRequestPayment(args: {
+  walletAddress: string;
+  amount: number;
+  note?: string;
+}) {
+  const opClient = await createClient();
+  const walletAddress = await getWalletAddress(args.walletAddress, opClient);
+
+  const amountObj = {
+    value: BigInt(args.amount * 10 ** walletAddress.assetScale).toString(),
+    assetCode: walletAddress.assetCode,
+    assetScale: walletAddress.assetScale,
+  };
+
+  const incomingPaymentGrant = await getIncomingPaymentGrant(
+    walletAddress.authServer,
+    opClient
+  );
+
+  // create incoming payment with amount
+  return await opClient.incomingPayment
+    .create(
+      {
+        url: new URL(walletAddress.id).origin,
+        accessToken: incomingPaymentGrant.access_token.value,
+      },
+      {
+        expiresAt: new Date(Date.now() + 6000 * 60 * 5).toISOString(),
+        walletAddress: walletAddress.id,
+        incomingAmount: amountObj,
+        metadata: {
+          description: args.note,
+        },
+      }
+    )
+    .catch(() => {
+      throw new Error("Unable to create incoming payment for request.");
+    });
 }
 
 export async function initializePayment(args: {
@@ -89,182 +231,6 @@ export async function initializePayment(args: {
   });
 
   return outgoingPaymentGrant;
-}
-
-export async function createRequestPayment(args: {
-  walletAddress: string;
-  amount: number;
-  note?: string;
-}) {
-  const opClient = await createClient();
-  const walletAddress = await getWalletAddress(args.walletAddress, opClient);
-
-  const amountObj = {
-    value: BigInt(args.amount * 10 ** walletAddress.assetScale).toString(),
-    assetCode: walletAddress.assetCode,
-    assetScale: walletAddress.assetScale,
-  };
-
-  const incomingPaymentGrant = await getNonInteractiveGrant(
-    walletAddress.authServer,
-    opClient
-  );
-
-  return await opClient.incomingPayment
-    .create(
-      {
-        url: new URL(walletAddress.id).origin,
-        accessToken: incomingPaymentGrant.access_token.value,
-      },
-      {
-        expiresAt: new Date(Date.now() + 6000 * 60 * 5).toISOString(),
-        walletAddress: walletAddress.id,
-        incomingAmount: amountObj,
-        metadata: {
-          description: args.note,
-        },
-      }
-    )
-    .catch(() => {
-      throw new Error("Unable to create incoming payment for request.");
-    });
-}
-
-export async function getWalletAddress(
-  url: string,
-  opClient?: AuthenticatedClient
-) {
-  opClient = opClient ? opClient : await createClient();
-
-  const walletAddress = await opClient.walletAddress
-    .get({
-      url: url,
-    })
-    .catch(() => {
-      throw new Error("Invalid payment pointer.");
-    });
-
-  return walletAddress;
-}
-
-async function getNonInteractiveGrant(
-  url: string,
-  opClient: AuthenticatedClient
-) {
-  const nonInteractiveGrant = await opClient.grant.request(
-    {
-      url: url,
-    },
-    {
-      access_token: {
-        access: [
-          {
-            type: "incoming-payment",
-            actions: ["read", "create", "complete"],
-          },
-        ],
-      },
-    }
-  );
-
-  if (isPendingGrant(nonInteractiveGrant)) {
-    throw new Error("Expected non-interactive grant");
-  }
-
-  return nonInteractiveGrant;
-}
-
-type CreateIncomingPaymentParams = {
-  walletAddress: WalletAddress;
-  accessToken: string;
-  note: string;
-  opClient: AuthenticatedClient;
-};
-
-async function createIncomingPayment({
-  accessToken,
-  walletAddress,
-  note,
-  opClient,
-}: CreateIncomingPaymentParams) {
-  return await opClient.incomingPayment
-    .create(
-      {
-        url: new URL(walletAddress.id).origin,
-        accessToken: accessToken,
-      },
-      {
-        expiresAt: new Date(Date.now() + 6000 * 60).toISOString(),
-        walletAddress: walletAddress.id,
-        metadata: {
-          description: note,
-        },
-      }
-    )
-    .catch(() => {
-      throw new Error("Unable to create incoming payment.");
-    });
-}
-
-type CreateQuoteParams = {
-  walletAddress: WalletAddress;
-  receiver: string;
-  amount: number;
-  opClient: AuthenticatedClient;
-};
-
-async function createQuote({
-  walletAddress,
-  receiver,
-  amount,
-  opClient,
-}: CreateQuoteParams): Promise<Quote> {
-  const amountObj = {
-    value: BigInt(amount * 10 ** walletAddress.assetScale).toString(),
-    assetCode: walletAddress.assetCode,
-    assetScale: walletAddress.assetScale,
-  };
-
-  const quoteGrant = await opClient.grant
-    .request(
-      {
-        url: walletAddress.authServer,
-      },
-      {
-        access_token: {
-          access: [
-            {
-              type: "quote",
-              actions: ["create", "read"],
-            },
-          ],
-        },
-      }
-    )
-    .catch(() => {
-      throw new Error("Could not retrieve quote grant.");
-    });
-
-  if (isPendingGrant(quoteGrant)) {
-    throw new Error("Expected non-interactive grant");
-  }
-
-  return await opClient.quote
-    .create(
-      {
-        url: new URL(walletAddress.id).origin,
-        accessToken: quoteGrant.access_token.value,
-      },
-      {
-        method: "ilp",
-        walletAddress: walletAddress.id,
-        receiver: receiver,
-        debitAmount: amountObj,
-      }
-    )
-    .catch(() => {
-      throw new Error(`Could not create quote for receiver ${receiver}.`);
-    });
 }
 
 export interface Amount {
@@ -334,11 +300,12 @@ async function createOutgoingPaymentGrant(
   return grant;
 }
 
-export async function send(
+export async function finishPayment(
   payment: Payment,
   interactRef: string,
   accessToken: string,
-  receiver: string
+  receiver: string,
+  isRequestPayment?: boolean
 ): Promise<void> {
   const opClient = await createClient();
 
@@ -370,15 +337,17 @@ export async function send(
       throw new Error("Could not create outgoing payment.");
     });
 
-  // complete incoming payment created without receive amount
-  await opClient.incomingPayment
-    .complete({
-      url: receiver,
-      accessToken: accessToken,
-    })
-    .catch(() => {
-      throw new Error("Could not complete incoming payment.");
-    });
+  if (!isRequestPayment) {
+    // complete incoming payment created without receive amount
+    await opClient.incomingPayment
+      .complete({
+        url: receiver,
+        accessToken: accessToken,
+      })
+      .catch(() => {
+        throw new Error("Could not complete incoming payment.");
+      });
+  }
 
   await prisma.payment.update({
     where: {
@@ -390,20 +359,97 @@ export async function send(
   });
 }
 
-export async function getPaymentDetails(
+export async function getRequestPaymentDetails(
   paymentUrl: string,
-  accessToken: string
+  walletAddress: string
 ) {
   const opClient = await createClient();
+
+  const receiver = await getWalletAddress(walletAddress, opClient);
+  const incomingPaymentGrant = await getIncomingPaymentGrant(
+    receiver.authServer,
+    opClient
+  );
 
   const paymentDetails = await opClient.incomingPayment
     .get({
       url: paymentUrl,
-      accessToken: accessToken,
+      accessToken: incomingPaymentGrant.access_token.value,
     })
     .catch(() => {
       throw new Error("Could not retrieve payment details.");
     });
 
   return paymentDetails;
+}
+
+type QuoteGrantParams = {
+  authServer: string;
+  opClient: AuthenticatedClient;
+};
+
+export async function getWalletAddress(
+  url: string,
+  opClient?: AuthenticatedClient
+) {
+  opClient = opClient ? opClient : await createClient();
+
+  const walletAddress = await opClient.walletAddress
+    .get({
+      url: url,
+    })
+    .catch(() => {
+      throw new Error("Invalid wallet address.");
+    });
+
+  return walletAddress;
+}
+
+async function getQuoteGrant({ authServer, opClient }: QuoteGrantParams) {
+  return await opClient.grant
+    .request(
+      {
+        url: authServer,
+      },
+      {
+        access_token: {
+          access: [
+            {
+              type: "quote",
+              actions: ["create", "read"],
+            },
+          ],
+        },
+      }
+    )
+    .catch(() => {
+      throw new Error("Could not retrieve quote grant.");
+    });
+}
+
+async function getIncomingPaymentGrant(
+  url: string,
+  opClient: AuthenticatedClient
+) {
+  const nonInteractiveGrant = await opClient.grant.request(
+    {
+      url: url,
+    },
+    {
+      access_token: {
+        access: [
+          {
+            type: "incoming-payment",
+            actions: ["read", "create", "complete"],
+          },
+        ],
+      },
+    }
+  );
+
+  if (isPendingGrant(nonInteractiveGrant)) {
+    throw new Error("Expected non-interactive grant");
+  }
+
+  return nonInteractiveGrant;
 }

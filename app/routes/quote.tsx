@@ -7,7 +7,7 @@ import { BackNav } from "~/components/icons";
 import { Button } from "~/components/ui/button";
 import { Field } from "~/components/ui/form/form";
 import { initializePayment } from "~/lib/open-payments.server";
-import { getSession } from "~/session";
+import { destroySession, getSession } from "~/session";
 import { formatAmount } from "~/utils/helpers";
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -27,8 +27,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
   });
 
   return json({
-    receiveAmount: receiveAmount.amount,
-    debitAmount: debitAmount.amount,
+    receiveAmount: receiveAmount.amountWithCurrency,
+    debitAmount: debitAmount.amountWithCurrency,
   } as const);
 }
 
@@ -92,8 +92,6 @@ export async function action({ request }: LoaderFunctionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
   const formData = await request.formData();
 
-  let redirectUrl = "/";
-
   if (formData.get("action") === "CONFIRM") {
     const quote = session.get("quote");
     const walletAddress = session.get("wallet-address");
@@ -103,8 +101,10 @@ export async function action({ request }: LoaderFunctionArgs) {
       quote: quote,
     });
 
-    redirectUrl = grant.interact.redirect;
+    return redirect(grant.interact.redirect);
   }
 
-  return redirect(redirectUrl);
+  return redirect("/", {
+    headers: { "Set-Cookie": await destroySession(session) },
+  });
 }

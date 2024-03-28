@@ -1,11 +1,11 @@
 import { useForm } from "@conform-to/react";
 import { type LoaderFunctionArgs, json, redirect } from "@remix-run/node";
-import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
+import { Form, useActionData, useLoaderData } from "@remix-run/react";
 import { Header } from "~/components/header";
 import { FinishCheck, FinishError } from "~/components/icons";
 import { Button } from "~/components/ui/button";
 import { prisma } from "~/lib/db.server";
-import { send } from "~/lib/open-payments.server";
+import { finishPayment } from "~/lib/open-payments.server";
 import { destroySession, getSession } from "~/session";
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -47,12 +47,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   const session = await getSession(request.headers.get("Cookie"));
   const quote = session.get("quote");
+  const isRequestPayment = session.get("isRequestPayment");
 
-  await send(
+  await finishPayment(
     payment,
     interactRef,
     quote.incomingPaymentGrantToken,
-    quote.receiver
+    quote.receiver,
+    isRequestPayment
   );
 
   return json({
@@ -81,16 +83,16 @@ export default function Finish() {
             <div className="text-destructive uppercase sm:text-2xl font-medium text-center">
               {data.message}
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline_destructive" size="sm">
-                Try again
-              </Button>{" "}
-              <Link to="/">
-                <Button variant="outline" size="sm">
+            <Form method="POST" {...form.props}>
+              <div className="flex gap-2">
+                <Button variant="outline_destructive" size="sm" type="submit">
+                  Try again
+                </Button>
+                <Button variant="outline" size="sm" type="submit">
                   Home
                 </Button>
-              </Link>
-            </div>
+              </div>
+            </Form>
           </>
         ) : data.color === "red" ? (
           <>

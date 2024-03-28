@@ -31,7 +31,8 @@ export const formatDate = ({
 };
 
 export type FormattedAmount = {
-  amount: string;
+  amount: number;
+  amountWithCurrency: string;
   symbol: string;
 };
 
@@ -41,18 +42,26 @@ type FormatAmountArgs = Amount & {
 
 export const formatAmount = (args: FormatAmountArgs): FormattedAmount => {
   const { value, assetCode, assetScale } = args;
-  const formatter = new Intl.NumberFormat("en-US", {
+  const formatterWithCurrency = new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: assetCode,
     maximumFractionDigits: assetScale,
     minimumFractionDigits: assetScale,
   });
+  const formatter = new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: assetScale,
+    minimumFractionDigits: assetScale,
+  });
 
-  const amount = formatter.format(Number(`${value}e-${assetScale}`));
+  const amount = Number(formatter.format(Number(`${value}e-${assetScale}`)));
+  const amountWithCurrency = formatterWithCurrency.format(
+    Number(`${value}e-${assetScale}`)
+  );
   const symbol = getCurrencySymbol(assetCode);
 
   return {
     amount,
+    amountWithCurrency,
     symbol,
   };
 };
