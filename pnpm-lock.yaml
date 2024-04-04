@@ -1,6 +1,7 @@
 lockfileVersion: 5.4
 
 specifiers:
+  '@conform-to/dom': 0.9.1
   '@conform-to/react': ^0.9.1
   '@conform-to/zod': ^0.9.1
   '@flydotio/dockerfile': ^0.4.11
@@ -21,7 +22,6 @@ specifiers:
   '@types/react-dom': ^18.2.21
   class-variance-authority: ^0.7.0
   clsx: ^2.1.0
-  dom@0.9.1: link:conform-to/dom@0.9.1
   dotenv: ^16.4.5
   eslint: ^8.57.0
   isbot: ^3.8.0
@@ -35,11 +35,13 @@ specifiers:
   tailwindcss-animate: ^1.0.7
   tsx: ^4.7.1
   typescript: ^5.4.2
+  web-share-shim: ^1.0.4
   zod: ^3.22.4
 
 dependencies:
+  '@conform-to/dom': 0.9.1
   '@conform-to/react': 0.9.1_react@18.2.0
-  '@conform-to/zod': 0.9.1_zod@3.22.4
+  '@conform-to/zod': 0.9.1_tavmwej2kwee3mb3yz2ecz7qgi
   '@headlessui/react': 1.7.18_biqbaboplfbrettd7655fr4n2y
   '@interledger/open-payments': 6.1.1
   '@paralleldrive/cuid2': 2.2.2
@@ -52,7 +54,6 @@ dependencies:
   '@remix-run/serve': 2.8.1_typescript@5.4.2
   class-variance-authority: 0.7.0
   clsx: 2.1.0
-  dom@0.9.1: link:conform-to/dom@0.9.1
   isbot: 3.8.0
   nprogress: 0.2.0
   prisma: 5.10.2
@@ -61,6 +62,7 @@ dependencies:
   remix: 2.8.1
   tailwind-merge: 2.2.1
   tailwindcss-animate: 1.0.7_tailwindcss@3.4.1
+  web-share-shim: 1.0.4
   zod: 3.22.4
 
 devDependencies:
@@ -522,12 +524,13 @@ packages:
       react: 18.2.0
     dev: false
 
-  /@conform-to/zod/0.9.1_zod@3.22.4:
+  /@conform-to/zod/0.9.1_tavmwej2kwee3mb3yz2ecz7qgi:
     resolution: {integrity: sha512-4hWBGzRpSd4RrlBFRXjS6QQ2MWFpMZDbDwz8H/xiq38Xl5yaL1RSZMhOJ4pmsmy8CIKghs78qvaD8ltTFlrNvQ==}
     peerDependencies:
       '@conform-to/dom': 0.9.1
       zod: ^3.21.0
     dependencies:
+      '@conform-to/dom': 0.9.1
       zod: 3.22.4
     dev: false
 
@@ -7238,6 +7241,10 @@ packages:
       util: 0.12.5
     optionalDependencies:
       '@zxing/text-encoding': 0.9.0
+
+  /web-share-shim/1.0.4:
+    resolution: {integrity: sha512-K73HwBtYuDGrjX1Ur6brVBnWDxPKdjhTdRLzvxcKm/43uEpKEK4iEliXlWTHS8hRLqs6ukrq3eTDFgG8LdlrRg==}
+    dev: false
 
   /web-streams-polyfill/3.3.3:
     resolution: {integrity: sha512-d2JWLCivmZYTSIoge9MsgFCZrt571BikcWGYkjC1khllbTeDlGqZ2D8vD8E/lJa8WGWbb7Plm8/XJYV7IJHZZw==}

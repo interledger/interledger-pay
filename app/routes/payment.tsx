@@ -7,6 +7,7 @@ import { AmountDisplay } from "~/components/dialpad";
 import { Header } from "~/components/header";
 import { Button } from "~/components/ui/button";
 import { Field } from "~/components/ui/form/form";
+import { useDialogContext } from "~/lib/context/dialog";
 import {
   fetchRequestQuote,
   getRequestPaymentDetails,
@@ -47,12 +48,12 @@ const schema = z.object({
     .transform((val) => val.replace("$", "https://"))
     .pipe(z.string().url({ message: "Invalid wallet address." })),
   incomingPaymentUrl: z.string(),
-  amount: z.number(),
 });
 
 export default function PayRequest() {
   const data = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
+  const { setOpen } = useDialogContext();
   const [form, fields] = useForm({
     id: "payment-form",
     constraint: getFieldsetConstraint(schema),
@@ -104,12 +105,12 @@ export default function PayRequest() {
               {...conform.input(fields.incomingPaymentUrl)}
               value={data.url || ""}
             />
-            <input
-              type="hidden"
-              {...conform.input(fields.amount)}
-              value={Number(data.requestedAmount?.amount)}
-            />
-            <Button aria-label="pay" type="submit" size="xl">
+            <Button
+              aria-label="pay"
+              type="submit"
+              size="xl"
+              onClick={() => setOpen(true)}
+            >
               Pay with Interledger Pay
             </Button>
           </Form>

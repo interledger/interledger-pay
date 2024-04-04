@@ -74,7 +74,9 @@ export async function fetchQuote(args: {
       }
     )
     .catch(() => {
-      throw new Error(`Could not create quote for receiver ${receiver}.`);
+      throw new Error(
+        `Could not create quote for receiver ${receiver.publicName}.`
+      );
     });
 
   const response = {
@@ -88,16 +90,9 @@ export async function fetchQuote(args: {
 export async function fetchRequestQuote(args: {
   walletAddress: string;
   incomingPaymentUrl: string;
-  amount: number;
 }) {
   const opClient = await createClient();
   const walletAddress = await getWalletAddress(args.walletAddress, opClient);
-
-  const amountObj = {
-    value: BigInt(args.amount * 10 ** walletAddress.assetScale).toString(),
-    assetCode: walletAddress.assetCode,
-    assetScale: walletAddress.assetScale,
-  };
 
   const quoteGrant = await getQuoteGrant({
     authServer: walletAddress.authServer,
@@ -119,7 +114,6 @@ export async function fetchRequestQuote(args: {
         method: "ilp",
         walletAddress: walletAddress.id,
         receiver: args.incomingPaymentUrl,
-        receiveAmount: amountObj,
       }
     )
     .catch(() => {
