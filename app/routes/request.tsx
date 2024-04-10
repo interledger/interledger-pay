@@ -16,6 +16,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
   const walletAddress = session.get("wallet-address");
 
+  if (walletAddress === undefined) {
+    throw new Error("Payment session expired.");
+  }
+
   return json({
     walletAddress: walletAddress.walletAddress,
   } as const);

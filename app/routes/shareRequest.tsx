@@ -14,6 +14,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
   const incomingPayment = session.get("incoming-payment");
 
+  if (incomingPayment === undefined) {
+    throw new Error("Payment session expired.");
+  }
+
   const requestAmount = formatAmount({
     value: incomingPayment.incomingAmount.value,
     assetCode: incomingPayment.incomingAmount.assetCode,

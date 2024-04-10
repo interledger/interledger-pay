@@ -50,6 +50,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const quote = session.get("quote");
   const isRequestPayment = session.get("isRequestPayment");
 
+  if (quote === undefined) {
+    throw new Error("Payment session expired.");
+  }
+
   await finishPayment(
     payment,
     interactRef,

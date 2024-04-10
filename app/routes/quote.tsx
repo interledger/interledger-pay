@@ -16,6 +16,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
   const quote = session.get("quote");
 
+  if (quote === undefined) {
+    throw new Error("Payment session expired.");
+  }
+
   const receiveAmount = formatAmount({
     value: quote.receiveAmount.value,
     assetCode: quote.receiveAmount.assetCode,
@@ -125,6 +129,10 @@ export async function action({ request }: LoaderFunctionArgs) {
   if (formData.get("action") === "CONFIRM") {
     const quote = session.get("quote");
     const walletAddress = session.get("wallet-address");
+
+    if (quote === undefined || walletAddress === undefined) {
+      throw new Error("Payment session expired.");
+    }
 
     const grant = await initializePayment({
       walletAddress: walletAddress.walletAddress,

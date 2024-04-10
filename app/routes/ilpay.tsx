@@ -6,10 +6,15 @@ import { useDialPadContext } from "~/lib/context/dialpad";
 import { BackNav } from "~/components/icons";
 import { json, type LoaderFunctionArgs } from "@remix-run/node";
 import { getSession } from "~/session";
+import { useEffect } from "react";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
   const walletAddress = session.get("wallet-address");
+
+  if (walletAddress === undefined) {
+    throw new Error("Payment session expired.");
+  }
 
   return json({
     assetCode: walletAddress.assetCode,
@@ -20,7 +25,9 @@ export default function Ilpay() {
   const data = useLoaderData<typeof loader>();
   const { amountValue, setAssetCode } = useDialPadContext();
 
-  setAssetCode(data.assetCode);
+  useEffect(() => {
+    setAssetCode(data.assetCode);
+  });
 
   return (
     <>
@@ -38,11 +45,7 @@ export default function Ilpay() {
                 aria-label="request"
                 variant="outline"
                 size="sm"
-                disabled={
-                  amountValue === "0" ||
-                  amountValue === "" ||
-                  amountValue === "0."
-                }
+                disabled={Number(amountValue) === 0}
               >
                 Request
               </Button>
@@ -51,11 +54,7 @@ export default function Ilpay() {
               <Button
                 aria-label="pay"
                 size={"sm"}
-                disabled={
-                  amountValue === "0" ||
-                  amountValue === "" ||
-                  amountValue === "0."
-                }
+                disabled={Number(amountValue) === 0}
               >
                 Pay
               </Button>
