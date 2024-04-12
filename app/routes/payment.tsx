@@ -1,5 +1,6 @@
 import { conform, useForm } from "@conform-to/react";
 import { getFieldsetConstraint, parse } from "@conform-to/zod";
+import { type WalletAddress } from "@interledger/open-payments";
 import { type LoaderFunctionArgs, json, redirect } from "@remix-run/node";
 import { Form, useActionData, useLoaderData } from "@remix-run/react";
 import { z } from "zod";
@@ -12,18 +13,16 @@ import {
   fetchRequestQuote,
   getRequestPaymentDetails,
 } from "~/lib/open-payments.server";
+import { getValidWalletAddress } from "~/lib/validators.server";
 import { commitSession, getSession } from "~/session";
 import { formatAmount, formatDate } from "~/utils/helpers";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const searchParams = new URL(request.url).searchParams;
 
-  const paymentId = searchParams.get("url");
-  const receiver = searchParams.get("receiver");
-  const paymentDetails = await getRequestPaymentDetails(
-    atob(paymentId || ""),
-    atob(receiver || "")
-  );
+  const paymentId = searchParams.get("url") || "";
+  const receiver = searchParams.get("receiver") || "";
+  const paymentDetails = await getRequestPaymentDetails(paymentId, receiver);
 
   const requestedAmount = paymentDetails.incomingAmount
     ? formatAmount({
@@ -35,9 +34,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   return json({
     receiver: paymentDetails.walletAddress,
-    url: atob(paymentId || ""),
+    url: paymentId,
     requestedAmount: requestedAmount,
-    note: paymentDetails.metadata?.description + "",
+    note: paymentDetails.metadata
+      ? paymentDetails.metadata.description + ""
+      : "",
     date: formatDate({ date: paymentDetails.createdAt }),
   } as const);
 }
@@ -99,6 +100,7 @@ export default function PayRequest() {
               type="text"
               placeholder="Enter your wallet address"
               {...conform.input(fields.walletAddress)}
+              errors={fields.walletAddress.errors}
             ></Field>
             <input
               type="hidden"
@@ -123,9 +125,21 @@ export default function PayRequest() {
 export async function action({ request }: LoaderFunctionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
 
+  let walletAddress = {} as WalletAddress;
+
   const formData = await request.formData();
   const submission = await parse(formData, {
-    schema,
+    schema: schema.superRefine(async (data, context) => {
+      try {
+        walletAddress = await getValidWalletAddress(data.walletAddress);
+      } catch (error) {
+        context.addIssue({
+          path: ["walletAddress"],
+          code: z.ZodIssueCode.custom,
+          message: "Your wallet address is not valid.",
+        });
+      }
+    }),
     async: true,
   });
 
@@ -134,9 +148,10 @@ export async function action({ request }: LoaderFunctionArgs) {
   }
 
   const quote = await fetchRequestQuote(submission.value);
+
   session.set("quote", quote);
   session.set("wallet-address", {
-    walletAddress: submission.value.walletAddress.trim(),
+    walletAddress: walletAddress,
   });
   session.set("isRequestPayment", true);
 

@@ -9,7 +9,7 @@ import { Button } from "~/components/ui/button";
 import { Field } from "~/components/ui/form/form";
 import { useDialogContext } from "~/lib/context/dialog";
 import { initializePayment } from "~/lib/open-payments.server";
-import { destroySession, getSession } from "~/session";
+import { commitSession, destroySession, getSession } from "~/session";
 import { formatAmount } from "~/utils/helpers";
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -128,18 +128,21 @@ export async function action({ request }: LoaderFunctionArgs) {
 
   if (formData.get("action") === "CONFIRM") {
     const quote = session.get("quote");
-    const walletAddress = session.get("wallet-address");
+    const walletAddressInfo = session.get("wallet-address");
 
-    if (quote === undefined || walletAddress === undefined) {
+    if (quote === undefined || walletAddressInfo === undefined) {
       throw new Error("Payment session expired.");
     }
 
     const grant = await initializePayment({
-      walletAddress: walletAddress.walletAddress,
+      walletAddress: walletAddressInfo.walletAddress.id,
       quote: quote,
     });
 
-    return redirect(grant.interact.redirect);
+    session.set("payment-grant", grant);
+    return redirect(grant.interact.redirect, {
+      headers: { "Set-Cookie": await commitSession(session) },
+    });
   }
 
   return redirect("/", {

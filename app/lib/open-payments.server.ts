@@ -6,8 +6,6 @@ import {
   createAuthenticatedClient,
   isPendingGrant,
 } from "@interledger/open-payments";
-import { prisma } from "./db.server";
-import { type Payment } from "@prisma/client";
 import { createId } from "@paralleldrive/cuid2";
 import { randomUUID } from "crypto";
 
@@ -21,15 +19,18 @@ async function createClient() {
 
 type QuoteResponse = Quote & { incomingPaymentGrantToken: string };
 
-export async function fetchQuote(args: {
-  walletAddress: string;
-  receiver: string;
-  amount: number;
-  note?: string;
-}): Promise<QuoteResponse> {
+export async function fetchQuote(
+  args: {
+    walletAddress: string;
+    receiver: string;
+    amount: number;
+    note?: string;
+  },
+  receiver: WalletAddress
+): Promise<QuoteResponse> {
   const opClient = await createClient();
   const walletAddress = await getWalletAddress(args.walletAddress, opClient);
-  const receiver = await getWalletAddress(args.receiver, opClient);
+  // const receiver = await getWalletAddress(args.receiver, opClient);
 
   const amountObj = {
     value: BigInt(args.amount * 10 ** walletAddress.assetScale).toString(),
@@ -103,7 +104,7 @@ export async function fetchRequestQuote(args: {
     throw new Error("Expected non-interactive grant");
   }
 
-  // create quote with receive amount, you care how much money the other person gets
+  // create quote with amount details in incoming payment url
   const quote = await opClient.quote
     .create(
       {
@@ -214,16 +215,6 @@ export async function initializePayment(args: {
     opClient,
   });
 
-  await prisma.payment.create({
-    data: {
-      id: paymentId,
-      walletAddress: walletAddress.id,
-      continueToken: outgoingPaymentGrant.continue.access_token.value,
-      continueUri: outgoingPaymentGrant.continue.uri,
-      quote: args.quote.id,
-    },
-  });
-
   return outgoingPaymentGrant;
 }
 
@@ -295,7 +286,9 @@ async function createOutgoingPaymentGrant(
 }
 
 export async function finishPayment(
-  payment: Payment,
+  payment: PendingGrant,
+  quote: Quote,
+  walletAddress: WalletAddress,
   interactRef: string,
   accessToken: string,
   receiver: string,
@@ -305,8 +298,8 @@ export async function finishPayment(
 
   const continuation = await opClient.grant.continue(
     {
-      accessToken: payment.continueToken,
-      url: payment.continueUri,
+      accessToken: payment.continue.access_token.value,
+      url: payment.continue.uri,
     },
     {
       interact_ref: interactRef,
@@ -316,12 +309,12 @@ export async function finishPayment(
   await opClient.outgoingPayment
     .create(
       {
-        url: new URL(payment.walletAddress).origin,
+        url: new URL(walletAddress.id).origin,
         accessToken: continuation.access_token.value,
       },
       {
-        walletAddress: payment.walletAddress,
-        quoteId: payment.quote,
+        walletAddress: walletAddress.id,
+        quoteId: quote.id,
         metadata: {
           description: "Payment at Interledger Pay",
         },
@@ -342,15 +335,6 @@ export async function finishPayment(
         throw new Error("Could not complete incoming payment.");
       });
   }
-
-  await prisma.payment.update({
-    where: {
-      id: payment.id,
-    },
-    data: {
-      processedAt: new Date(),
-    },
-  });
 }
 
 export async function getRequestPaymentDetails(

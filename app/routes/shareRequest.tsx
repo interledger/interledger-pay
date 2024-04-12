@@ -27,9 +27,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const dateRequested = formatDate({
     date: incomingPayment.createdAt,
   });
-  const url = `${process.env.INTERLEDGER_PAY_HOST}/payment?url=${btoa(
-    incomingPayment.id
-  )}&receiver=${btoa(incomingPayment.walletAddress)}`;
+  const url = `${process.env.INTERLEDGER_PAY_HOST}/payment?url=${incomingPayment.id}&receiver=${incomingPayment.walletAddress}`;
 
   return json({
     requestAmount: requestAmount.amountWithCurrency,

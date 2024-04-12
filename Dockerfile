@@ -12,9 +12,6 @@ WORKDIR /app
 # Set production environment
 ENV NODE_ENV="production"
 
-# Install openssl for Prisma
-RUN apt-get update && apt-get install -y openssl
-
 # Install pnpm
 ARG PNPM_VERSION=8.10.5
 RUN npm install -g pnpm@$PNPM_VERSION
@@ -30,10 +27,6 @@ RUN apt-get update -qq && \
 # Install node modules
 COPY --link package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile --prod=false
-
-# Generate Prisma client
-ADD prisma .
-RUN pnpm dlx prisma generate
 
 # Copy application code
 COPY --link . .

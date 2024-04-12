@@ -1,5 +1,6 @@
 import { conform, useForm } from "@conform-to/react";
 import { getFieldsetConstraint, parse } from "@conform-to/zod";
+import { type WalletAddress } from "@interledger/open-payments";
 import { json, redirect, type LoaderFunctionArgs } from "@remix-run/node";
 import { Form, type MetaFunction, useActionData } from "@remix-run/react";
 import { z } from "zod";
@@ -7,7 +8,7 @@ import { Header } from "~/components/header";
 import { Button } from "~/components/ui/button";
 import { Field } from "~/components/ui/form/form";
 import { useDialPadContext } from "~/lib/context/dialpad";
-import { getWalletAddress } from "~/lib/open-payments.server";
+import { getValidWalletAddress } from "~/lib/validators.server";
 import { commitSession, getSession } from "~/session";
 
 export const meta: MetaFunction = () => {
@@ -64,9 +65,22 @@ export default function Index() {
 
 export async function action({ request }: LoaderFunctionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
+
+  let walletAddress = {} as WalletAddress;
+
   const formData = await request.formData();
   const submission = await parse(formData, {
-    schema,
+    schema: schema.superRefine(async (data, context) => {
+      try {
+        walletAddress = await getValidWalletAddress(data.walletAddress);
+      } catch (error) {
+        context.addIssue({
+          path: ["walletAddress"],
+          code: z.ZodIssueCode.custom,
+          message: "Your wallet address is not valid.",
+        });
+      }
+    }),
     async: true,
   });
 
@@ -74,11 +88,8 @@ export async function action({ request }: LoaderFunctionArgs) {
     return json(submission);
   }
 
-  const walletAddress = await getWalletAddress(submission.value.walletAddress);
-
   session.set("wallet-address", {
-    walletAddress: submission.value.walletAddress.trim(),
-    assetCode: walletAddress.assetCode,
+    walletAddress: walletAddress,
   });
   return redirect("/ilpay", {
     headers: { "Set-Cookie": await commitSession(session) },

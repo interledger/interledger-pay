@@ -1,5 +1,6 @@
 import { conform, useForm } from "@conform-to/react";
 import { getFieldsetConstraint, parse } from "@conform-to/zod";
+import { type WalletAddress } from "@interledger/open-payments";
 import { json, redirect, type LoaderFunctionArgs } from "@remix-run/node";
 import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
 import { z } from "zod";
@@ -11,18 +12,19 @@ import { Field } from "~/components/ui/form/form";
 import { useDialogContext } from "~/lib/context/dialog";
 import { useDialPadContext } from "~/lib/context/dialpad";
 import { fetchQuote } from "~/lib/open-payments.server";
+import { getValidWalletAddress } from "~/lib/validators.server";
 import { commitSession, getSession } from "~/session";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
-  const walletAddress = session.get("wallet-address");
+  const walletAddressInfo = session.get("wallet-address");
 
-  if (walletAddress === undefined) {
+  if (walletAddressInfo === undefined) {
     throw new Error("Payment session expired.");
   }
 
   return json({
-    walletAddress: walletAddress.walletAddress,
+    walletAddress: walletAddressInfo.walletAddress.id,
   } as const);
 }
 
@@ -105,9 +107,21 @@ export default function Pay() {
 export async function action({ request }: LoaderFunctionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
 
+  let receiver = {} as WalletAddress;
+
   const formData = await request.formData();
   const submission = await parse(formData, {
-    schema,
+    schema: schema.superRefine(async (data, context) => {
+      try {
+        receiver = await getValidWalletAddress(data.receiver);
+      } catch (error) {
+        context.addIssue({
+          path: ["receiver"],
+          code: z.ZodIssueCode.custom,
+          message: "Receiver wallet address is not valid.",
+        });
+      }
+    }),
     async: true,
   });
 
@@ -115,7 +129,7 @@ export async function action({ request }: LoaderFunctionArgs) {
     return json(submission);
   }
 
-  const quote = await fetchQuote(submission.value);
+  const quote = await fetchQuote(submission.value, receiver);
   session.set("quote", quote);
 
   return redirect(`/quote`, {

@@ -14,14 +14,14 @@ import { commitSession, getSession } from "~/session";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
-  const walletAddress = session.get("wallet-address");
+  const walletAddressInfo = session.get("wallet-address");
 
-  if (walletAddress === undefined) {
+  if (walletAddressInfo === undefined) {
     throw new Error("Payment session expired.");
   }
 
   return json({
-    walletAddress: walletAddress.walletAddress,
+    walletAddress: walletAddressInfo.walletAddress.id,
   } as const);
 }
 

@@ -5,7 +5,6 @@ import { Header } from "~/components/header";
 import { FinishCheck, FinishError } from "~/components/icons";
 import { Button } from "~/components/ui/button";
 import { useDialogContext } from "~/lib/context/dialog";
-import { prisma } from "~/lib/db.server";
 import { finishPayment } from "~/lib/open-payments.server";
 import { destroySession, getSession } from "~/session";
 
@@ -26,18 +25,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
   }
 
   if (!paymentId || !interactRef) {
-    throw redirect("/");
-  }
-
-  const payment = await prisma.payment.findUnique({
-    where: {
-      id: paymentId,
-      processedAt: null,
-    },
-  });
-
-  if (!payment) {
-    console.error(`[FINISH] Could not find payment with ID: '${paymentId}'`);
     return json({
       isRejected: true,
       message: "An Error occured",
@@ -48,6 +35,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   const session = await getSession(request.headers.get("Cookie"));
   const quote = session.get("quote");
+  const grant = session.get("payment-grant");
+  const walletAddressInfo = session.get("wallet-address");
   const isRequestPayment = session.get("isRequestPayment");
 
   if (quote === undefined) {
@@ -55,7 +44,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
   }
 
   await finishPayment(
-    payment,
+    grant,
+    quote,
+    walletAddressInfo.walletAddress,
     interactRef,
     quote.incomingPaymentGrantToken,
     quote.receiver,
