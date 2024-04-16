@@ -50,6 +50,8 @@
     "typescript": "^5.4.2"
   },
   "engines": {
-    "node": ">=18.0.0"
-  }
+    "pnpm": "^8.15.4",
+    "node": ">=20.0.0"
+  },
+  "packageManager": "pnpm@8.15.5"
 }
