@@ -14,13 +14,13 @@ See Interledger Pay in action [here](https://interledgerpay.com).
 
 Never heard of Interledger before, or you would like to learn more? Here are some good places to start:
 
-- [Good first issues](https://github.com/interledger/testnet/contribute)
+- [Interledger Website](https://interledger.org/)
+- [Interledger Specs](https://interledger.org/rfcs/0027-interledger-protocol-4/)
 - [Interledger Explainer Video](https://twitter.com/Interledger/status/1567916000074678272)
-- [Interledger Website](https://interledger.org)
-- [Payment pointers](https://paymentpointers.org/)
+- [Open Payments](https://openpayments.guide/)
 - [Web monetization](https://webmonetization.org/)
 - [Interledger Test Wallet](https://rafiki.money)
-- [Interledger Boutique](https://rafiki.boutique)c
+- [Interledger Boutique](https://rafiki.boutique)
 
 ## Contributing
 
