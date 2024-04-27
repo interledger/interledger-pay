@@ -3,14 +3,46 @@ import { cn } from "~/lib/cn";
 import { useDialPadContext } from "~/lib/context/dialpad";
 import { getCurrencySymbol } from "~/utils/helpers";
 
+enum DialPadIds {
+  Backspace = "Backspace",
+  Dot = ".",
+  Zero = "0",
+  One = "1",
+  Two = "2",
+  Three = "3",
+  Four = "4",
+  Five = "5",
+  Six = "6",
+  Seven = "7",
+  Eight = "8",
+  Nine = "9",
+}
+
 export const DialPad = () => {
   return (
     <div className="flex flex-col gap-10 text-xl w-2/3">
       <AmountDisplay />
-      <DialPadRow first="1" second="2" third="3" />
-      <DialPadRow first="4" second="5" third="6" />
-      <DialPadRow first="7" second="8" third="9" />
-      <DialPadRow first="." second="0" third="<" idThird="Backspace" />
+      <DialPadRow
+        first={DialPadIds.One}
+        second={DialPadIds.Two}
+        third={DialPadIds.Three}
+      />
+      <DialPadRow
+        first={DialPadIds.Four}
+        second={DialPadIds.Five}
+        third={DialPadIds.Six}
+      />
+      <DialPadRow
+        first={DialPadIds.Seven}
+        second={DialPadIds.Eight}
+        third={DialPadIds.Nine}
+      />
+      <DialPadRow
+        first={DialPadIds.Dot}
+        second={DialPadIds.Zero}
+        third="<"
+        idThird={DialPadIds.Backspace}
+      />
     </div>
   );
 };
@@ -50,20 +82,7 @@ type DialPadKeyProps = {
 };
 const DialPadKey = ({ label, id }: DialPadKeyProps) => {
   const { amountValue, setAmountValue } = useDialPadContext();
-  const idsList = [
-    "Backspace",
-    ".",
-    "0",
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-  ];
+
   useEffect(() => {
     function handleKeyDown(e: any) {
       handleDialPadInputs(e.key);
@@ -78,19 +97,19 @@ const DialPadKey = ({ label, id }: DialPadKeyProps) => {
   }, [amountValue]);
 
   const handleDialPadInputs = (id: string) => {
-    const label = id === "Backspace" ? "<" : id;
-    if (idsList.indexOf(id) !== -1) {
-      if (id === "Backspace") {
+    const label = id === DialPadIds.Backspace ? "<" : id;
+    if (Object.values<string>(DialPadIds).includes(id)) {
+      if (id === DialPadIds.Backspace) {
         setAmountValue(`${amountValue.substring(0, amountValue.length - 1)}`);
-      } else if (amountValue === "0" && id !== ".") {
+      } else if (amountValue === "0" && id !== DialPadIds.Dot) {
         setAmountValue(
           `${amountValue.substring(0, amountValue.length - 1)}${label}`
         );
       } else if (
-        (id === "." &&
-          amountValue.indexOf(".") === -1 &&
+        (id === DialPadIds.Dot &&
+          amountValue.indexOf(DialPadIds.Dot) === -1 &&
           amountValue.length !== 0) ||
-        id !== "."
+        id !== DialPadIds.Dot
       ) {
         setAmountValue(`${amountValue}${label}`);
       }
@@ -101,7 +120,7 @@ const DialPadKey = ({ label, id }: DialPadKeyProps) => {
     <li
       className={cn(
         "cursor-pointer hover:text-green-1",
-        id === "." ? "pl-1" : ""
+        id === DialPadIds.Dot ? "pl-1" : ""
       )}
       tabIndex={0}
       id={id}
