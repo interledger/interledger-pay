@@ -94,7 +94,7 @@ export default function Pay() {
                 size="xl"
                 onClick={() => setOpen(true)}
               >
-                Pay with Interledger Pay
+                Pay with Interledger
               </Button>
             </div>
           </Form>
@@ -114,6 +114,7 @@ export async function action({ request }: LoaderFunctionArgs) {
     schema: schema.superRefine(async (data, context) => {
       try {
         receiver = await getValidWalletAddress(data.receiver);
+        session.set("receiver-wallet-address", receiver);
       } catch (error) {
         context.addIssue({
           path: ["receiver"],
