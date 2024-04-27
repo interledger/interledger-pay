@@ -52,15 +52,13 @@ export default function App() {
         <Links />
       </head>
 
-      <body className="bg-background text-primary">
-        <div className="flex h-screen items-center justify-center">
-          <div className="bg-foreground py-4 px-6 w-full h-full md:w-3/4 md:h-5/6 shadow-md rounded-sm">
-            <DialogProvider>
-              <DialPadProvider>
-                <Outlet />
-              </DialPadProvider>
-            </DialogProvider>
-          </div>
+      <body className="bg-background h-screen text-primary flex justify-center items-center">
+        <div className="bg-foreground h-fit py-10 px-6 w-full md:w-3/4 shadow-md rounded-sm">
+          <DialogProvider>
+            <DialPadProvider>
+              <Outlet />
+            </DialPadProvider>
+          </DialogProvider>
         </div>
         <ScrollRestoration />
         <Scripts />
