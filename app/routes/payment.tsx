@@ -113,7 +113,7 @@ export default function PayRequest() {
               size="xl"
               onClick={() => setOpen(true)}
             >
-              Pay with Interledger Pay
+              Pay with Interledger
             </Button>
           </Form>
         </div>
