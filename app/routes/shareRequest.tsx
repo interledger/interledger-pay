@@ -7,6 +7,7 @@ import { BackNav } from "~/components/icons";
 import { Button } from "~/components/ui/button";
 import { CopyButton } from "~/components/ui/copyButton";
 import { Field } from "~/components/ui/form/form";
+import { ShareButton } from "~/components/ui/shareButton";
 import { destroySession, getSession } from "~/session";
 import { formatAmount, formatDate } from "~/utils/helpers";
 
@@ -89,24 +90,17 @@ export default function ShareRequest() {
                     value={data.paymentUrl}
                     variant="input"
                   ></CopyButton>
+                  <ShareButton
+                    aria-label="share payment link"
+                    className="h-7 w-7"
+                    url={data.paymentUrl}
+                    size="sm"
+                    variant="input"
+                  ></ShareButton>
                 </>
               }
             ></Field>
-            <Button
-              variant="outline"
-              size="xl"
-              type="button"
-              onClick={() => {
-                navigator.share({
-                  title: "Payment link",
-                  text: "Interledger Pay payment link:",
-                  url: data.paymentUrl,
-                });
-              }}
-            >
-              Share payment link
-            </Button>
-            <Button type="submit" className="mt-8" size="xl">
+            <Button type="submit" size="xl">
               Close
             </Button>
           </Form>
