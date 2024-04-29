@@ -73,14 +73,11 @@ export default function Request() {
                 {...conform.input(fields.amount)}
                 value={amountValue}
               />
-              <Button
-                aria-label="pay"
-                type="submit"
-                variant="outline"
-                size="xl"
-              >
-                Create Request
-              </Button>
+              <div className="flex justify-center">
+                <Button aria-label="pay" type="submit" variant="outline">
+                  Create Request
+                </Button>
+              </div>
             </div>
           </Form>
         </div>

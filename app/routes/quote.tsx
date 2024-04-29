@@ -94,27 +94,26 @@ export default function Quote() {
                         value={data.receiveAmount}
                         variant="info"
                       ></Field>
-                      <Button
-                        aria-label="confirm-pay"
-                        type="submit"
-                        size="xl"
-                        className="mb-5"
-                        value="CONFIRM"
-                        name="action"
-                      >
-                        Confirm payment
-                      </Button>
-                      <Button
-                        aria-label="cancel-pay"
-                        type="submit"
-                        size="xl"
-                        variant="destructive"
-                        value="CANCEL"
-                        name="action"
-                        onClick={() => setOpen(false)}
-                      >
-                        Cancel payment
-                      </Button>
+                      <div className="flex justify-center items-center gap-3">
+                        <Button
+                          aria-label="confirm-pay"
+                          type="submit"
+                          value="CONFIRM"
+                          name="action"
+                        >
+                          Confirm payment
+                        </Button>
+                        <Button
+                          aria-label="cancel-pay"
+                          type="submit"
+                          variant="destructive"
+                          value="CANCEL"
+                          name="action"
+                          onClick={() => setOpen(false)}
+                        >
+                          Cancel payment
+                        </Button>
+                      </div>
                     </Form>
                   </div>
                 </div>

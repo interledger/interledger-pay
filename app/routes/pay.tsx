@@ -88,14 +88,15 @@ export default function Pay() {
                 {...conform.input(fields.amount)}
                 value={Number(amountValue)}
               />
-              <Button
-                aria-label="pay"
-                type="submit"
-                size="xl"
-                onClick={() => setOpen(true)}
-              >
-                Pay with Interledger
-              </Button>
+              <div className="flex justify-center">
+                <Button
+                  aria-label="pay"
+                  type="submit"
+                  onClick={() => setOpen(true)}
+                >
+                  Pay with Interledger
+                </Button>
+              </div>
             </div>
           </Form>
         </div>
