@@ -100,9 +100,11 @@ export default function ShareRequest() {
                 </>
               }
             ></Field>
-            <Button type="submit" size="xl">
-              Close
-            </Button>
+            <div className="flex justify-center">
+              <Button type="submit" className="mt-8">
+                Close
+              </Button>
+            </div>
           </Form>
         </div>
       </div>
