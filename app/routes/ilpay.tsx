@@ -41,7 +41,7 @@ export default function Ilpay() {
           <div className="flex gap-2">
             <Link
               to={`/request`}
-              onClick={(e: any) => {
+              onClick={(e: React.MouseEvent<HTMLElement>) => {
                 if (Number(amountValue) === 0) e.preventDefault();
               }}
             >
@@ -56,7 +56,7 @@ export default function Ilpay() {
             </Link>
             <Link
               to={`/pay`}
-              onClick={(e: any) => {
+              onClick={(e: React.MouseEvent<HTMLElement>) => {
                 if (Number(amountValue) === 0) e.preventDefault();
               }}
             >
