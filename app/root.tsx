@@ -52,8 +52,8 @@ export default function App() {
         <Links />
       </head>
 
-      <body className="bg-background h-screen text-primary flex justify-center items-center">
-        <div className="bg-foreground h-fit py-10 px-6 w-full md:w-3/4 shadow-md rounded-sm">
+      <body className="bg-foreground text-primary flex justify-center items-center h-screen">
+        <div className="w-full h-full p-20">
           <DialogProvider>
             <DialPadProvider>
               <Outlet />

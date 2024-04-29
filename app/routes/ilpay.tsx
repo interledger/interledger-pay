@@ -39,7 +39,12 @@ export default function Ilpay() {
         <div className="h-2/3 items-center justify-center flex flex-col gap-10 w-full max-w-sm">
           <DialPad />
           <div className="flex gap-2">
-            <Link to={`/request`}>
+            <Link
+              to={`/request`}
+              onClick={(e: React.MouseEvent<HTMLElement>) => {
+                if (Number(amountValue) === 0) e.preventDefault();
+              }}
+            >
               <Button
                 aria-label="request"
                 variant="outline"
@@ -49,7 +54,12 @@ export default function Ilpay() {
                 Request
               </Button>
             </Link>
-            <Link to={`/pay`}>
+            <Link
+              to={`/pay`}
+              onClick={(e: React.MouseEvent<HTMLElement>) => {
+                if (Number(amountValue) === 0) e.preventDefault();
+              }}
+            >
               <Button
                 aria-label="pay"
                 size={"sm"}
