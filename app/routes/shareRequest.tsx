@@ -106,9 +106,11 @@ export default function ShareRequest() {
             >
               Share payment link
             </Button>
-            <Button type="submit" className="mt-8" size="xl">
-              Close
-            </Button>
+            <div className="flex justify-center">
+              <Button type="submit" className="mt-8">
+                Close
+              </Button>
+            </div>
           </Form>
         </div>
       </div>
