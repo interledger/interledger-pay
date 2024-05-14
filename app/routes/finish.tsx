@@ -5,7 +5,7 @@ import { cx } from "class-variance-authority";
 import { Suspense } from "react";
 import { Header } from "~/components/header";
 import { FinishCheck, FinishError } from "~/components/icons";
-import { Loader } from "~/components/loader";
+import { Fallback, Loader } from "~/components/loader";
 import { Button } from "~/components/ui/button";
 import { useDialogContext } from "~/lib/context/dialog";
 import {
@@ -93,7 +93,8 @@ export default function Finish() {
     <>
       <Header />
       <div className="flex justify-center items-center flex-col h-full px-5 gap-8">
-        <Suspense fallback={<Loader />}>
+        <Loader />
+        <Suspense fallback={<Fallback />}>
           <Await
             resolve={data.checkOutgoingPayment}
             errorElement={<FinishError />}

@@ -20,6 +20,7 @@ import { type ReactNode, useEffect } from "react";
 import { Button } from "./components/ui/button";
 import { FinishError } from "./components/icons";
 import { DialogProvider } from "./components/providers/dialogProvider";
+import { BackdropProvider } from "./components/providers/backdropProvider";
 
 export const links: LinksFunction = () => [
   {
@@ -54,11 +55,13 @@ export default function App() {
 
       <body className="bg-foreground text-primary flex justify-center items-center h-screen">
         <div className="w-full h-full p-20">
-          <DialogProvider>
-            <DialPadProvider>
-              <Outlet />
-            </DialPadProvider>
-          </DialogProvider>
+          <BackdropProvider>
+            <DialogProvider>
+              <DialPadProvider>
+                <Outlet />
+              </DialPadProvider>
+            </DialogProvider>
+          </BackdropProvider>
         </div>
         <ScrollRestoration />
         <Scripts />

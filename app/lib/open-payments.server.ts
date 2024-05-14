@@ -359,7 +359,7 @@ export async function checkOutgoingPayment(
   accessToken: string
 ): Promise<PaymentResultType> {
   const opClient = await createClient();
-  await timeout(9000);
+  await timeout(7000);
 
   // get outgoing payment, to check if there was enough balance
   const checkOutgoingPaymentResponse = await opClient.outgoingPayment
