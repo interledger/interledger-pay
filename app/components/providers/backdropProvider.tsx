@@ -6,7 +6,7 @@ type BackdropProviderProps = {
 };
 
 export const BackdropProvider = ({ children }: BackdropProviderProps) => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   return (
     <BackdropContext.Provider

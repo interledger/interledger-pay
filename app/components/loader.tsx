@@ -1,17 +1,7 @@
 import { motion } from "framer-motion";
-import { useEffect } from "react";
 import { useBackdropContext } from "~/lib/context/backdrop";
 
 export function Fallback() {
-  const { isLoading, setIsLoading } = useBackdropContext();
-
-  useEffect(() => {
-    setIsLoading(true);
-    return () => {
-      setIsLoading(false);
-    };
-  }, [isLoading, setIsLoading]);
-
   return null;
 }
 

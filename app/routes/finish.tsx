@@ -7,6 +7,7 @@ import { Header } from "~/components/header";
 import { FinishCheck, FinishError } from "~/components/icons";
 import { Fallback, Loader } from "~/components/loader";
 import { Button } from "~/components/ui/button";
+import { useBackdropContext } from "~/lib/context/backdrop";
 import { useDialogContext } from "~/lib/context/dialog";
 import {
   type PaymentResultType,
@@ -88,6 +89,7 @@ export default function Finish() {
 
   const { setOpen } = useDialogContext();
   setOpen(false);
+  const { setIsLoading } = useBackdropContext();
 
   return (
     <>
@@ -101,6 +103,7 @@ export default function Finish() {
           >
             {(outgoingPaymentCheck) => (
               <>
+                {setIsLoading(false)}
                 {outgoingPaymentCheck.error ? (
                   <>
                     <FinishError />
