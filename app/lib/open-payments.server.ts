@@ -8,6 +8,7 @@ import {
 } from "@interledger/open-payments";
 import { createId } from "@paralleldrive/cuid2";
 import { randomUUID } from "crypto";
+import { formatAmount } from "~/utils/helpers";
 
 async function createClient() {
   return await createAuthenticatedClient({
@@ -30,7 +31,6 @@ export async function fetchQuote(
 ): Promise<QuoteResponse> {
   const opClient = await createClient();
   const walletAddress = await getWalletAddress(args.walletAddress, opClient);
-  // const receiver = await getWalletAddress(args.receiver, opClient);
 
   const amountObj = {
     value: BigInt(args.amount * 10 ** walletAddress.assetScale).toString(),
@@ -226,9 +226,9 @@ export interface Amount {
 
 type CreateOutgoingPaymentParams = {
   walletAddress: WalletAddress;
-  debitAmount: Amount;
-  receiveAmount: Amount;
-  nonce: string;
+  debitAmount?: Amount;
+  receiveAmount?: Amount;
+  nonce?: string;
   paymentId: string;
   opClient: AuthenticatedClient;
 };
@@ -269,7 +269,7 @@ async function createOutgoingPaymentGrant(
           finish: {
             method: "redirect",
             uri: `${process.env.REDIRECT_URL}?paymentId=${paymentId}`,
-            nonce: nonce,
+            nonce: nonce || "",
           },
         },
       }
@@ -293,7 +293,7 @@ export async function finishPayment(
   accessToken: string,
   receiver: string,
   isRequestPayment?: boolean
-): Promise<void> {
+): Promise<{ url: string; accessToken: string }> {
   const opClient = await createClient();
 
   const continuation = await opClient.grant.continue(
@@ -306,10 +306,12 @@ export async function finishPayment(
     }
   );
 
-  await opClient.outgoingPayment
+  const url = new URL(walletAddress.id).origin;
+
+  const outgoingPayment = await opClient.outgoingPayment
     .create(
       {
-        url: new URL(walletAddress.id).origin,
+        url: url,
         accessToken: continuation.access_token.value,
       },
       {
@@ -335,6 +337,63 @@ export async function finishPayment(
         throw new Error("Could not complete incoming payment.");
       });
   }
+
+  return {
+    url: outgoingPayment.id,
+    accessToken: continuation.access_token.value,
+  };
+}
+
+function timeout(delay: number) {
+  return new Promise((res) => setTimeout(res, delay));
+}
+
+export type PaymentResultType = {
+  message: string;
+  color: "red" | "green";
+  error: boolean;
+};
+
+export async function checkOutgoingPayment(
+  url: string,
+  accessToken: string
+): Promise<PaymentResultType> {
+  const opClient = await createClient();
+  await timeout(7000);
+
+  // get outgoing payment, to check if there was enough balance
+  const checkOutgoingPaymentResponse = await opClient.outgoingPayment
+    .get({
+      url: url,
+      accessToken: accessToken,
+    })
+    .then((op) => {
+      let paymentResult: PaymentResultType;
+      if (Number(op.sentAmount.value) >= Number(op.receiveAmount.value)) {
+        paymentResult = {
+          message: "Payment successful",
+          color: "green",
+          error: false,
+        };
+      } else if (Number(op.sentAmount.value) === 0) {
+        paymentResult = {
+          message: "Payment failed. Check your balance and try again.",
+          color: "red",
+          error: true,
+        };
+      } else {
+        const amountSent = formatAmount(op.sentAmount);
+        paymentResult = {
+          message: `Payment failed. Only ${amountSent.amountWithCurrency} was sent. Check your balance and try again.`,
+          color: "red",
+          error: true,
+        };
+      }
+
+      return paymentResult;
+    });
+
+  return checkOutgoingPaymentResponse;
 }
 
 export async function getRequestPaymentDetails(
