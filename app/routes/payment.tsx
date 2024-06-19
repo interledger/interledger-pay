@@ -1,29 +1,36 @@
 import { conform, useForm } from "@conform-to/react";
 import { getFieldsetConstraint, parse } from "@conform-to/zod";
 import { type WalletAddress } from "@interledger/open-payments";
-import { type LoaderFunctionArgs, json, redirect } from "@remix-run/node";
+import {
+  type LoaderFunctionArgs,
+  json,
+  redirect,
+  type ActionFunctionArgs,
+} from "@remix-run/node";
 import { Form, useActionData, useLoaderData } from "@remix-run/react";
 import { z } from "zod";
 import { AmountDisplay } from "~/components/dialpad";
 import { Header } from "~/components/header";
+import Quote from "~/components/quoteDialog";
 import { Button } from "~/components/ui/button";
 import { Field } from "~/components/ui/form/form";
 import { useDialogContext } from "~/lib/context/dialog";
 import {
   fetchRequestQuote,
   getRequestPaymentDetails,
+  initializePayment,
 } from "~/lib/open-payments.server";
 import { getValidWalletAddress } from "~/lib/validators.server";
-import { commitSession, getSession } from "~/session";
+import { commitSession, destroySession, getSession } from "~/session";
 import { formatAmount, formatDate } from "~/utils/helpers";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const searchParams = new URL(request.url).searchParams;
-
+  const isQuote = searchParams.get("quote") || false;
   const paymentId = searchParams.get("url") || "";
   const receiver = searchParams.get("receiver") || "";
-  const paymentDetails = await getRequestPaymentDetails(paymentId, receiver);
 
+  const paymentDetails = await getRequestPaymentDetails(paymentId, receiver);
   const requestedAmount = paymentDetails.incomingAmount
     ? formatAmount({
         value: paymentDetails.incomingAmount?.value,
@@ -31,6 +38,36 @@ export async function loader({ request }: LoaderFunctionArgs) {
         assetScale: paymentDetails.incomingAmount?.assetScale,
       })
     : null;
+
+  const session = await getSession(request.headers.get("Cookie"));
+
+  let receiverName = "";
+  let receiveAmount = null;
+  let debitAmount = null;
+
+  if (isQuote) {
+    const quote = session.get("quote");
+    const receiver = session.get("receiver-wallet-address");
+
+    if (quote === undefined) {
+      throw new Error("Payment session expired.");
+    }
+
+    receiverName =
+      receiver.publicName === undefined ? "Recepient" : receiver.publicName;
+
+    receiveAmount = formatAmount({
+      value: quote.receiveAmount.value,
+      assetCode: quote.receiveAmount.assetCode,
+      assetScale: quote.receiveAmount.assetScale,
+    });
+
+    debitAmount = formatAmount({
+      value: quote.debitAmount.value,
+      assetCode: quote.debitAmount.assetCode,
+      assetScale: quote.debitAmount.assetScale,
+    });
+  }
 
   return json({
     receiver: paymentDetails.walletAddress,
@@ -40,6 +77,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
       ? paymentDetails.metadata.description + ""
       : "",
     date: formatDate({ date: paymentDetails.createdAt }),
+    receiveAmount: receiveAmount ? receiveAmount.amountWithCurrency : null,
+    debitAmount: debitAmount ? debitAmount.amountWithCurrency : null,
+    receiverName: receiverName,
   } as const);
 }
 
@@ -111,6 +151,8 @@ export default function PayRequest() {
               <Button
                 aria-label="pay"
                 type="submit"
+                name="intent"
+                value="pay"
                 onClick={() => setOpen(true)}
               >
                 Pay with Interledger
@@ -118,45 +160,85 @@ export default function PayRequest() {
             </div>
           </Form>
         </div>
+        <Quote
+          receiverName={data.receiverName}
+          receiveAmount={data.receiveAmount || ""}
+          debitAmount={data.debitAmount || ""}
+        />
       </div>
     </>
   );
 }
 
-export async function action({ request }: LoaderFunctionArgs) {
+export async function action({ request }: ActionFunctionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
 
   let walletAddress = {} as WalletAddress;
+  let receiverWalletAddress = {} as WalletAddress;
 
   const formData = await request.formData();
-  const submission = await parse(formData, {
-    schema: schema.superRefine(async (data, context) => {
-      try {
-        walletAddress = await getValidWalletAddress(data.walletAddress);
-      } catch (error) {
-        context.addIssue({
-          path: ["walletAddress"],
-          code: z.ZodIssueCode.custom,
-          message: "Your wallet address is not valid.",
-        });
+  const intent = formData.get("intent");
+
+  const searchParams = new URL(request.url).searchParams;
+  const paymentId = searchParams.get("url") || "";
+  const receiver = searchParams.get("receiver") || "";
+
+  if (intent === "pay") {
+    const submission = await parse(formData, {
+      schema: schema.superRefine(async (data, context) => {
+        try {
+          walletAddress = await getValidWalletAddress(data.walletAddress);
+          receiverWalletAddress = await getValidWalletAddress(receiver);
+        } catch (error) {
+          context.addIssue({
+            path: ["walletAddress"],
+            code: z.ZodIssueCode.custom,
+            message: "Your wallet address is not valid.",
+          });
+        }
+      }),
+      async: true,
+    });
+
+    if (!submission.value || submission.intent !== "submit") {
+      return json(submission);
+    }
+
+    const quote = await fetchRequestQuote(submission.value);
+
+    session.set("quote", quote);
+    session.set("wallet-address", {
+      walletAddress: walletAddress,
+    });
+    session.set("receiver-wallet-address", receiverWalletAddress);
+    session.set("isRequestPayment", true);
+
+    return redirect(
+      `/payment?url=${paymentId}&receiver=${receiver}&quote=true`,
+      {
+        headers: { "Set-Cookie": await commitSession(session) },
       }
-    }),
-    async: true,
-  });
+    );
+  } else if (intent === "confirm") {
+    const quote = session.get("quote");
+    const walletAddressInfo = session.get("wallet-address");
 
-  if (!submission.value || submission.intent !== "submit") {
-    return json(submission);
+    if (quote === undefined || walletAddressInfo === undefined) {
+      throw new Error("Payment session expired.");
+    }
+
+    const grant = await initializePayment({
+      walletAddress: walletAddressInfo.walletAddress.id,
+      quote: quote,
+    });
+
+    session.set("payment-grant", grant);
+    return redirect(grant.interact.redirect, {
+      headers: { "Set-Cookie": await commitSession(session) },
+    });
+  } else {
+    return redirect("/", {
+      headers: { "Set-Cookie": await destroySession(session) },
+    });
   }
-
-  const quote = await fetchRequestQuote(submission.value);
-
-  session.set("quote", quote);
-  session.set("wallet-address", {
-    walletAddress: walletAddress,
-  });
-  session.set("isRequestPayment", true);
-
-  return redirect(`/quote`, {
-    headers: { "Set-Cookie": await commitSession(session) },
-  });
 }

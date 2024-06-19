@@ -432,7 +432,6 @@ export async function getWalletAddress(
   opClient?: AuthenticatedClient
 ) {
   opClient = opClient ? opClient : await createClient();
-
   const walletAddress = await opClient.walletAddress
     .get({
       url: url,
