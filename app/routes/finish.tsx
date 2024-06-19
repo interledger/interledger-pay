@@ -61,15 +61,15 @@ export async function loader({ request }: LoaderFunctionArgs) {
       grant,
       quote,
       walletAddressInfo.walletAddress,
-      interactRef,
-      quote.incomingPaymentGrantToken,
-      quote.receiver,
-      isRequestPayment
+      interactRef
     );
 
     const checkOutgoingPaymentPromise = checkOutgoingPayment(
       finishPaymentResponse.url,
-      finishPaymentResponse.accessToken
+      finishPaymentResponse.accessToken,
+      quote.incomingPaymentGrantToken,
+      quote.receiver,
+      isRequestPayment
     );
 
     return defer({ checkOutgoingPayment: checkOutgoingPaymentPromise });
@@ -95,7 +95,7 @@ export default function Finish() {
     <>
       <Header />
       <div className="flex justify-center items-center flex-col h-full px-5 gap-8">
-        <Loader />
+        <Loader type="large" />
         <Suspense fallback={<Fallback />}>
           <Await
             resolve={data.checkOutgoingPayment}

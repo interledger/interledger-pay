@@ -289,10 +289,7 @@ export async function finishPayment(
   payment: PendingGrant,
   quote: Quote,
   walletAddress: WalletAddress,
-  interactRef: string,
-  accessToken: string,
-  receiver: string,
-  isRequestPayment?: boolean
+  interactRef: string
 ): Promise<{ url: string; accessToken: string }> {
   const opClient = await createClient();
 
@@ -326,18 +323,6 @@ export async function finishPayment(
       throw new Error("Could not create outgoing payment.");
     });
 
-  if (!isRequestPayment) {
-    // complete incoming payment created without receive amount
-    await opClient.incomingPayment
-      .complete({
-        url: receiver,
-        accessToken: accessToken,
-      })
-      .catch(() => {
-        throw new Error("Could not complete incoming payment.");
-      });
-  }
-
   return {
     url: outgoingPayment.id,
     accessToken: continuation.access_token.value,
@@ -356,7 +341,10 @@ export type PaymentResultType = {
 
 export async function checkOutgoingPayment(
   url: string,
-  accessToken: string
+  accessToken: string,
+  accessTokenIncomingPayment: string,
+  receiver: string,
+  isRequestPayment?: boolean
 ): Promise<PaymentResultType> {
   const opClient = await createClient();
   await timeout(7000);
@@ -392,6 +380,20 @@ export async function checkOutgoingPayment(
 
       return paymentResult;
     });
+
+  if (!checkOutgoingPaymentResponse.error) {
+    if (!isRequestPayment) {
+      // complete incoming payment created without receive amount
+      await opClient.incomingPayment
+        .complete({
+          url: receiver,
+          accessToken: accessTokenIncomingPayment,
+        })
+        .catch(() => {
+          throw new Error("Could not complete incoming payment.");
+        });
+    }
+  }
 
   return checkOutgoingPaymentResponse;
 }
