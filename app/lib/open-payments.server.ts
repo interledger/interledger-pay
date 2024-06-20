@@ -8,7 +8,6 @@ import {
 } from "@interledger/open-payments";
 import { createId } from "@paralleldrive/cuid2";
 import { randomUUID } from "crypto";
-import { formatAmount } from "~/utils/helpers";
 
 async function createClient() {
   return await createAuthenticatedClient({
@@ -347,7 +346,7 @@ export async function checkOutgoingPayment(
   isRequestPayment?: boolean
 ): Promise<PaymentResultType> {
   const opClient = await createClient();
-  await timeout(7000);
+  await timeout(3000);
 
   // get outgoing payment, to check if there was enough balance
   const checkOutgoingPaymentResponse = await opClient.outgoingPayment
@@ -357,22 +356,15 @@ export async function checkOutgoingPayment(
     })
     .then((op) => {
       let paymentResult: PaymentResultType;
-      if (Number(op.sentAmount.value) >= Number(op.receiveAmount.value)) {
+      if (Number(op.sentAmount.value) > 0) {
         paymentResult = {
           message: "Payment successful",
           color: "green",
           error: false,
         };
-      } else if (Number(op.sentAmount.value) === 0) {
+      } else {
         paymentResult = {
           message: "Payment failed. Check your balance and try again.",
-          color: "red",
-          error: true,
-        };
-      } else {
-        const amountSent = formatAmount(op.sentAmount);
-        paymentResult = {
-          message: `Payment failed. Only ${amountSent.amountWithCurrency} was sent. Check your balance and try again.`,
           color: "red",
           error: true,
         };

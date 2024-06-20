@@ -15,7 +15,7 @@ export function Loader(loaderArgs: LoaderArgs) {
   return (
     <>
       {isLoading ? (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-y-10 bg-background-dark opacity-20">
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-y-10">
           <motion.div
             className={cx(
               "rounded-full  border-gray-200 border-t-green-1",
