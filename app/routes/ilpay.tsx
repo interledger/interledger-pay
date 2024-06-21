@@ -1,5 +1,5 @@
 import { Button } from "~/components/ui/button";
-import { DialPad } from "~/components/dialpad";
+import { DialPad, DialPadIds } from "~/components/dialpad";
 import { Header } from "~/components/header";
 import { Link, useLoaderData } from "@remix-run/react";
 import { useDialPadContext } from "~/lib/context/dialpad";
@@ -22,7 +22,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function Ilpay() {
   const data = useLoaderData<typeof loader>();
-  const { amountValue, setAssetCode } = useDialPadContext();
+  const { amountValue, setAmountValue, setAssetCode } = useDialPadContext();
 
   useEffect(() => {
     setAssetCode(data.assetCode);
@@ -42,6 +42,12 @@ export default function Ilpay() {
             <Link
               to={`/request`}
               onClick={(e: React.MouseEvent<HTMLElement>) => {
+                if (
+                  amountValue.indexOf(DialPadIds.Dot) === -1 ||
+                  amountValue.endsWith(DialPadIds.Dot)
+                ) {
+                  setAmountValue(Number(amountValue).toFixed(2).toString());
+                }
                 if (Number(amountValue) === 0) e.preventDefault();
               }}
             >
@@ -57,6 +63,12 @@ export default function Ilpay() {
             <Link
               to={`/pay`}
               onClick={(e: React.MouseEvent<HTMLElement>) => {
+                if (
+                  amountValue.indexOf(DialPadIds.Dot) === -1 ||
+                  amountValue.endsWith(DialPadIds.Dot)
+                ) {
+                  setAmountValue(Number(amountValue).toFixed(2).toString());
+                }
                 if (Number(amountValue) === 0) e.preventDefault();
               }}
             >

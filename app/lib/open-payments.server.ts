@@ -33,7 +33,9 @@ export async function fetchQuote(
   const walletAddress = await getWalletAddress(args.walletAddress, opClient);
 
   const amountObj = {
-    value: BigInt(args.amount * 10 ** walletAddress.assetScale).toString(),
+    value: BigInt(
+      (args.amount * 10 ** walletAddress.assetScale).toFixed()
+    ).toString(),
     assetCode: walletAddress.assetCode,
     assetScale: walletAddress.assetScale,
   };
@@ -166,7 +168,9 @@ export async function createRequestPayment(args: {
   const walletAddress = await getWalletAddress(args.walletAddress, opClient);
 
   const amountObj = {
-    value: BigInt(args.amount * 10 ** walletAddress.assetScale).toString(),
+    value: BigInt(
+      (args.amount * 10 ** walletAddress.assetScale).toFixed()
+    ).toString(),
     assetCode: walletAddress.assetCode,
     assetScale: walletAddress.assetScale,
   };
