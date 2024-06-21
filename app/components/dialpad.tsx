@@ -3,7 +3,7 @@ import { cn } from "~/lib/cn";
 import { useDialPadContext } from "~/lib/context/dialpad";
 import { getCurrencySymbol } from "~/utils/helpers";
 
-enum DialPadIds {
+export enum DialPadIds {
   Backspace = "Backspace",
   Dot = ".",
   Zero = "0",
