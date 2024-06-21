@@ -42,7 +42,7 @@ export const Field = ({
 
   return (
     <div className={cx(className, "flex flex-col gap-3")}>
-      <Label className="pl-2" htmlFor={id}>
+      <Label className="pl-2 font-medium" htmlFor={id}>
         {label}
       </Label>
       <Input

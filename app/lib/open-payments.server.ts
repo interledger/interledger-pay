@@ -8,7 +8,6 @@ import {
 } from "@interledger/open-payments";
 import { createId } from "@paralleldrive/cuid2";
 import { randomUUID } from "crypto";
-import { formatAmount } from "~/utils/helpers";
 
 async function createClient() {
   return await createAuthenticatedClient({
@@ -293,10 +292,7 @@ export async function finishPayment(
   payment: PendingGrant,
   quote: Quote,
   walletAddress: WalletAddress,
-  interactRef: string,
-  accessToken: string,
-  receiver: string,
-  isRequestPayment?: boolean
+  interactRef: string
 ): Promise<{ url: string; accessToken: string }> {
   const opClient = await createClient();
 
@@ -330,18 +326,6 @@ export async function finishPayment(
       throw new Error("Could not create outgoing payment.");
     });
 
-  if (!isRequestPayment) {
-    // complete incoming payment created without receive amount
-    await opClient.incomingPayment
-      .complete({
-        url: receiver,
-        accessToken: accessToken,
-      })
-      .catch(() => {
-        throw new Error("Could not complete incoming payment.");
-      });
-  }
-
   return {
     url: outgoingPayment.id,
     accessToken: continuation.access_token.value,
@@ -360,10 +344,13 @@ export type PaymentResultType = {
 
 export async function checkOutgoingPayment(
   url: string,
-  accessToken: string
+  accessToken: string,
+  accessTokenIncomingPayment: string,
+  receiver: string,
+  isRequestPayment?: boolean
 ): Promise<PaymentResultType> {
   const opClient = await createClient();
-  await timeout(7000);
+  await timeout(3000);
 
   // get outgoing payment, to check if there was enough balance
   const checkOutgoingPaymentResponse = await opClient.outgoingPayment
@@ -373,22 +360,15 @@ export async function checkOutgoingPayment(
     })
     .then((op) => {
       let paymentResult: PaymentResultType;
-      if (Number(op.sentAmount.value) >= Number(op.receiveAmount.value)) {
+      if (Number(op.sentAmount.value) > 0) {
         paymentResult = {
           message: "Payment successful",
           color: "green",
           error: false,
         };
-      } else if (Number(op.sentAmount.value) === 0) {
+      } else {
         paymentResult = {
           message: "Payment failed. Check your balance and try again.",
-          color: "red",
-          error: true,
-        };
-      } else {
-        const amountSent = formatAmount(op.sentAmount);
-        paymentResult = {
-          message: `Payment failed. Only ${amountSent.amountWithCurrency} was sent. Check your balance and try again.`,
           color: "red",
           error: true,
         };
@@ -396,6 +376,20 @@ export async function checkOutgoingPayment(
 
       return paymentResult;
     });
+
+  if (!checkOutgoingPaymentResponse.error) {
+    if (!isRequestPayment) {
+      // complete incoming payment created without receive amount
+      await opClient.incomingPayment
+        .complete({
+          url: receiver,
+          accessToken: accessTokenIncomingPayment,
+        })
+        .catch(() => {
+          throw new Error("Could not complete incoming payment.");
+        });
+    }
+  }
 
   return checkOutgoingPaymentResponse;
 }
@@ -434,7 +428,6 @@ export async function getWalletAddress(
   opClient?: AuthenticatedClient
 ) {
   opClient = opClient ? opClient : await createClient();
-
   const walletAddress = await opClient.walletAddress
     .get({
       url: url,
