@@ -6,7 +6,8 @@
 
 ## What is Interledger Pay?
 
-Interledger Pay is a simplified transactions platform, where you can easily send or request money from anyone anywhere in the world, if you own a wallet address.
+Interledger Pay is a simplified payments platform, where you can easily send or request money from anyone anywhere in the world, if you own a Wallet Address.
+A Wallet Address is a standardized identifier for a payment account. In the same way that an email address provides an identifier for a mailbox in the email ecosystem, a wallet address is used by an account holder to share the details of their account with a counter-party. If you don't already own one, you can create one at [Interledger Test Wallet](https://rafiki.money).
 
 See Interledger Pay in action [here](https://interledgerpay.com).
 
@@ -58,6 +59,25 @@ To install dependencies, execute:
 ```sh
 pnpm i
 ```
+
+### Environment Variables
+
+In order for the Interledger Pay to function, it is necessary to configure the environment variables appropriately. You must duplicate the example environment file, `.env.example`, into your local environment file, `.env`.
+
+> **Note**
+> The local environment file (`.env`) is **NOT** tracked in the version control system, and should **NOT** be included in any commits.
+
+Navigate to the project's root directory and enter the following command:
+
+```sh
+cp ./docker/dev/.env.example ./docker/dev/.env
+```
+
+Using your preferred text editor, open the `./docker/dev/.env` file and configure the necessary environment variables.
+
+You will need to create a USD wallet address in the [Test Wallet](https://rafiki.money) application, then generate public and private key for the wallet address in the `Developer Keys` found in the `Settings` menu of Interledger Test Wallet. With the generated values you can proceed to update the following environment variables: `PRIVATE_KEY` to the generated base64 encoded private key, `KEY_ID` to the wallet address key id, and `WALLET_ADDRESS` to the created wallet address.
+
+`REDIRECT_URL` variable is the url for the interaction with the Identity Provider Page, in our case, localy this would be `http://localhost:3000/finish`. `INTERLEDGER_PAY_HOST` is the url where Interledger Pay is hosted, localy the value is `http://localhost:3000`. We are using cookies to store some data, so a cookie secret key needs to be set in `SESSION_COOKIE_SECRET_KEY`.
 
 ### Local Interledger Pay
 
