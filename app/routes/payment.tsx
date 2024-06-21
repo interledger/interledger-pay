@@ -107,14 +107,15 @@ export default function PayRequest() {
               {...conform.input(fields.incomingPaymentUrl)}
               value={data.url || ""}
             />
-            <Button
-              aria-label="pay"
-              type="submit"
-              size="xl"
-              onClick={() => setOpen(true)}
-            >
-              Pay with Interledger Pay
-            </Button>
+            <div className="flex justify-center">
+              <Button
+                aria-label="pay"
+                type="submit"
+                onClick={() => setOpen(true)}
+              >
+                Pay with Interledger
+              </Button>
+            </div>
           </Form>
         </div>
       </div>

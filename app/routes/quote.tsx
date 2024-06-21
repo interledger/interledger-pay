@@ -15,10 +15,14 @@ import { formatAmount } from "~/utils/helpers";
 export async function loader({ request }: LoaderFunctionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
   const quote = session.get("quote");
+  const receiver = session.get("receiver-wallet-address");
 
   if (quote === undefined) {
     throw new Error("Payment session expired.");
   }
+
+  const receiverName =
+    receiver.publicName === undefined ? "Recepient" : receiver.publicName;
 
   const receiveAmount = formatAmount({
     value: quote.receiveAmount.value,
@@ -35,6 +39,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   return json({
     receiveAmount: receiveAmount.amountWithCurrency,
     debitAmount: debitAmount.amountWithCurrency,
+    receiverName: receiverName,
   } as const);
 }
 
@@ -80,36 +85,35 @@ export default function Quote() {
                   <div className="mx-auto w-full max-w-sm">
                     <Form method="POST" {...form.props}>
                       <Field
-                        label="You send exactly"
+                        label="You send"
                         value={data.debitAmount}
                         variant="info"
                       ></Field>
                       <Field
-                        label="Recepient gets"
+                        label={`${data.receiverName} gets`}
                         value={data.receiveAmount}
                         variant="info"
                       ></Field>
-                      <Button
-                        aria-label="confirm-pay"
-                        type="submit"
-                        size="xl"
-                        className="mb-5"
-                        value="CONFIRM"
-                        name="action"
-                      >
-                        Confirm payment
-                      </Button>
-                      <Button
-                        aria-label="cancel-pay"
-                        type="submit"
-                        size="xl"
-                        variant="destructive"
-                        value="CANCEL"
-                        name="action"
-                        onClick={() => setOpen(false)}
-                      >
-                        Cancel payment
-                      </Button>
+                      <div className="flex justify-center items-center gap-3">
+                        <Button
+                          aria-label="confirm-pay"
+                          type="submit"
+                          value="CONFIRM"
+                          name="action"
+                        >
+                          Confirm payment
+                        </Button>
+                        <Button
+                          aria-label="cancel-pay"
+                          type="submit"
+                          variant="destructive"
+                          value="CANCEL"
+                          name="action"
+                          onClick={() => setOpen(false)}
+                        >
+                          Cancel payment
+                        </Button>
+                      </div>
                     </Form>
                   </div>
                 </div>

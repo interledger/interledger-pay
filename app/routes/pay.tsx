@@ -88,14 +88,15 @@ export default function Pay() {
                 {...conform.input(fields.amount)}
                 value={Number(amountValue)}
               />
-              <Button
-                aria-label="pay"
-                type="submit"
-                size="xl"
-                onClick={() => setOpen(true)}
-              >
-                Pay with Interledger Pay
-              </Button>
+              <div className="flex justify-center">
+                <Button
+                  aria-label="pay"
+                  type="submit"
+                  onClick={() => setOpen(true)}
+                >
+                  Pay with Interledger
+                </Button>
+              </div>
             </div>
           </Form>
         </div>
@@ -114,6 +115,7 @@ export async function action({ request }: LoaderFunctionArgs) {
     schema: schema.superRefine(async (data, context) => {
       try {
         receiver = await getValidWalletAddress(data.receiver);
+        session.set("receiver-wallet-address", receiver);
       } catch (error) {
         context.addIssue({
           path: ["receiver"],
