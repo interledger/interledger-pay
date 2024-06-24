@@ -80,6 +80,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     receiveAmount: receiveAmount ? receiveAmount.amountWithCurrency : null,
     debitAmount: debitAmount ? debitAmount.amountWithCurrency : null,
     receiverName: receiverName,
+    isQuote: isQuote,
   } as const);
 }
 
@@ -87,7 +88,7 @@ const schema = z.object({
   walletAddress: z
     .string()
     .transform((val) => val.replace("$", "https://"))
-    .pipe(z.string().url({ message: "Invalid wallet address." })),
+    .pipe(z.string().url({ message: "The input is not a wallet address." })),
   incomingPaymentUrl: z.string(),
 });
 
@@ -101,6 +102,8 @@ export default function PayRequest() {
     lastSubmission: actionData,
     shouldRevalidate: "onSubmit",
   });
+
+  data.isQuote ? setOpen(true) : setOpen(false);
 
   return (
     <>
@@ -148,13 +151,7 @@ export default function PayRequest() {
               value={data.url || ""}
             />
             <div className="flex justify-center">
-              <Button
-                aria-label="pay"
-                type="submit"
-                name="intent"
-                value="pay"
-                onClick={() => setOpen(true)}
-              >
+              <Button aria-label="pay" type="submit" name="intent" value="pay">
                 Pay with Interledger
               </Button>
             </div>
