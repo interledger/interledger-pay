@@ -66,6 +66,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     receiveAmount: receiveAmount ? receiveAmount.amountWithCurrency : null,
     debitAmount: debitAmount ? debitAmount.amountWithCurrency : null,
     receiverName: receiverName,
+    isQuote: isQuote,
   } as const);
 }
 
@@ -74,7 +75,7 @@ const schema = z.object({
   receiver: z
     .string()
     .transform((val) => val.replace("$", "https://"))
-    .pipe(z.string().url({ message: "Invalid wallet address." })),
+    .pipe(z.string().url({ message: "The input is not a wallet address." })),
   amount: z.coerce.number(),
   note: z.string().optional(),
 });
@@ -90,6 +91,8 @@ export default function Pay() {
     lastSubmission: actionData,
     shouldRevalidate: "onSubmit",
   });
+
+  data.isQuote ? setOpen(true) : setOpen(false);
 
   return (
     <>
@@ -135,7 +138,6 @@ export default function Pay() {
                   type="submit"
                   name="intent"
                   value="pay"
-                  onClick={() => setOpen(true)}
                 >
                   Pay with Interledger
                 </Button>
