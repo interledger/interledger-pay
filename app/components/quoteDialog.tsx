@@ -65,12 +65,12 @@ export default function Quote({
                     <Loader type="small" />
                     <Form method="POST" {...form.props}>
                       <Field
-                        label="You send"
+                        label="You will pay approximately:"
                         value={debitAmount}
                         variant="info"
                       ></Field>
                       <Field
-                        label={`${receiverName} gets`}
+                        label={`${receiverName} receives approximately: `}
                         value={receiveAmount}
                         variant="info"
                       ></Field>
