@@ -18,8 +18,8 @@ dependencies:
     specifier: ^1.7.18
     version: 1.7.19(react-dom@18.3.1)(react@18.3.1)
   '@interledger/open-payments':
-    specifier: 6.1.1
-    version: 6.1.1
+    specifier: 6.13.1
+    version: 6.13.1
   '@paralleldrive/cuid2':
     specifier: ^2.2.2
     version: 2.2.2
@@ -1057,32 +1057,31 @@ packages:
     resolution: {integrity: sha512-93zYdMES/c1D69yZiKDBj0V24vqNzB/koF26KPaagAfd3P/4gUlh3Dys5ogAK+Exi9QyzlD8x/08Zt7wIKcDcA==}
     dev: true
 
-  /@interledger/http-signature-utils@2.0.0:
-    resolution: {integrity: sha512-zJTuTzkb9Y8ZJe8L0KcYnRtha8KyrYVpdM0FLL3HEOscWXRNrYC75IkJLzeTZnjzog77q9DT9PmxLitHuPl8iQ==}
+  /@interledger/http-signature-utils@2.0.2:
+    resolution: {integrity: sha512-gTAPFMt7xwG1zv1rbrltcZTAqOw/ZJwkVdnNjQzu5G9JTfvJQzS6pcpiVUej1cblpewotbOzosgdX00f93q9zA==}
     dependencies:
-      http-message-signatures: 0.1.2
+      http-message-signatures: 1.0.4
       httpbis-digest-headers: 1.0.0
       jose: 4.15.5
       uuid: 9.0.1
     dev: false
 
-  /@interledger/open-payments@6.1.1:
-    resolution: {integrity: sha512-eS2zEGCuqb+WMAOzFvjCeKSRhpsIYQpFSslu4ET+jpleDn8NZJCwhW0q16f43UJJNargLeSGIg9CsKRcYRceZA==}
+  /@interledger/open-payments@6.13.1:
+    resolution: {integrity: sha512-LMNj051ee473ylQ1fPD8XUR0U/TCxQo1kaD/8iXZ85J/Hmp7Na5wTJ3WrYfk4HbW7O6efWuDvD4PqMSym2rmiQ==}
     dependencies:
-      '@interledger/http-signature-utils': 2.0.0
-      '@interledger/openapi': 1.2.1
-      axios: 1.7.2
+      '@interledger/http-signature-utils': 2.0.2
+      '@interledger/openapi': 2.0.1
       base64url: 3.0.1
       http-message-signatures: 0.1.2
+      ky: 1.4.0
       pino: 8.21.0
       uuid: 9.0.1
     transitivePeerDependencies:
-      - debug
       - supports-color
     dev: false
 
-  /@interledger/openapi@1.2.1:
-    resolution: {integrity: sha512-CVEMjLH94svT5ikaojplgZ3YlZAe7ml6G6bt0ZCbqkbwHszUwY1E6RexZZejiGju5QvwS/6Jl/Op5ymv/ECaLg==}
+  /@interledger/openapi@2.0.1:
+    resolution: {integrity: sha512-eS5mzfb6sHa0M3YvlYl1ahlTQn7Jng2VF++agS5XeL93ZrFnSaniyARNdLU0r/tJcUQxKLVSCcoKn84mU9X+pg==}
     dependencies:
       '@apidevtools/json-schema-ref-parser': 10.1.0
       ajv: 8.14.0
@@ -2279,10 +2278,6 @@ packages:
     resolution: {integrity: sha512-baNZyqaaLhyLVKm/DlvdW051MSgO6b8eVfIezl9E5PqWxFgzLm/wQntEW4zOytVburDEr0JlALEpdOFwvErLsg==}
     dev: true
 
-  /asynckit@0.4.0:
-    resolution: {integrity: sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q==}
-    dev: false
-
   /atomic-sleep@1.0.0:
     resolution: {integrity: sha512-kNOjDqAh7px0XWNI+4QbzoiR/nTkHAWNud2uvnJquD1/x5a7EQZMJT0AczqK0Qn67oY/TTQ1LbUKajZpp3I9tQ==}
     engines: {node: '>=8.0.0'}
@@ -2298,16 +2293,6 @@ packages:
     resolution: {integrity: sha512-M0JtH+hlOL5pLQwHOLNYZaXuhqmvS8oExsqB1SBYgA4Dk7u/xx+YdGHXaK5pyUfed5mYXdlYiphWq3G8cRi5JQ==}
     engines: {node: '>=4'}
     dev: true
-
-  /axios@1.7.2:
-    resolution: {integrity: sha512-2A8QhOMrbomlDuiLeK9XibIBzuHeRcqqNOHp0Cyp5EoJ1IFDh+XZH3A6BkXtv0K4gFGCI0Y4BM7B1wOEi0Rmgw==}
-    dependencies:
-      follow-redirects: 1.15.6
-      form-data: 4.0.0
-      proxy-from-env: 1.1.0
-    transitivePeerDependencies:
-      - debug
-    dev: false
 
   /axobject-query@3.2.1:
     resolution: {integrity: sha512-jsyHu61e6N4Vbz/v18DHwWYKK0bSWLqn47eeDSKPB7m8tqMHF9YJ+mhIk2lVteyZrY8tnSj/jHOv4YiTCuCJgg==}
@@ -2621,13 +2606,6 @@ packages:
   /color-name@1.1.4:
     resolution: {integrity: sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==}
 
-  /combined-stream@1.0.8:
-    resolution: {integrity: sha512-FQN4MRfuJeHf7cBbBMJFXhKSDq+2kAArBlmRBvcvFE5BB1HZKXtSFASDhdlz9zOYwxh8lDdnvmMOe/+5cdoEdg==}
-    engines: {node: '>= 0.8'}
-    dependencies:
-      delayed-stream: 1.0.0
-    dev: false
-
   /comma-separated-tokens@2.0.3:
     resolution: {integrity: sha512-Fu4hJdvzeylCfQPp9SGWidpzrMs7tTrlu6Vb8XGaRGck8QSNZJJp538Wrb60Lax4fPwR64ViY468OIUTbRlGZg==}
     dev: true
@@ -2867,11 +2845,6 @@ packages:
       has-property-descriptors: 1.0.2
       object-keys: 1.1.1
     dev: true
-
-  /delayed-stream@1.0.0:
-    resolution: {integrity: sha512-ZySD7Nf91aLB0RxL4KGrKHBXl7Eds1DAmEdcoVawXnLD7SDhpNgtuII2aAkg7a7QS41jxPSZ17p4VdGnMHk3MQ==}
-    engines: {node: '>=0.4.0'}
-    dev: false
 
   /delegates@1.0.0:
     resolution: {integrity: sha512-bd2L678uiWATM6m5Z1VzNCErI3jiGzt6HGY8OVICs40JQq/HALfbyNJmp0UDakEY4pMMaN0Ly5om/B1VI/+xfQ==}
@@ -3831,16 +3804,6 @@ packages:
     resolution: {integrity: sha512-X8cqMLLie7KsNUDSdzeN8FYK9rEt4Dt67OsG/DNGnYTSDBG4uFAJFBnUeiV+zCVAvwFy56IjM9sH51jVaEhNxw==}
     dev: true
 
-  /follow-redirects@1.15.6:
-    resolution: {integrity: sha512-wWN62YITEaOpSK584EZXJafH1AGpO8RVgElfkuXbTOrPX4fIfOyEpW/CsiNd8JdYrAoOvafRTOEnvsO++qCqFA==}
-    engines: {node: '>=4.0'}
-    peerDependencies:
-      debug: '*'
-    peerDependenciesMeta:
-      debug:
-        optional: true
-    dev: false
-
   /for-each@0.3.3:
     resolution: {integrity: sha512-jqYfLp7mo9vIyQf8ykW2v7A+2N4QjeCeI5+Dz9XraiO1ign81wjiH7Fb9vSOWvQfNtmSa4H2RoQTrrXivdUZmw==}
     dependencies:
@@ -3852,15 +3815,6 @@ packages:
     dependencies:
       cross-spawn: 7.0.3
       signal-exit: 4.1.0
-
-  /form-data@4.0.0:
-    resolution: {integrity: sha512-ETEklSGi5t0QMZuiXoA/Q6vcnxcLQP5vdugSpuAyi6SVGi2clPPp+xgEhuMaHC+zGgn31Kd235W35f7Hykkaww==}
-    engines: {node: '>= 6'}
-    dependencies:
-      asynckit: 0.4.0
-      combined-stream: 1.0.8
-      mime-types: 2.1.35
-    dev: false
 
   /format@0.2.2:
     resolution: {integrity: sha512-wzsgA6WOq+09wrU1tsJ09udeR/YZRaeArL9e1wPbFg3GG2yDnC2ldKpxs4xunpFF9DgqCqOIra3bc1HWrJ37Ww==}
@@ -4194,6 +4148,12 @@ packages:
 
   /http-message-signatures@0.1.2:
     resolution: {integrity: sha512-gjJYDgFBy+xnlAs2G0gIWpiorCv9Xi7pIlOnnd91zHAK7BtkLxonmm/JAtd5e6CakOuW03IwEuJzj2YMy8lfWQ==}
+    dev: false
+
+  /http-message-signatures@1.0.4:
+    resolution: {integrity: sha512-gavCQWnxHFg0BVlKs6CmYK7hNSH1o0x0mHTC68yBAHYOYuTVXPv52mEE7QuT5TenfiagTdOa/zPJzen4lEX7Rg==}
+    dependencies:
+      structured-headers: 1.0.1
     dev: false
 
   /httpbis-digest-headers@1.0.0:
@@ -4705,6 +4665,11 @@ packages:
       vary: 1.1.2
     transitivePeerDependencies:
       - supports-color
+    dev: false
+
+  /ky@1.4.0:
+    resolution: {integrity: sha512-tPhhoGUiEiU/WXR4rt8klIoLdnTtyu+9jVKHd/wauEjYud32jyn63mzKWQweaQrHWxBQtYoVtdcEnYX1LosnFQ==}
+    engines: {node: '>=18'}
     dev: false
 
   /language-subtag-registry@0.3.23:
@@ -6045,10 +6010,6 @@ packages:
       forwarded: 0.2.0
       ipaddr.js: 1.9.1
 
-  /proxy-from-env@1.1.0:
-    resolution: {integrity: sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==}
-    dev: false
-
   /pump@2.0.1:
     resolution: {integrity: sha512-ruPMNRkN3MHP1cWJc9OWr+T/xDP0jhXYCLfJcBuX54hhfIBnaQmAUMfDcG4DM5UMWByBbJY69QSphm3jtDKIkA==}
     dependencies:
@@ -6734,6 +6695,11 @@ packages:
 
   /structured-headers@0.5.0:
     resolution: {integrity: sha512-oLnmXSsjhud+LxRJpvokwP8ImEB2wTg8sg30buwfVViKMuluTv3BlOJHUX9VW9pJ2nQOxmx87Z0kB86O4cphag==}
+    dev: false
+
+  /structured-headers@1.0.1:
+    resolution: {integrity: sha512-QYBxdBtA4Tl5rFPuqmbmdrS9kbtren74RTJTcs0VSQNVV5iRhJD4QlYTLD0+81SBwUQctjEQzjTRI3WG4DzICA==}
+    engines: {node: '>= 14', npm: '>=6'}
     dev: false
 
   /style-to-object@0.4.4:

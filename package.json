@@ -16,7 +16,7 @@
     "@conform-to/react": "^0.9.1",
     "@conform-to/zod": "^0.9.1",
     "@headlessui/react": "^1.7.18",
-    "@interledger/open-payments": "6.1.1",
+    "@interledger/open-payments": "6.13.1",
     "@paralleldrive/cuid2": "^2.2.2",
     "@radix-ui/react-label": "^2.0.2",
     "@radix-ui/react-slot": "^1.0.2",
