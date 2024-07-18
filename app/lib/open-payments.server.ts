@@ -312,7 +312,7 @@ export async function finishPayment(
     .create(
       {
         url: url,
-        accessToken: continuation.access_token.value,
+        accessToken: continuation.continue.access_token.value,
       },
       {
         walletAddress: walletAddress.id,
@@ -328,7 +328,7 @@ export async function finishPayment(
 
   return {
     url: outgoingPayment.id,
-    accessToken: continuation.access_token.value,
+    accessToken: continuation.continue.access_token.value,
   };
 }
 
