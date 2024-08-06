@@ -322,7 +322,8 @@ export async function finishPayment(
         },
       }
     )
-    .catch(() => {
+    .catch((error) => {
+      console.log({error});
       throw new Error("Could not create outgoing payment.");
     });
 

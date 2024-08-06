@@ -65,3 +65,13 @@ export const formatAmount = (args: FormatAmountArgs): FormattedAmount => {
     symbol,
   };
 };
+
+export const objectToUrlParams = (obj: { [key: string]: number | string }) => {
+  const params = [];
+
+  for (const key in obj) {
+    params.push(`${encodeURIComponent(key)}=${encodeURIComponent(obj[key])}`);
+  }
+
+  return params.join("&");
+};

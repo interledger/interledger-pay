@@ -66,12 +66,12 @@ export default function Quote({
                     <Form method="POST" {...form.props}>
                       <Field
                         label="You send:"
-                        value={debitAmount}
+                        defaultValue={debitAmount}
                         variant="info"
                       ></Field>
                       <Field
                         label={`${receiverName} receives (approximately): `}
-                        value={receiveAmount}
+                        defaultValue={receiveAmount}
                         variant="info"
                       ></Field>
                       <div className="flex justify-center items-center gap-3">
