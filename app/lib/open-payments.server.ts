@@ -5,6 +5,7 @@ import {
   type WalletAddress,
   createAuthenticatedClient,
   isPendingGrant,
+  isFinalizedGrant,
 } from "@interledger/open-payments";
 import { createId } from "@paralleldrive/cuid2";
 import { randomUUID } from "crypto";
@@ -306,13 +307,17 @@ export async function finishPayment(
     }
   );
 
+  if (!isFinalizedGrant(continuation)) {
+    throw new Error('Expected finalized grant. Received non-finalized grant.')
+  }
+
   const url = new URL(walletAddress.id).origin;
 
   const outgoingPayment = await opClient.outgoingPayment
     .create(
       {
         url: url,
-        accessToken: continuation.continue.access_token.value,
+        accessToken: continuation.access_token.value,
       },
       {
         walletAddress: walletAddress.id,
