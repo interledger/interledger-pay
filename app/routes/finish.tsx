@@ -56,10 +56,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     if (quote === undefined) {
       throw new Error("Payment session expired.");
     }
-console.log({grant,
-  quote,
-  wallet: walletAddressInfo.walletAddress,
-  interactRef});
+
     const finishPaymentResponse = await finishPayment(
       grant,
       quote,

@@ -103,7 +103,7 @@ const DialPadKey = ({ label, id }: DialPadKeyProps) => {
         setAmountValue(`${amountValue.substring(0, amountValue.length - 1)}`);
       } else if (amountValue === "0" && id !== DialPadIds.Dot) {
         setAmountValue(
-          `${amountValue.substring(0, amountValue.length - 1)}${label}`
+          `${amountValue.substring(0, amountValue.length - 1)}${label}`,
         );
       } else if (
         (id === DialPadIds.Dot &&
@@ -120,7 +120,7 @@ const DialPadKey = ({ label, id }: DialPadKeyProps) => {
     <li
       className={cn(
         "cursor-pointer hover:text-green-1",
-        id === DialPadIds.Dot ? "pl-1" : ""
+        id === DialPadIds.Dot ? "pl-1" : "",
       )}
       tabIndex={0}
       id={id}

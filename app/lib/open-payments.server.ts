@@ -78,7 +78,7 @@ export async function fetchQuote(
     )
     .catch(() => {
       throw new Error(
-        `Could not create quote for receiver ${receiver.publicName}.`
+        `Could not create quote for receiver ${receiver.publicName}.`,
       );
     });
 
@@ -308,7 +308,7 @@ export async function finishPayment(
   );
 
   if (!isFinalizedGrant(continuation)) {
-    throw new Error('Expected finalized grant. Received non-finalized grant.')
+    throw new Error("Expected finalized grant. Received non-finalized grant.");
   }
 
   const url = new URL(walletAddress.id).origin;
@@ -328,13 +328,12 @@ export async function finishPayment(
       }
     )
     .catch((error) => {
-      console.log({error});
       throw new Error("Could not create outgoing payment.");
     });
 
   return {
     url: outgoingPayment.id,
-    accessToken: continuation.continue.access_token.value,
+    accessToken: continuation.access_token.value
   };
 }
 

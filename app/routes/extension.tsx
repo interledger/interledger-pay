@@ -7,10 +7,11 @@ import {
   redirect,
   type LoaderFunctionArgs,
 } from "@remix-run/node";
+import type {
+  MetaFunction} from "@remix-run/react";
 import {
   Form,
   Link,
-  MetaFunction,
   useActionData,
   useLoaderData,
   useNavigation,

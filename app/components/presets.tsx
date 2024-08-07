@@ -2,7 +2,8 @@ import { useEffect } from "react";
 import { cn } from "~/lib/cn";
 import { useDialPadContext } from "~/lib/context/dialpad";
 
-const presetPadKeyClasses = "cursor-pointer flex flex-wrap content-center justify-center items-center text-lg aspect-square rounded-full border border-gray-300 w-14"; 
+const presetPadKeyClasses =
+  "cursor-pointer flex flex-wrap content-center justify-center items-center text-lg aspect-square rounded-full border border-gray-300 w-14";
 
 type PresetPadKeyProps = {
   label: string;
@@ -14,10 +15,7 @@ const PresetPadKey = ({ label, id, currency }: PresetPadKeyProps) => {
 
   return (
     <li
-      className={cn(
-        presetPadKeyClasses,
-        "hover:bg-green-2"
-      )}
+      className={cn(presetPadKeyClasses, "hover:bg-green-2")}
       id={id}
       onClick={() => {
         const formattedNumber = Number(id || 0).toFixed(2);
@@ -34,10 +32,9 @@ PresetPadKey.displayName = "PresetPadKey";
 type PresetPadProps = {
   values: string[];
   currency: string;
-  onMore: () => void
+  onMore: () => void;
 };
 export const PresetPad = ({ values, currency, onMore }: PresetPadProps) => {
-
   return (
     <ul>
       <div className="flex justify-evenly">
@@ -53,7 +50,7 @@ export const PresetPad = ({ values, currency, onMore }: PresetPadProps) => {
           className={cn(
             presetPadKeyClasses,
             "rotate-90 pb-2.5",
-            "hover:bg-green-2"
+            "hover:bg-green-2",
           )}
           onClick={() => onMore()}
         >
