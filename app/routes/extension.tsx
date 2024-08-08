@@ -7,8 +7,7 @@ import {
   redirect,
   type LoaderFunctionArgs,
 } from "@remix-run/node";
-import type {
-  MetaFunction} from "@remix-run/react";
+import type { MetaFunction } from "@remix-run/react";
 import {
   Form,
   Link,
@@ -19,7 +18,6 @@ import {
 import { z } from "zod";
 import { AmountDisplay, DialPad } from "~/components/dialpad";
 import { PresetPad } from "~/components/presets";
-import { Header } from "~/components/header";
 import Quote from "~/components/quoteDialog";
 import { Button } from "~/components/ui/button";
 import { Field } from "~/components/ui/form/form";
@@ -28,7 +26,7 @@ import { useDialPadContext } from "~/lib/context/dialpad";
 import { fetchQuote, initializePayment } from "~/lib/open-payments.server";
 import { getValidWalletAddress } from "~/lib/validators.server";
 import { commitSession, destroySession, getSession } from "~/session";
-import { formatAmount, objectToUrlParams } from "~/utils/helpers";
+import { formatAmount, objectToUrlParams, predefinedPaymentValues } from "~/utils/helpers";
 import { useEffect, useState } from "react";
 import { Footer } from "~/components/footer";
 import { cn } from "~/lib/cn";
@@ -42,7 +40,6 @@ export const meta: MetaFunction = () => {
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
-  //   const walletAddressInfo = session.get("wallet-address");
 
   const params = new URL(request.url).searchParams;
   const receiver = params.get("receiver");
@@ -57,15 +54,16 @@ export async function loader({ request }: LoaderFunctionArgs) {
   let debitAmount = null;
 
   let isValidRequest = receiver !== undefined;
-  let walletAddressInfo;
+  let receiverWalletAddressInfo;
 
   try {
     if (receiver) {
       const formattedReceiver = String(receiver).replace("$", "https://");
-      walletAddressInfo = await getValidWalletAddress(formattedReceiver);
+      receiverWalletAddressInfo = await getValidWalletAddress(
+        formattedReceiver
+      );
     }
   } catch (error) {
-    console.log(error);
     isValidRequest = false;
   }
 
@@ -76,7 +74,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     assetScale,
   });
 
-  if (isQuote && isValidRequest && walletAddressInfo) {
+  if (isQuote && isValidRequest && receiverWalletAddressInfo) {
     const quote = session.get("quote");
 
     if (quote === undefined) {
@@ -84,9 +82,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
     }
 
     receiverName =
-      walletAddressInfo.publicName === undefined
+      receiverWalletAddressInfo.publicName === undefined
         ? "Recepient"
-        : walletAddressInfo.publicName;
+        : receiverWalletAddressInfo.publicName;
 
     receiveAmount = formatAmount({
       value: quote.receiveAmount.value,
@@ -102,7 +100,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
   }
 
   return json({
-    receiverWalletAddress: walletAddressInfo ? walletAddressInfo.id : undefined,
+    receiverWalletAddress: receiverWalletAddressInfo
+      ? receiverWalletAddressInfo.id
+      : undefined,
     amount: formattedAmount,
     currency: asset ? asset : "usd",
     note: note ? note : null,
@@ -123,6 +123,7 @@ const schema = z.object({
     .pipe(z.string().url({ message: "The input is not a wallet address." })),
   amount: z.coerce.number(),
   note: z.string().optional(),
+  action: z.string().optional(),
 });
 
 export default function Extension() {
@@ -164,7 +165,7 @@ export default function Extension() {
               <div className="flex flex-col gap-4">
                 <div className="flex justify-center mt-8">
                   <Button
-                    className="formattable-button"
+                    className="wmt-formattable-button"
                     aria-label="continue"
                     value="continue"
                     onClick={() => {
@@ -187,7 +188,7 @@ export default function Extension() {
               <AmountDisplay />
               <div className="mx-auto w-full max-w-sm my-6">
                 <PresetPad
-                  values={["1", "5", "10"]}
+                  values={predefinedPaymentValues}
                   currency={data.amount.symbol}
                   onMore={() => setDisplayDialPad(true)}
                 />
@@ -224,7 +225,7 @@ export default function Extension() {
                   />
                   <div className="flex justify-center">
                     <Button
-                      className="formattable-button"
+                      className="wmt-formattable-button disabled:pointer-events-auto disabled:cursor-progress"
                       aria-label="pay"
                       type="submit"
                       name="intent"
@@ -233,6 +234,11 @@ export default function Extension() {
                     >
                       {data.action || "Pay"}
                     </Button>
+                    <input
+                      type="hidden"
+                      {...conform.input(fields.action)}
+                      defaultValue={data.action || undefined}
+                    />
                   </div>
                 </div>
               </Form>
@@ -263,6 +269,7 @@ export default function Extension() {
 
 export async function action({ request }: ActionFunctionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
+  session.set("fromExtension", true);
 
   let walletAddress;
   let receiver = {} as WalletAddress;
