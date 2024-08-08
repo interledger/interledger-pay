@@ -4,8 +4,8 @@ import {
   type Quote,
   type WalletAddress,
   createAuthenticatedClient,
-  isPendingGrant,
   isFinalizedGrant,
+  isPendingGrant,
 } from "@interledger/open-payments";
 import { createId } from "@paralleldrive/cuid2";
 import { randomUUID } from "crypto";
@@ -333,7 +333,7 @@ export async function finishPayment(
 
   return {
     url: outgoingPayment.id,
-    accessToken: continuation.access_token.value
+    accessToken: continuation.access_token.value,
   };
 }
 
