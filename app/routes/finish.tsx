@@ -15,6 +15,7 @@ import {
   checkOutgoingPayment,
 } from "~/lib/open-payments.server";
 import { destroySession, getSession } from "~/session";
+import { objectToUrlParams } from "~/utils/helpers";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const searchParams = new URL(request.url).searchParams;
@@ -52,6 +53,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const grant = session.get("payment-grant");
     const walletAddressInfo = session.get("wallet-address");
     const isRequestPayment = session.get("isRequestPayment");
+    const isFromExtension = session.get("fromExtension");
 
     if (quote === undefined) {
       throw new Error("Payment session expired.");
@@ -72,10 +74,16 @@ export async function loader({ request }: LoaderFunctionArgs) {
       isRequestPayment
     );
 
-    return defer({ checkOutgoingPayment: checkOutgoingPaymentPromise });
+    return defer({
+      checkOutgoingPayment: checkOutgoingPaymentPromise,
+      isFromExtension,
+    });
   }
 
-  return defer({ checkOutgoingPayment: Promise.resolve(paymentResult) });
+  return defer({
+    checkOutgoingPayment: Promise.resolve(paymentResult),
+    isFromExtension: false,
+  });
 }
 
 export default function Finish() {
@@ -93,7 +101,7 @@ export default function Finish() {
 
   return (
     <>
-      <Header />
+      {!data.isFromExtension && <Header />}
       <div className="flex justify-center items-center flex-col h-full px-5 gap-8">
         <Loader type="large" />
         <Suspense fallback={<Fallback />}>
@@ -111,8 +119,13 @@ export default function Finish() {
                       {outgoingPaymentCheck.message}
                     </div>
                     <Form method="POST" {...form.props}>
-                      <Button variant="outline" size="sm" type="submit">
-                        Home
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="wmt-formattable-button"
+                        type="submit"
+                      >
+                        {data.isFromExtension ? "Close" : "Home"}
                       </Button>
                     </Form>
                   </>
@@ -130,8 +143,13 @@ export default function Finish() {
                       {outgoingPaymentCheck.message}
                     </div>
                     <Form method="POST" {...form.props}>
-                      <Button variant="outline" size="sm" type="submit">
-                        Home
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="wmt-formattable-button"
+                        type="submit"
+                      >
+                        {data.isFromExtension ? "Close" : "Home"}
                       </Button>
                     </Form>
                   </>
@@ -147,8 +165,15 @@ export default function Finish() {
 
 export async function action({ request }: LoaderFunctionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
+  const isFromExtension = session.get("fromExtension");
+  const submission = session.get("submission");
+  if (submission?.value?.walletAddress) {
+    delete submission.value.walletAddress;
+  }
+  const params = submission?.value ? objectToUrlParams(submission?.value) : "";
+  const path = isFromExtension ? `/extension?${params}` : `/`;
 
-  return redirect("/", {
+  return redirect(path, {
     headers: { "Set-Cookie": await destroySession(session) },
   });
 }

@@ -1,5 +1,7 @@
 import { type Amount } from "~/lib/open-payments.server";
 
+export const predefinedPaymentValues = ["1", "5", "10"];
+
 export const getCurrencySymbol = (assetCode: string): string => {
   return new Intl.NumberFormat("en-US", {
     currency: assetCode,
@@ -64,4 +66,14 @@ export const formatAmount = (args: FormatAmountArgs): FormattedAmount => {
     amountWithCurrency,
     symbol,
   };
+};
+
+export const objectToUrlParams = (obj: { [key: string]: number | string }) => {
+  const params = [];
+
+  for (const key in obj) {
+    params.push(`${encodeURIComponent(key)}=${encodeURIComponent(obj[key])}`);
+  }
+
+  return params.join("&");
 };

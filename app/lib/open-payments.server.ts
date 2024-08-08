@@ -78,7 +78,7 @@ export async function fetchQuote(
     )
     .catch(() => {
       throw new Error(
-        `Could not create quote for receiver ${receiver.publicName}.`
+        `Could not create quote for receiver ${receiver.publicName}.`,
       );
     });
 
@@ -327,7 +327,7 @@ export async function finishPayment(
         },
       }
     )
-    .catch(() => {
+    .catch((error) => {
       throw new Error("Could not create outgoing payment.");
     });
 

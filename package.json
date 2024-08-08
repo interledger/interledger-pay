@@ -12,9 +12,9 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@conform-to/dom": "0.9.1",
-    "@conform-to/react": "^0.9.1",
-    "@conform-to/zod": "^0.9.1",
+    "@conform-to/dom": "0.9.2",
+    "@conform-to/react": "^0.9.2",
+    "@conform-to/zod": "^0.9.2",
     "@headlessui/react": "^1.7.18",
     "@interledger/open-payments": "6.13.1",
     "@paralleldrive/cuid2": "^2.2.2",
@@ -41,6 +41,7 @@
     "@flydotio/dockerfile": "^0.4.11",
     "@remix-run/dev": "^2.8.1",
     "@remix-run/eslint-config": "^2.8.1",
+    "@types/koa": "^2.15.0",
     "@types/nprogress": "^0.2.3",
     "@types/react": "^18.2.65",
     "@types/react-dom": "^18.2.21",
