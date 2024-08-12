@@ -26,9 +26,14 @@ import { useDialPadContext } from "~/lib/context/dialpad";
 import { fetchQuote, initializePayment } from "~/lib/open-payments.server";
 import { getValidWalletAddress } from "~/lib/validators.server";
 import { commitSession, destroySession, getSession } from "~/session";
-import { formatAmount, objectToUrlParams, predefinedPaymentValues } from "~/utils/helpers";
+import {
+  isMessageEvent,
+  formatAmount,
+  objectToUrlParams,
+  predefinedPaymentValues,
+  sanitizeAndAddCss,
+} from "~/utils/helpers";
 import { useEffect, useState } from "react";
-import { Footer } from "~/components/footer";
 import { cn } from "~/lib/cn";
 
 export const meta: MetaFunction = () => {
@@ -126,6 +131,21 @@ const schema = z.object({
   action: z.string().optional(),
 });
 
+const addCssFromMessage = (e: Event) => {
+  if (!isMessageEvent(e)) {
+    throw new Error("not a message event");
+  }
+
+  // check if it's received in expected format
+  if (e.data?.configCss) {
+    const existingStyle = document.getElementById("wm_tools_styles");
+    if (existingStyle) {
+      existingStyle.remove();
+    }
+    sanitizeAndAddCss(e.data.configCss);
+  }
+};
+
 export default function Extension() {
   const data = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
@@ -150,6 +170,13 @@ export default function Extension() {
     setAmountValue(String(formattedNumber));
   }, [data.amount]);
 
+  useEffect(() => {
+    window.addEventListener("message", addCssFromMessage);
+    return () => {
+      window.removeEventListener("message", addCssFromMessage);
+    };
+  }, []);
+
   return (
     <>
       <div className="flex flex-col justify-center gap-10">
@@ -157,12 +184,12 @@ export default function Extension() {
           <>
             <div
               className={cn(
-                "mx-auto w-full max-w-sm flex flex-col justify-center items-center",
+                "mx-auto w-full max-w-sm flex flex-col justify-center items-center text-muted",
                 displayDialPad ? "" : "hidden"
               )}
             >
               <DialPad />
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
                 <div className="flex justify-center mt-8">
                   <Button
                     className="wmt-formattable-button"
@@ -194,7 +221,7 @@ export default function Extension() {
                 />
               </div>
               <Form method="POST" {...form.props}>
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-2">
                   <Field
                     type="text"
                     label="Pay from"
@@ -242,7 +269,6 @@ export default function Extension() {
                   </div>
                 </div>
               </Form>
-              <Footer />
             </div>
             <Quote
               receiverName={data.receiverName}

@@ -144,7 +144,7 @@ export const AmountDisplay = (args: AmountDisplayProps) => {
     : `${getCurrencySymbol(assetCode)} ${amountValue}`;
 
   return (
-    <div className="w-full whitespace-nowrap flex items-center justify-center text-5xl text-green-1">
+    <div className="amount-display w-full whitespace-nowrap flex items-center justify-center text-5xl text-green-1">
       {value}
     </div>
   );

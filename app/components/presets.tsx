@@ -11,11 +11,11 @@ type PresetPadKeyProps = {
   id: string;
 };
 const PresetPadKey = ({ label, id, currency }: PresetPadKeyProps) => {
-  const { amountValue, setAmountValue } = useDialPadContext();
+  const { setAmountValue } = useDialPadContext();
 
   return (
     <li
-      className={cn(presetPadKeyClasses, "hover:bg-green-2")}
+      className={presetPadKeyClasses}
       id={id}
       onClick={() => {
         const formattedNumber = Number(id || 0).toFixed(2);
@@ -37,7 +37,7 @@ type PresetPadProps = {
 export const PresetPad = ({ values, currency, onMore }: PresetPadProps) => {
   return (
     <ul>
-      <div className="flex justify-evenly">
+      <div className="preset-pad flex justify-evenly text-muted">
         {values.map((value) => (
           <PresetPadKey
             label={value}
@@ -47,11 +47,7 @@ export const PresetPad = ({ values, currency, onMore }: PresetPadProps) => {
           />
         ))}
         <li
-          className={cn(
-            presetPadKeyClasses,
-            "rotate-90 pb-2.5",
-            "hover:bg-green-2",
-          )}
+          className={cn(presetPadKeyClasses, "rotate-90 pb-2.5")}
           onClick={() => onMore()}
         >
           ...
