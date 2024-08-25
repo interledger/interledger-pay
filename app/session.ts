@@ -5,7 +5,9 @@ const { getSession, commitSession, destroySession } =
     cookie: {
       name: "ilpay-session",
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production" ? true : false,
+      // secure: process.env.NODE_ENV === "production" ? true : false,
+      secure: true,
+      sameSite: "none",
       secrets: [
         process.env.SESSION_COOKIE_SECRET_KEY || "supersecretilpaystring",
       ],

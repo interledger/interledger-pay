@@ -45,6 +45,7 @@ export const meta: MetaFunction = () => {
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
+  const submission = session.get("submission");
 
   const params = new URL(request.url).searchParams;
   const receiver = params.get("receiver");
@@ -63,12 +64,16 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   try {
     if (receiver) {
-      const formattedReceiver = String(receiver).replace("$", "https://");
+      const formattedReceiver = decodeURI(String(receiver)).replace(
+        "$",
+        "https://"
+      );
       receiverWalletAddressInfo = await getValidWalletAddress(
         formattedReceiver
       );
     }
   } catch (error) {
+    console.log(error)
     isValidRequest = false;
   }
 
@@ -117,6 +122,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     debitAmount: debitAmount ? debitAmount.amountWithCurrency : null,
     receiverName: receiverName,
     isQuote: isQuote,
+    submission,
   } as const);
 }
 
@@ -155,13 +161,13 @@ export default function Extension() {
   const { amountValue, setAmountValue, setAssetCode } = useDialPadContext();
   const { setOpen } = useDialogContext();
   const [displayDialPad, setDisplayDialPad] = useState(false);
+  const [wmToolsData, setWmToolsData] = useState();
   const [form, fields] = useForm({
     id: "extension-pay-form",
     constraint: getFieldsetConstraint(schema),
     lastSubmission: actionData,
     shouldRevalidate: "onSubmit",
   });
-
   data.isQuote ? setOpen(true) : setOpen(false);
 
   useEffect(() => {
@@ -171,11 +177,32 @@ export default function Extension() {
   }, [data.amount]);
 
   useEffect(() => {
+    // if (wmToolsDataWindow) {
+    //   console.log(wmToolsDataWindow);
+    //   setWmToolsData(wmToolsDataWindow);
+    // }
+
     window.addEventListener("message", addCssFromMessage);
     return () => {
       window.removeEventListener("message", addCssFromMessage);
     };
   }, []);
+
+  // useEffect(() => {
+  //   data.isQuote ? setOpen(true) : setOpen(false);
+  //   if (data.isQuote) {
+  //     console.log("here");
+  //     window.open(
+  //       `/extension?quote=true&${objectToUrlParams(data.submission.value)}`,
+  //       "_blank"
+  //     );
+  //   }
+  // }, [data.isQuote]);
+
+  //   if (typeof window ! == 'undefined') {
+  //   const wmToolsDataWindow = (window as any).parent;
+  //   console.log(wmToolsDataWindow._wm_tools_data)
+  // }
 
   return (
     <>
@@ -188,7 +215,7 @@ export default function Extension() {
                 displayDialPad ? "" : "hidden"
               )}
             >
-              <DialPad />
+              {displayDialPad && <DialPad />}
               <div className="flex flex-col gap-2">
                 <div className="flex justify-center mt-8">
                   <Button
@@ -227,7 +254,6 @@ export default function Extension() {
                     label="Pay from"
                     placeholder="Enter wallet address"
                     {...conform.input(fields.walletAddress)}
-                    autoFocus={true}
                   />
                   <Field
                     type="text"
@@ -358,7 +384,7 @@ export async function action({ request }: ActionFunctionArgs) {
       walletAddress: walletAddress.walletAddress.id,
       quote: quote,
     });
-
+    console.log({ grant });
     session.set("payment-grant", grant);
     return redirect(grant.interact.redirect, {
       headers: { "Set-Cookie": await commitSession(session) },
