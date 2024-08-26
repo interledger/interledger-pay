@@ -26,6 +26,7 @@ interface FieldProps extends InputHTMLAttributes<HTMLInputElement> {
   className?: string;
   variant?: "default" | "info" | "highlight";
   trailing?: ReactNode;
+  compact?: boolean;
 }
 
 export const Field = ({
@@ -34,6 +35,7 @@ export const Field = ({
   className,
   variant,
   trailing,
+  compact,
   ...props
 }: FieldProps) => {
   const fallbackId = useId();
@@ -53,7 +55,7 @@ export const Field = ({
         trailing={trailing}
         {...props}
       />
-      <div className="pb-3">
+      <div className={cx("pb-3", compact && !errorId && 'hidden')}>
         {errorId ? <ErrorList id={errorId} errors={errors} /> : null}
       </div>
     </div>

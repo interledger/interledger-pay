@@ -161,7 +161,7 @@ export default function Extension() {
   const { amountValue, setAmountValue, setAssetCode } = useDialPadContext();
   const { setOpen } = useDialogContext();
   const [displayDialPad, setDisplayDialPad] = useState(false);
-  const [wmToolsData, setWmToolsData] = useState();
+  const [displayPesets, setDisplayPresets] = useState(false);
   const [form, fields] = useForm({
     id: "extension-pay-form",
     constraint: getFieldsetConstraint(schema),
@@ -177,32 +177,11 @@ export default function Extension() {
   }, [data.amount]);
 
   useEffect(() => {
-    // if (wmToolsDataWindow) {
-    //   console.log(wmToolsDataWindow);
-    //   setWmToolsData(wmToolsDataWindow);
-    // }
-
     window.addEventListener("message", addCssFromMessage);
     return () => {
       window.removeEventListener("message", addCssFromMessage);
     };
   }, []);
-
-  // useEffect(() => {
-  //   data.isQuote ? setOpen(true) : setOpen(false);
-  //   if (data.isQuote) {
-  //     console.log("here");
-  //     window.open(
-  //       `/extension?quote=true&${objectToUrlParams(data.submission.value)}`,
-  //       "_blank"
-  //     );
-  //   }
-  // }, [data.isQuote]);
-
-  //   if (typeof window ! == 'undefined') {
-  //   const wmToolsDataWindow = (window as any).parent;
-  //   console.log(wmToolsDataWindow._wm_tools_data)
-  // }
 
   return (
     <>
@@ -239,8 +218,10 @@ export default function Extension() {
                 displayDialPad ? "hidden" : ""
               )}
             >
-              <AmountDisplay />
-              <div className="mx-auto w-full max-w-sm my-6">
+              <div onClick={() => setDisplayPresets(!displayPesets)}>
+                <AmountDisplay />
+              </div>
+              <div className={cn("mx-auto w-full max-w-sm my-6", !displayPesets && 'hidden')}>
                 <PresetPad
                   values={predefinedPaymentValues}
                   currency={data.amount.symbol}
@@ -253,6 +234,7 @@ export default function Extension() {
                     type="text"
                     label="Pay from"
                     placeholder="Enter wallet address"
+                    compact
                     {...conform.input(fields.walletAddress)}
                   />
                   <Field
@@ -261,6 +243,7 @@ export default function Extension() {
                     variant="highlight"
                     value={data.receiverWalletAddress}
                     readOnly
+                    compact
                     {...conform.input(fields.receiver)}
                     errors={fields.receiver.errors}
                   />
@@ -268,6 +251,7 @@ export default function Extension() {
                     label="Payment note"
                     defaultValue={data.note || ""}
                     placeholder="Note"
+                    compact
                     {...conform.input(fields.note)}
                     errors={fields.note.errors}
                   />
@@ -276,7 +260,7 @@ export default function Extension() {
                     {...conform.input(fields.amount)}
                     defaultValue={Number(amountValue || 0)}
                   />
-                  <div className="flex justify-center">
+                  <div className="flex justify-center mt-2">
                     <Button
                       className="wmt-formattable-button disabled:pointer-events-auto disabled:cursor-progress"
                       aria-label="pay"
