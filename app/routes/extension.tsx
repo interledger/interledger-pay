@@ -35,6 +35,7 @@ import {
 } from "~/utils/helpers";
 import { useEffect, useState } from "react";
 import { cn } from "~/lib/cn";
+import { decompressCss } from "~/lib/tdb_decompress_css";
 
 export const meta: MetaFunction = () => {
   return [
@@ -46,7 +47,7 @@ export const meta: MetaFunction = () => {
 export async function loader({ request }: LoaderFunctionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
   const submission = session.get("submission");
-  console.log(new URL(request.url))
+  console.log(new URL(request.url));
 
   const params = new URL(request.url).searchParams;
   const receiver = params.get("receiver");
@@ -54,6 +55,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const asset = params.get("asset");
   const note = params.get("note");
   const action = params.get("action");
+  let css = "";
+  if (params.get("css")) {
+    css = await decompressCss(params.get("css") || "");
+  }
 
   const isQuote = params.get("quote") || false;
   let receiverName = "";
@@ -74,7 +79,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
       );
     }
   } catch (error) {
-    console.log(error)
+    console.log(error);
     isValidRequest = false;
   }
 
@@ -124,6 +129,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     receiverName: receiverName,
     isQuote: isQuote,
     submission,
+    css,
   } as const);
 }
 
@@ -138,19 +144,12 @@ const schema = z.object({
   action: z.string().optional(),
 });
 
-const addCssFromMessage = (e: Event) => {
-  if (!isMessageEvent(e)) {
-    throw new Error("not a message event");
+const addCss = (css: string) => {
+  const existingStyle = document.getElementById("wm_tools_styles");
+  if (existingStyle) {
+    existingStyle.remove();
   }
-
-  // check if it's received in expected format
-  if (e.data?.configCss) {
-    const existingStyle = document.getElementById("wm_tools_styles");
-    if (existingStyle) {
-      existingStyle.remove();
-    }
-    sanitizeAndAddCss(e.data.configCss);
-  }
+  sanitizeAndAddCss(css);
 };
 
 export default function Extension() {
@@ -178,11 +177,8 @@ export default function Extension() {
   }, [data.amount]);
 
   useEffect(() => {
-    window.addEventListener("message", addCssFromMessage);
-    return () => {
-      window.removeEventListener("message", addCssFromMessage);
-    };
-  }, []);
+    addCss(data?.css || "");
+  }, [data.css]);
 
   return (
     <>
@@ -222,7 +218,12 @@ export default function Extension() {
               <div onClick={() => setDisplayPresets(!displayPesets)}>
                 <AmountDisplay />
               </div>
-              <div className={cn("mx-auto w-full max-w-sm my-6", !displayPesets && 'hidden')}>
+              <div
+                className={cn(
+                  "mx-auto w-full max-w-sm my-6",
+                  !displayPesets && "hidden"
+                )}
+              >
                 <PresetPad
                   values={predefinedPaymentValues}
                   currency={data.amount.symbol}
