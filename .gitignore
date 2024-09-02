@@ -5,6 +5,4 @@ build
 /public/build
 /.vscode
 /.cert
-nginx.conf
-docker-compose.dev.yml
-Dockerfile.dev
+/.exclude
