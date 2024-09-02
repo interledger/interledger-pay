@@ -35,7 +35,11 @@ export default function Quote({
 
   return (
     <Transition.Root show={open} as={Fragment}>
-      <Dialog as="div" className="relative z-10" onClose={() => setOpen(false)}>
+      <Dialog
+        as="div"
+        className="bg-foreground text-primary relative z-10"
+        onClose={() => setOpen(false)}
+      >
         <Transition.Child
           as={Fragment}
           enter="transition-opacity duration-500"
@@ -66,12 +70,12 @@ export default function Quote({
                     <Form method="POST" {...form.props}>
                       <Field
                         label="You send:"
-                        value={debitAmount}
+                        defaultValue={debitAmount}
                         variant="info"
                       ></Field>
                       <Field
                         label={`${receiverName} receives (approximately): `}
-                        value={receiveAmount}
+                        defaultValue={receiveAmount}
                         variant="info"
                       ></Field>
                       <div className="flex justify-center items-center gap-3">

@@ -9,6 +9,7 @@ import {
   Scripts,
   ScrollRestoration,
   isRouteErrorResponse,
+  useLocation,
   useNavigation,
   useRouteError,
 } from "@remix-run/react";
@@ -21,6 +22,7 @@ import { Button } from "./components/ui/button";
 import { FinishError } from "./components/icons";
 import { DialogProvider } from "./components/providers/dialogProvider";
 import { BackdropProvider } from "./components/providers/backdropProvider";
+import { cn } from "./lib/cn";
 
 export const links: LinksFunction = () => [
   {
@@ -35,6 +37,10 @@ export const links: LinksFunction = () => [
 
 export default function App() {
   const navigation = useNavigation();
+  const location = useLocation();
+
+  // detect if it's loaded in wm tools
+  const isEmbeded = location.pathname.indexOf("extension") !== -1;
 
   useEffect(() => {
     if (navigation.state === "loading" || navigation.state === "submitting") {
@@ -45,7 +51,10 @@ export default function App() {
   }, [navigation.state]);
 
   return (
-    <html lang="en" className="h-full overflow-x-hidden">
+    <html
+      lang="en"
+      className={cn("h-full overflow-x-hidden", isEmbeded && "overflow-hidden")}
+    >
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -53,8 +62,18 @@ export default function App() {
         <Links />
       </head>
 
-      <body className="bg-foreground text-primary flex justify-center items-center h-screen">
-        <div className="w-full h-full p-20">
+      <body
+        className={cn(
+          isEmbeded
+            ? "ilpay_body bg-transparent flex justify-center items-center h-screen"
+            : "bg-foreground text-primary flex justify-center items-center h-screen"
+        )}
+      >
+        <div
+          className={cn(
+            isEmbeded ? "w-full h-full pt-4" : "w-full h-full p-20"
+          )}
+        >
           <BackdropProvider>
             <DialogProvider>
               <DialPadProvider>

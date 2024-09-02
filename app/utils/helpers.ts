@@ -1,5 +1,7 @@
 import { type Amount } from "~/lib/open-payments.server";
 
+export const predefinedPaymentValues = ["1", "5", "10"];
+
 export const getCurrencySymbol = (assetCode: string): string => {
   return new Intl.NumberFormat("en-US", {
     currency: assetCode,
@@ -65,3 +67,43 @@ export const formatAmount = (args: FormatAmountArgs): FormattedAmount => {
     symbol,
   };
 };
+
+export const objectToUrlParams = (obj: { [key: string]: number | string }) => {
+  const params = [];
+
+  for (const key in obj) {
+    params.push(`${encodeURIComponent(key)}=${encodeURIComponent(obj[key])}`);
+  }
+
+  return params.join("&");
+};
+
+// ensure received css is non corupted, valid css
+export const sanitizeAndAddCss = (css: string) => {
+  const iframe = document.createElement("iframe");
+  iframe.style.display = "none";
+  iframe.style.width = "10px";
+  iframe.style.height = "10px";
+  document.body.appendChild(iframe);
+  if (iframe && iframe.contentDocument) {
+    const style = iframe.contentDocument.createElement("style");
+    style.innerHTML = css;
+    iframe.contentDocument.head.appendChild(style);
+    const sheet = style.sheet as CSSStyleSheet;
+    const result = Array.from(sheet.cssRules)
+      .map((rule) => rule.cssText || "")
+      .join("\n");
+    iframe.remove();
+
+    const sanitizedCss =  document.createElement('style');
+    sanitizedCss.setAttribute("id", "wm_tools_styles");
+
+    sanitizedCss.innerHTML = result || "";
+    document.head.appendChild(sanitizedCss);
+  }
+};
+
+export const isMessageEvent = (event: Event): event is MessageEvent => {
+  return "data" in event;
+};
+
