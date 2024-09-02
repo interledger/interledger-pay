@@ -46,6 +46,7 @@ export const meta: MetaFunction = () => {
 export async function loader({ request }: LoaderFunctionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
   const submission = session.get("submission");
+  console.log(new URL(request.url))
 
   const params = new URL(request.url).searchParams;
   const receiver = params.get("receiver");
