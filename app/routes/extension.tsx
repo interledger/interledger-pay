@@ -27,7 +27,6 @@ import { fetchQuote, initializePayment } from "~/lib/open-payments.server";
 import { getValidWalletAddress } from "~/lib/validators.server";
 import { commitSession, destroySession, getSession } from "~/session";
 import {
-  isMessageEvent,
   formatAmount,
   objectToUrlParams,
   predefinedPaymentValues,
@@ -47,7 +46,6 @@ export const meta: MetaFunction = () => {
 export async function loader({ request }: LoaderFunctionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
   const submission = session.get("submission");
-  console.log(new URL(request.url));
 
   const params = new URL(request.url).searchParams;
   const receiver = params.get("receiver");
@@ -83,7 +81,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     isValidRequest = false;
   }
 
-  const assetScale = 2;
+  const assetScale = 2; // TODO: determine scale by asset
   const formattedAmount = formatAmount({
     value: amount ? String(Number(amount) * Math.pow(10, assetScale)) : "0",
     assetCode: asset || "usd",
@@ -129,6 +127,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     receiverName: receiverName,
     isQuote: isQuote,
     submission,
+    assetScale,
     css,
   } as const);
 }
@@ -161,7 +160,7 @@ export default function Extension() {
   const { amountValue, setAmountValue, setAssetCode } = useDialPadContext();
   const { setOpen } = useDialogContext();
   const [displayDialPad, setDisplayDialPad] = useState(false);
-  const [displayPesets, setDisplayPresets] = useState(false);
+  const [displayPresets, setDisplayPresets] = useState(true);
   const [form, fields] = useForm({
     id: "extension-pay-form",
     constraint: getFieldsetConstraint(schema),
@@ -172,7 +171,7 @@ export default function Extension() {
 
   useEffect(() => {
     setAssetCode(data.currency);
-    const formattedNumber = data.amount.amount.toFixed(2);
+    const formattedNumber = data.amount.amount.toFixed(data.assetScale);
     setAmountValue(String(formattedNumber));
   }, [data.amount]);
 
@@ -199,7 +198,9 @@ export default function Extension() {
                     aria-label="continue"
                     value="continue"
                     onClick={() => {
-                      const formattedNumber = Number(amountValue).toFixed(2);
+                      const formattedNumber = Number(amountValue).toFixed(
+                        data.assetScale
+                      );
                       setAmountValue(String(formattedNumber));
                       setDisplayDialPad(false);
                     }}
@@ -215,13 +216,13 @@ export default function Extension() {
                 displayDialPad ? "hidden" : ""
               )}
             >
-              <div onClick={() => setDisplayPresets(!displayPesets)}>
+              <div onClick={() => setDisplayPresets(!displayPresets)}>
                 <AmountDisplay />
               </div>
               <div
                 className={cn(
                   "mx-auto w-full max-w-sm my-6",
-                  !displayPesets && "hidden"
+                  !displayPresets && "hidden"
                 )}
               >
                 <PresetPad
@@ -370,7 +371,7 @@ export async function action({ request }: ActionFunctionArgs) {
       walletAddress: walletAddress.walletAddress.id,
       quote: quote,
     });
-    console.log({ grant });
+
     session.set("payment-grant", grant);
     return redirect(grant.interact.redirect, {
       headers: { "Set-Cookie": await commitSession(session) },

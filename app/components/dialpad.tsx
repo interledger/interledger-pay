@@ -101,6 +101,10 @@ const DialPadKey = ({ label, id }: DialPadKeyProps) => {
     if (Object.values<string>(DialPadIds).includes(id)) {
       if (id === DialPadIds.Backspace) {
         setAmountValue(`${amountValue.substring(0, amountValue.length - 1)}`);
+      } else if (amountValue === "0.00" && id !== DialPadIds.Dot) {
+        setAmountValue(
+          `${amountValue.substring(0, amountValue.length - 4)}${label}`,
+        );
       } else if (amountValue === "0" && id !== DialPadIds.Dot) {
         setAmountValue(
           `${amountValue.substring(0, amountValue.length - 1)}${label}`,
