@@ -103,7 +103,3 @@ export const sanitizeAndAddCss = (css: string) => {
   }
 };
 
-export const isMessageEvent = (event: Event): event is MessageEvent => {
-  return "data" in event;
-};
-
