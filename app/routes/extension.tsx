@@ -160,7 +160,7 @@ export default function Extension() {
   const { amountValue, setAmountValue, setAssetCode } = useDialPadContext();
   const { setOpen } = useDialogContext();
   const [displayDialPad, setDisplayDialPad] = useState(false);
-  const [displayPesets, setDisplayPresets] = useState(true);
+  const [displayPresets, setDisplayPresets] = useState(true);
   const [form, fields] = useForm({
     id: "extension-pay-form",
     constraint: getFieldsetConstraint(schema),
@@ -198,7 +198,9 @@ export default function Extension() {
                     aria-label="continue"
                     value="continue"
                     onClick={() => {
-                      const formattedNumber = Number(amountValue).toFixed(data.assetScale);
+                      const formattedNumber = Number(amountValue).toFixed(
+                        data.assetScale
+                      );
                       setAmountValue(String(formattedNumber));
                       setDisplayDialPad(false);
                     }}
@@ -214,13 +216,13 @@ export default function Extension() {
                 displayDialPad ? "hidden" : ""
               )}
             >
-              <div onClick={() => setDisplayPresets(!displayPesets)}>
+              <div onClick={() => setDisplayPresets(!displayPresets)}>
                 <AmountDisplay />
               </div>
               <div
                 className={cn(
                   "mx-auto w-full max-w-sm my-6",
-                  !displayPesets && "hidden"
+                  !displayPresets && "hidden"
                 )}
               >
                 <PresetPad
