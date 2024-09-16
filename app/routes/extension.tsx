@@ -53,9 +53,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const asset = params.get("asset");
   const note = params.get("note");
   const action = params.get("action");
+  const paramCss = params.get("css");
+
   let css = "";
-  if (params.get("css")) {
-    css = await decompressCss(params.get("css") || "");
+  if (paramCss) {
+    css = await decompressCss(paramCss);
   }
 
   const isQuote = params.get("quote") || false;
@@ -176,7 +178,9 @@ export default function Extension() {
   }, [data.amount]);
 
   useEffect(() => {
-    addCss(data?.css || "");
+    if (data.css) {
+      addCss(data.css);
+    }
   }, [data.css]);
 
   return (
