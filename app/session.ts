@@ -7,6 +7,7 @@ const { getSession, commitSession, destroySession } =
       httpOnly: true,
       secure: process.env.NODE_ENV === "production" ? true : false,
       sameSite: "none",
+      partitioned: true,
       secrets: [
         process.env.SESSION_COOKIE_SECRET_KEY || "supersecretilpaystring",
       ],
