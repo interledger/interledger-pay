@@ -93,6 +93,14 @@ export default function App() {
 export function ErrorBoundary() {
   const error = useRouteError();
 
+  // detect if page loaded in wm tools
+  const location = useLocation();
+  const isEmbeded = location.pathname.indexOf("extension") !== -1;
+  // remove quote=true from params if exists
+  const urlParams = location.search ? location.search.replace('quote=true&', '') : undefined;
+  const onErrorLink = isEmbeded ? `/extension${urlParams}` : '/';
+  const onErrorLabel = isEmbeded ? 'Try again' : 'Go to homepage';
+
   const ErrorPage = ({ children }: { children: ReactNode }) => {
     return (
       <html lang="en" className="h-full overflow-x-hidden">
@@ -127,9 +135,9 @@ export function ErrorBoundary() {
           <div className="text-destructive sm:text-md font-medium">
             {error.statusText}
           </div>
-          <Link to="/">
+          <Link to={onErrorLink}>
             <Button variant="outline" size="sm">
-              Go to homepage
+              {onErrorLabel}
             </Button>
           </Link>
         </div>
@@ -152,9 +160,9 @@ export function ErrorBoundary() {
         <div className="text-destructive sm:text-md font-medium">
           Cause: {errorMessage}
         </div>
-        <Link to="/">
+        <Link to={onErrorLink}>
           <Button variant="outline" size="sm">
-            Go to homepage
+            {onErrorLabel}
           </Button>
         </Link>
       </div>

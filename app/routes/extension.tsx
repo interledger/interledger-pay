@@ -51,9 +51,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const receiver = params.get("receiver");
   const amount = params.get("amount");
   const asset = params.get("asset");
-  const note = params.get("note");
   const action = params.get("action");
   const paramCss = params.get("css");
+  let note = params.get("note");
+  note = note === "undefined" ? null : note;
 
   let css = "";
   if (paramCss) {
@@ -121,8 +122,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
       : undefined,
     amount: formattedAmount,
     currency: asset ? asset : "usd",
-    note: note ? note : null,
-    action: action ? action : null,
+    note: note ? note : undefined,
+    action: action ? action : undefined,
     isValidRequest: isValidRequest,
     receiveAmount: receiveAmount ? receiveAmount.amountWithCurrency : null,
     debitAmount: debitAmount ? debitAmount.amountWithCurrency : null,
@@ -130,6 +131,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     isQuote: isQuote,
     submission,
     assetScale,
+    encodedCss: paramCss ? paramCss : undefined,
     css,
   } as const);
 }
@@ -140,9 +142,12 @@ const schema = z.object({
     .string()
     .transform((val) => val.replace("$", "https://"))
     .pipe(z.string().url({ message: "The input is not a wallet address." })),
-  amount: z.coerce.number(),
+  amount: z.coerce
+    .number()
+    .positive({ message: "The amount has to be a positive number." }),
   note: z.string().optional(),
   action: z.string().optional(),
+  css: z.string().optional(),
 });
 
 const addCss = (css: string) => {
@@ -243,6 +248,7 @@ export default function Extension() {
                     placeholder="Enter wallet address"
                     compact
                     {...conform.input(fields.walletAddress)}
+                    errors={fields.walletAddress.errors}
                   />
                   <Field
                     type="text"
@@ -269,19 +275,27 @@ export default function Extension() {
                   />
                   <div className="flex justify-center mt-2">
                     <Button
-                      className="wmt-formattable-button disabled:pointer-events-auto disabled:cursor-progress"
+                      className={cn(
+                        "wmt-formattable-button disabled:pointer-events-auto",
+                        isSubmitting && "disabled:cursor-progress" 
+                      )}
                       aria-label="pay"
                       type="submit"
                       name="intent"
                       value="pay"
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || Number(amountValue) === 0}
                     >
                       {data.action || "Pay"}
                     </Button>
                     <input
                       type="hidden"
                       {...conform.input(fields.action)}
-                      defaultValue={data.action || undefined}
+                      defaultValue={data.action}
+                    />
+                    <input
+                      type="hidden"
+                      {...conform.input(fields.css)}
+                      defaultValue={data.encodedCss}
                     />
                   </div>
                 </div>
