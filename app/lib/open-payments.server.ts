@@ -66,7 +66,7 @@ export async function fetchQuote(
   const quote = await opClient.quote
     .create(
       {
-        url: new URL(walletAddress.id).origin,
+        url: walletAddress.resourceServer,
         accessToken: quoteGrant.access_token.value,
       },
       {
@@ -78,7 +78,7 @@ export async function fetchQuote(
     )
     .catch(() => {
       throw new Error(
-        `Could not create quote for receiver ${receiver.publicName}.`,
+        `Could not create quote for receiver ${receiver.publicName}.`
       );
     });
 
@@ -110,7 +110,7 @@ export async function fetchRequestQuote(args: {
   const quote = await opClient.quote
     .create(
       {
-        url: new URL(walletAddress.id).origin,
+        url: walletAddress.resourceServer,
         accessToken: quoteGrant.access_token.value,
       },
       {
@@ -143,7 +143,7 @@ async function createIncomingPayment({
   return await opClient.incomingPayment
     .create(
       {
-        url: new URL(walletAddress.id).origin,
+        url: walletAddress.resourceServer,
         accessToken: accessToken,
       },
       {
@@ -184,7 +184,7 @@ export async function createRequestPayment(args: {
   return await opClient.incomingPayment
     .create(
       {
-        url: new URL(walletAddress.id).origin,
+        url: walletAddress.resourceServer,
         accessToken: incomingPaymentGrant.access_token.value,
       },
       {
@@ -311,7 +311,7 @@ export async function finishPayment(
     throw new Error("Expected finalized grant. Received non-finalized grant.");
   }
 
-  const url = new URL(walletAddress.id).origin;
+  const url = walletAddress.resourceServer;
 
   const outgoingPayment = await opClient.outgoingPayment
     .create(
