@@ -1,32 +1,32 @@
-import { Button } from "~/components/ui/button";
-import { DialPad, DialPadIds } from "~/components/dialpad";
-import { Header } from "~/components/header";
-import { Link, useLoaderData } from "@remix-run/react";
-import { useDialPadContext } from "~/lib/context/dialpad";
-import { BackNav } from "~/components/icons";
-import { json, type LoaderFunctionArgs } from "@remix-run/node";
-import { getSession } from "~/session";
-import { useEffect } from "react";
+import { Button } from '~/components/ui/button'
+import { DialPad, DialPadIds } from '~/components/dialpad'
+import { Header } from '~/components/header'
+import { Link, useLoaderData } from '@remix-run/react'
+import { useDialPadContext } from '~/lib/context/dialpad'
+import { BackNav } from '~/components/icons'
+import { json, type LoaderFunctionArgs } from '@remix-run/node'
+import { getSession } from '~/session'
+import { useEffect } from 'react'
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const session = await getSession(request.headers.get("Cookie"));
-  const walletAddressInfo = session.get("wallet-address");
+  const session = await getSession(request.headers.get('Cookie'))
+  const walletAddressInfo = session.get('wallet-address')
 
   if (walletAddressInfo === undefined) {
-    throw new Error("Payment session expired.");
+    throw new Error('Payment session expired.')
   }
   return json({
-    assetCode: walletAddressInfo.walletAddress.assetCode,
-  } as const);
+    assetCode: walletAddressInfo.walletAddress.assetCode
+  } as const)
 }
 
 export default function Ilpay() {
-  const data = useLoaderData<typeof loader>();
-  const { amountValue, setAmountValue, setAssetCode } = useDialPadContext();
+  const data = useLoaderData<typeof loader>()
+  const { amountValue, setAmountValue, setAssetCode } = useDialPadContext()
 
   useEffect(() => {
-    setAssetCode(data.assetCode);
-  });
+    setAssetCode(data.assetCode)
+  })
 
   return (
     <>
@@ -46,9 +46,9 @@ export default function Ilpay() {
                   amountValue.indexOf(DialPadIds.Dot) === -1 ||
                   amountValue.endsWith(DialPadIds.Dot)
                 ) {
-                  setAmountValue(Number(amountValue).toFixed(2).toString());
+                  setAmountValue(Number(amountValue).toFixed(2).toString())
                 }
-                if (Number(amountValue) === 0) e.preventDefault();
+                if (Number(amountValue) === 0) e.preventDefault()
               }}
             >
               <Button
@@ -67,14 +67,14 @@ export default function Ilpay() {
                   amountValue.indexOf(DialPadIds.Dot) === -1 ||
                   amountValue.endsWith(DialPadIds.Dot)
                 ) {
-                  setAmountValue(Number(amountValue).toFixed(2).toString());
+                  setAmountValue(Number(amountValue).toFixed(2).toString())
                 }
-                if (Number(amountValue) === 0) e.preventDefault();
+                if (Number(amountValue) === 0) e.preventDefault()
               }}
             >
               <Button
                 aria-label="pay"
-                size={"sm"}
+                size={'sm'}
                 disabled={Number(amountValue) === 0}
               >
                 Pay
@@ -84,5 +84,5 @@ export default function Ilpay() {
         </div>
       </div>
     </>
-  );
+  )
 }

@@ -1,5 +1,5 @@
-import { Link } from "@remix-run/react";
-import { Logo } from "./ui/logo";
+import { Link } from '@remix-run/react'
+import { Logo } from './ui/logo'
 
 export const Header = () => {
   return (
@@ -8,6 +8,6 @@ export const Header = () => {
       <span>Interledger</span>
       <span className="text-green-1 font-medium">Pay</span>
     </Link>
-  );
-};
-Header.displayName = "Header";
+  )
+}
+Header.displayName = 'Header'

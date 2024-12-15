@@ -1,9 +1,9 @@
 export interface FieldErrorProps {
-  error?: string | string[];
+  error?: string | string[]
 }
 
 export const FieldError = ({ error }: FieldErrorProps) => {
-  if (!error) return null;
+  if (!error) return null
 
   return (
     <div className="text-vermillion font-medium">
@@ -17,6 +17,6 @@ export const FieldError = ({ error }: FieldErrorProps) => {
         error
       )}
     </div>
-  );
-};
-FieldError.displayName = "FieldError";
+  )
+}
+FieldError.displayName = 'FieldError'

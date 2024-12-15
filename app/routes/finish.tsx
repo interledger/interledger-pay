@@ -1,62 +1,62 @@
-import { useForm } from "@conform-to/react";
-import { type LoaderFunctionArgs, redirect, defer } from "@remix-run/node";
-import { Await, Form, useActionData, useLoaderData } from "@remix-run/react";
-import { cx } from "class-variance-authority";
-import { Suspense } from "react";
-import { Header } from "~/components/header";
-import { FinishCheck, FinishError } from "~/components/icons";
-import { Fallback, Loader } from "~/components/loader";
-import { Button } from "~/components/ui/button";
-import { useBackdropContext } from "~/lib/context/backdrop";
-import { useDialogContext } from "~/lib/context/dialog";
+import { useForm } from '@conform-to/react'
+import { type LoaderFunctionArgs, redirect, defer } from '@remix-run/node'
+import { Await, Form, useActionData, useLoaderData } from '@remix-run/react'
+import { cx } from 'class-variance-authority'
+import { Suspense } from 'react'
+import { Header } from '~/components/header'
+import { FinishCheck, FinishError } from '~/components/icons'
+import { Fallback, Loader } from '~/components/loader'
+import { Button } from '~/components/ui/button'
+import { useBackdropContext } from '~/lib/context/backdrop'
+import { useDialogContext } from '~/lib/context/dialog'
 import {
   type PaymentResultType,
   finishPayment,
-  checkOutgoingPayment,
-} from "~/lib/open-payments.server";
-import { destroySession, getSession } from "~/session";
-import { objectToUrlParams } from "~/utils/helpers";
+  checkOutgoingPayment
+} from '~/lib/open-payments.server'
+import { destroySession, getSession } from '~/session'
+import { objectToUrlParams } from '~/utils/helpers'
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const searchParams = new URL(request.url).searchParams;
+  const searchParams = new URL(request.url).searchParams
 
-  const paymentId = searchParams.get("paymentId") || "";
-  const interactRef = searchParams.get("interact_ref") || "";
-  const result = searchParams.get("result") || "";
+  const paymentId = searchParams.get('paymentId') || ''
+  const interactRef = searchParams.get('interact_ref') || ''
+  const result = searchParams.get('result') || ''
 
   let paymentResult: PaymentResultType = {
-    message: "",
-    color: "red",
-    error: false,
-  };
-  let notDefer = false;
+    message: '',
+    color: 'red',
+    error: false
+  }
+  let notDefer = false
 
-  if (result === "grant_rejected") {
+  if (result === 'grant_rejected') {
     paymentResult = {
-      message: "Payment was successfully declined",
-      color: "red",
-      error: false,
-    };
-    notDefer = true;
+      message: 'Payment was successfully declined',
+      color: 'red',
+      error: false
+    }
+    notDefer = true
   } else if (!paymentId || !interactRef) {
     paymentResult = {
-      message: "An Error occured. Please try again.",
-      color: "red",
-      error: true,
-    };
-    notDefer = true;
+      message: 'An Error occured. Please try again.',
+      color: 'red',
+      error: true
+    }
+    notDefer = true
   }
 
   if (!notDefer) {
-    const session = await getSession(request.headers.get("Cookie"));
-    const quote = session.get("quote");
-    const grant = session.get("payment-grant");
-    const walletAddressInfo = session.get("wallet-address");
-    const isRequestPayment = session.get("isRequestPayment");
-    const isFromExtension = session.get("fromExtension");
+    const session = await getSession(request.headers.get('Cookie'))
+    const quote = session.get('quote')
+    const grant = session.get('payment-grant')
+    const walletAddressInfo = session.get('wallet-address')
+    const isRequestPayment = session.get('isRequestPayment')
+    const isFromExtension = session.get('fromExtension')
 
     if (quote === undefined) {
-      throw new Error("Payment session expired.");
+      throw new Error('Payment session expired.')
     }
 
     const finishPaymentResponse = await finishPayment(
@@ -64,7 +64,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
       quote,
       walletAddressInfo.walletAddress,
       interactRef
-    );
+    )
 
     const checkOutgoingPaymentPromise = checkOutgoingPayment(
       finishPaymentResponse.url,
@@ -72,32 +72,32 @@ export async function loader({ request }: LoaderFunctionArgs) {
       quote.incomingPaymentGrantToken,
       quote.receiver,
       isRequestPayment
-    );
+    )
 
     return defer({
       checkOutgoingPayment: checkOutgoingPaymentPromise,
-      isFromExtension,
-    });
+      isFromExtension
+    })
   }
 
   return defer({
     checkOutgoingPayment: Promise.resolve(paymentResult),
-    isFromExtension: false,
-  });
+    isFromExtension: false
+  })
 }
 
 export default function Finish() {
-  const data = useLoaderData<typeof loader>();
-  const actionData = useActionData<typeof action>();
+  const data = useLoaderData<typeof loader>()
+  const actionData = useActionData<typeof action>()
 
   const [form] = useForm({
-    id: "finish-form",
-    lastSubmission: actionData,
-  });
+    id: 'finish-form',
+    lastSubmission: actionData
+  })
 
-  const { setOpen } = useDialogContext();
-  setOpen(false);
-  const { setIsLoading } = useBackdropContext();
+  const { setOpen } = useDialogContext()
+  setOpen(false)
+  const { setIsLoading } = useBackdropContext()
 
   return (
     <>
@@ -125,7 +125,7 @@ export default function Finish() {
                         className="wmt-formattable-button"
                         type="submit"
                       >
-                        {data.isFromExtension ? "Close" : "Home"}
+                        {data.isFromExtension ? 'Close' : 'Home'}
                       </Button>
                     </Form>
                   </>
@@ -134,10 +134,10 @@ export default function Finish() {
                     <FinishCheck color={outgoingPaymentCheck.color} />
                     <div
                       className={cx(
-                        "uppercase sm:text-2xl font-medium text-center",
-                        outgoingPaymentCheck.color === "red"
-                          ? "text-destructive"
-                          : "text-green-1"
+                        'uppercase sm:text-2xl font-medium text-center',
+                        outgoingPaymentCheck.color === 'red'
+                          ? 'text-destructive'
+                          : 'text-green-1'
                       )}
                     >
                       {outgoingPaymentCheck.message}
@@ -149,7 +149,7 @@ export default function Finish() {
                         className="wmt-formattable-button"
                         type="submit"
                       >
-                        {data.isFromExtension ? "Close" : "Home"}
+                        {data.isFromExtension ? 'Close' : 'Home'}
                       </Button>
                     </Form>
                   </>
@@ -160,20 +160,20 @@ export default function Finish() {
         </Suspense>
       </div>
     </>
-  );
+  )
 }
 
 export async function action({ request }: LoaderFunctionArgs) {
-  const session = await getSession(request.headers.get("Cookie"));
-  const isFromExtension = session.get("fromExtension");
-  const submission = session.get("submission");
+  const session = await getSession(request.headers.get('Cookie'))
+  const isFromExtension = session.get('fromExtension')
+  const submission = session.get('submission')
   if (submission?.value?.walletAddress) {
-    delete submission.value.walletAddress;
+    delete submission.value.walletAddress
   }
-  const params = submission?.value ? objectToUrlParams(submission?.value) : "";
-  const path = isFromExtension ? `/extension?${params}` : `/`;
+  const params = submission?.value ? objectToUrlParams(submission?.value) : ''
+  const path = isFromExtension ? `/extension?${params}` : `/`
 
   return redirect(path, {
-    headers: { "Set-Cookie": await destroySession(session) },
-  });
+    headers: { 'Set-Cookie': await destroySession(session) }
+  })
 }

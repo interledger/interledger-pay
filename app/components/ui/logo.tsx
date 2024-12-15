@@ -1,4 +1,4 @@
-import type { SVGProps } from "react";
+import type { SVGProps } from 'react'
 
 export const Logo = (props: SVGProps<SVGSVGElement>) => {
   return (
@@ -93,5 +93,5 @@ export const Logo = (props: SVGProps<SVGSVGElement>) => {
         fill="#F17F64"
       />
     </svg>
-  );
-};
+  )
+}

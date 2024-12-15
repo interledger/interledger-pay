@@ -1,0 +1,8 @@
+build
+public
+pnpm-lock.yaml
+*.svg
+Dockerfile
+.gitignore
+.prettierignore
+tailwind*

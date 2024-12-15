@@ -1,46 +1,46 @@
-import { conform, useForm } from "@conform-to/react";
-import { getFieldsetConstraint, parse } from "@conform-to/zod";
-import { json, redirect, type LoaderFunctionArgs } from "@remix-run/node";
-import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
-import { z } from "zod";
-import { AmountDisplay } from "~/components/dialpad";
-import { Header } from "~/components/header";
-import { BackNav } from "~/components/icons";
-import { Button } from "~/components/ui/button";
-import { Field } from "~/components/ui/form/form";
-import { useDialPadContext } from "~/lib/context/dialpad";
-import { createRequestPayment } from "~/lib/open-payments.server";
-import { commitSession, getSession } from "~/session";
+import { conform, useForm } from '@conform-to/react'
+import { getFieldsetConstraint, parse } from '@conform-to/zod'
+import { json, redirect, type LoaderFunctionArgs } from '@remix-run/node'
+import { Form, Link, useActionData, useLoaderData } from '@remix-run/react'
+import { z } from 'zod'
+import { AmountDisplay } from '~/components/dialpad'
+import { Header } from '~/components/header'
+import { BackNav } from '~/components/icons'
+import { Button } from '~/components/ui/button'
+import { Field } from '~/components/ui/form/form'
+import { useDialPadContext } from '~/lib/context/dialpad'
+import { createRequestPayment } from '~/lib/open-payments.server'
+import { commitSession, getSession } from '~/session'
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const session = await getSession(request.headers.get("Cookie"));
-  const walletAddressInfo = session.get("wallet-address");
+  const session = await getSession(request.headers.get('Cookie'))
+  const walletAddressInfo = session.get('wallet-address')
 
   if (walletAddressInfo === undefined) {
-    throw new Error("Payment session expired.");
+    throw new Error('Payment session expired.')
   }
 
   return json({
-    walletAddress: walletAddressInfo.walletAddress.id,
-  } as const);
+    walletAddress: walletAddressInfo.walletAddress.id
+  } as const)
 }
 
 const schema = z.object({
   walletAddress: z.string(),
   amount: z.coerce.number(),
-  note: z.string().optional(),
-});
+  note: z.string().optional()
+})
 
 export default function Request() {
-  const data = useLoaderData<typeof loader>();
-  const actionData = useActionData<typeof action>();
-  const { amountValue } = useDialPadContext();
+  const data = useLoaderData<typeof loader>()
+  const actionData = useActionData<typeof action>()
+  const { amountValue } = useDialPadContext()
   const [form, fields] = useForm({
-    id: "request-form",
+    id: 'request-form',
     constraint: getFieldsetConstraint(schema),
     lastSubmission: actionData,
-    shouldRevalidate: "onSubmit",
-  });
+    shouldRevalidate: 'onSubmit'
+  })
 
   return (
     <>
@@ -83,26 +83,26 @@ export default function Request() {
         </div>
       </div>
     </>
-  );
+  )
 }
 
 export async function action({ request }: LoaderFunctionArgs) {
-  const session = await getSession(request.headers.get("Cookie"));
+  const session = await getSession(request.headers.get('Cookie'))
 
-  const formData = await request.formData();
+  const formData = await request.formData()
   const submission = await parse(formData, {
     schema,
-    async: true,
-  });
+    async: true
+  })
 
-  if (!submission.value || submission.intent !== "submit") {
-    return json(submission);
+  if (!submission.value || submission.intent !== 'submit') {
+    return json(submission)
   }
 
-  const incomingPayment = await createRequestPayment(submission.value);
-  session.set("incoming-payment", incomingPayment);
+  const incomingPayment = await createRequestPayment(submission.value)
+  session.set('incoming-payment', incomingPayment)
 
-  return redirect("/shareRequest", {
-    headers: { "Set-Cookie": await commitSession(session) },
-  });
+  return redirect('/shareRequest', {
+    headers: { 'Set-Cookie': await commitSession(session) }
+  })
 }
