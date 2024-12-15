@@ -142,6 +142,16 @@ export default function Pay() {
                   Pay with Interledger
                 </Button>
               </div>
+              <div className="flex justify-center">
+                <Button
+                  aria-label="pay"
+                  type="submit"
+                  name="intent"
+                  value="pay-by-card"
+                >
+                  Pay by card
+                </Button>
+              </div>
             </div>
           </Form>
         </div>
@@ -162,6 +172,34 @@ export async function action({ request }: ActionFunctionArgs) {
 
   const formData = await request.formData()
   const intent = formData.get('intent')
+
+  if (intent === 'pay-by-card') {
+    const submission = await parse(formData, {
+      schema: schema.superRefine(async (data, context) => {
+        try {
+          receiver = await getValidWalletAddress(data.receiver)
+          session.set('receiver-wallet-address', receiver)
+          session.set('amount', data.amount)
+        } catch (error) {
+          context.addIssue({
+            path: ['receiver'],
+            code: z.ZodIssueCode.custom,
+            message: 'Receiver wallet address is not valid.'
+          })
+        }
+      }),
+      async: true
+    })
+
+    if (!submission.value || submission.intent !== 'submit') {
+      console.log('return json(submission)')
+      return json(submission)
+    }
+
+    return redirect(`/checkout`, {
+      headers: { 'Set-Cookie': await commitSession(session) }
+    })
+  }
 
   if (intent === 'pay') {
     const submission = await parse(formData, {
