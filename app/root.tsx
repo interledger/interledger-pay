@@ -1,5 +1,5 @@
-import { cssBundleHref } from "@remix-run/css-bundle";
-import type { LinksFunction } from "@remix-run/node";
+import { cssBundleHref } from '@remix-run/css-bundle'
+import type { LinksFunction } from '@remix-run/node'
 import {
   Link,
   Links,
@@ -11,49 +11,49 @@ import {
   isRouteErrorResponse,
   useLocation,
   useNavigation,
-  useRouteError,
-} from "@remix-run/react";
-import stylesheet from "~/tailwind.css";
-import { DialPadProvider } from "./components/providers/dialPadProvider";
-import Nprogress from "nprogress";
-import nprogressStyles from "nprogress/nprogress.css";
-import { type ReactNode, useEffect } from "react";
-import { Button } from "./components/ui/button";
-import { FinishError } from "./components/icons";
-import { DialogProvider } from "./components/providers/dialogProvider";
-import { BackdropProvider } from "./components/providers/backdropProvider";
-import { cn } from "./lib/cn";
+  useRouteError
+} from '@remix-run/react'
+import stylesheet from '~/tailwind.css'
+import { DialPadProvider } from './components/providers/dialPadProvider'
+import Nprogress from 'nprogress'
+import nprogressStyles from 'nprogress/nprogress.css'
+import { type ReactNode, useEffect } from 'react'
+import { Button } from './components/ui/button'
+import { FinishError } from './components/icons'
+import { DialogProvider } from './components/providers/dialogProvider'
+import { BackdropProvider } from './components/providers/backdropProvider'
+import { cn } from './lib/cn'
 
 export const links: LinksFunction = () => [
   {
-    rel: "icon",
-    href: "/favicon.svg",
-    type: "image/svg+xml",
+    rel: 'icon',
+    href: '/favicon.svg',
+    type: 'image/svg+xml'
   },
-  { rel: "stylesheet", href: stylesheet },
-  { rel: "stylesheet", href: nprogressStyles },
-  ...(cssBundleHref ? [{ rel: "stylesheet", href: cssBundleHref }] : []),
-];
+  { rel: 'stylesheet', href: stylesheet },
+  { rel: 'stylesheet', href: nprogressStyles },
+  ...(cssBundleHref ? [{ rel: 'stylesheet', href: cssBundleHref }] : [])
+]
 
 export default function App() {
-  const navigation = useNavigation();
-  const location = useLocation();
+  const navigation = useNavigation()
+  const location = useLocation()
 
   // detect if it's loaded in wm tools
-  const isEmbeded = location.pathname.indexOf("extension") !== -1;
+  const isEmbeded = location.pathname.indexOf('extension') !== -1
 
   useEffect(() => {
-    if (navigation.state === "loading" || navigation.state === "submitting") {
-      Nprogress.start();
+    if (navigation.state === 'loading' || navigation.state === 'submitting') {
+      Nprogress.start()
     } else {
-      Nprogress.done();
+      Nprogress.done()
     }
-  }, [navigation.state]);
+  }, [navigation.state])
 
   return (
     <html
       lang="en"
-      className={cn("h-full overflow-x-hidden", isEmbeded && "overflow-hidden")}
+      className={cn('h-full overflow-x-hidden', isEmbeded && 'overflow-hidden')}
     >
       <head>
         <meta charSet="utf-8" />
@@ -65,13 +65,13 @@ export default function App() {
       <body
         className={cn(
           isEmbeded
-            ? "ilpay_body bg-transparent flex justify-center items-center h-screen"
-            : "bg-foreground text-primary flex justify-center items-center h-screen"
+            ? 'ilpay_body bg-transparent flex justify-center items-center h-screen'
+            : 'bg-foreground text-primary flex justify-center items-center h-screen'
         )}
       >
         <div
           className={cn(
-            isEmbeded ? "w-full h-full pt-4" : "w-full h-full p-20"
+            isEmbeded ? 'w-full h-full pt-4' : 'w-full h-full p-20'
           )}
         >
           <BackdropProvider>
@@ -87,19 +87,21 @@ export default function App() {
         <LiveReload />
       </body>
     </html>
-  );
+  )
 }
 
 export function ErrorBoundary() {
-  const error = useRouteError();
+  const error = useRouteError()
 
   // detect if page loaded in wm tools
-  const location = useLocation();
-  const isEmbeded = location.pathname.indexOf("extension") !== -1;
+  const location = useLocation()
+  const isEmbeded = location.pathname.indexOf('extension') !== -1
   // remove quote=true from params if exists
-  const urlParams = location.search ? location.search.replace('quote=true&', '') : undefined;
-  const onErrorLink = isEmbeded ? `/extension${urlParams}` : '/';
-  const onErrorLabel = isEmbeded ? 'Try again' : 'Go to homepage';
+  const urlParams = location.search
+    ? location.search.replace('quote=true&', '')
+    : undefined
+  const onErrorLink = isEmbeded ? `/extension${urlParams}` : '/'
+  const onErrorLabel = isEmbeded ? 'Try again' : 'Go to homepage'
 
   const ErrorPage = ({ children }: { children: ReactNode }) => {
     return (
@@ -121,8 +123,8 @@ export function ErrorBoundary() {
           <LiveReload />
         </body>
       </html>
-    );
-  };
+    )
+  }
 
   if (isRouteErrorResponse(error)) {
     return (
@@ -142,12 +144,12 @@ export function ErrorBoundary() {
           </Link>
         </div>
       </ErrorPage>
-    );
+    )
   }
 
-  let errorMessage = "Unknown error";
+  let errorMessage = 'Unknown error'
   if (error instanceof Error) {
-    errorMessage = error.message;
+    errorMessage = error.message
   }
 
   return (
@@ -167,5 +169,5 @@ export function ErrorBoundary() {
         </Link>
       </div>
     </ErrorPage>
-  );
+  )
 }

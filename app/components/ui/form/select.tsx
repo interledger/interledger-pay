@@ -1,67 +1,66 @@
-import { Fragment, useId, useState } from "react";
-import { Combobox, Transition } from "@headlessui/react";
-import { Label } from "./label";
-import { Input } from "./input";
-import { Chevron } from "~/components/icons";
-import { FieldError } from "./fieldError";
-import { useDialPadContext } from "~/lib/context/dialpad";
-import { getCurrencySymbol } from "~/utils/helpers";
+import { Fragment, useId, useState } from 'react'
+import { Combobox, Transition } from '@headlessui/react'
+import { Label } from './label'
+import { Input } from './input'
+import { Chevron } from '~/components/icons'
+import { FieldError } from './fieldError'
+import { useDialPadContext } from '~/lib/context/dialpad'
+import { getCurrencySymbol } from '~/utils/helpers'
 
 export type SelectOption = {
-  label: string;
-  value: string;
-};
+  label: string
+  value: string
+}
 
 type SelectProps = {
-  options: SelectOption[];
-  placeholder?: string;
-  name?: string;
-  label?: string;
-  disabled?: boolean;
-  required?: boolean;
-  error?: string | string[];
-  defaultValue?: SelectOption;
-  onChange?: void;
-};
+  options: SelectOption[]
+  placeholder?: string
+  name?: string
+  label?: string
+  disabled?: boolean
+  required?: boolean
+  error?: string | string[]
+  defaultValue?: SelectOption
+  onChange?: void
+}
 
 export const Select = ({
   options,
   name,
-  placeholder = "",
+  placeholder = '',
   label,
   error,
   disabled = false,
   required = false,
   defaultValue = {
-    label: "",
-    value: "",
+    label: '',
+    value: ''
   },
-  onChange,
+  onChange
 }: SelectProps) => {
-  const id = useId();
-  const [internalValue, setInternalValue] =
-    useState<SelectOption>(defaultValue);
-  const [searchTerm, setSearchTerm] = useState("");
-  const { setAssetCode } = useDialPadContext();
+  const id = useId()
+  const [internalValue, setInternalValue] = useState<SelectOption>(defaultValue)
+  const [searchTerm, setSearchTerm] = useState('')
+  const { setAssetCode } = useDialPadContext()
 
   const filteredOptions =
-    searchTerm === ""
+    searchTerm === ''
       ? options
       : options.filter((option) =>
           option.label
             .toLowerCase()
-            .replace(/\s+/g, "")
-            .includes(searchTerm.toLowerCase().replace(/\s+/g, ""))
-        );
+            .replace(/\s+/g, '')
+            .includes(searchTerm.toLowerCase().replace(/\s+/g, ''))
+        )
 
   return (
     <Combobox
       value={internalValue}
       onChange={(selected) => {
-        if (name === "asset") {
-          setAssetCode(getCurrencySymbol(selected.label));
+        if (name === 'asset') {
+          setAssetCode(getCurrencySymbol(selected.label))
         }
-        setInternalValue(selected);
+        setInternalValue(selected)
       }}
       disabled={disabled}
     >
@@ -88,7 +87,7 @@ export const Select = ({
             {({ open }) => (
               <Chevron
                 className="w-3 h-3 transition-all duration-100"
-                direction={open ? "down" : "left"}
+                direction={open ? 'down' : 'left'}
                 strokeWidth={3}
               />
             )}
@@ -100,10 +99,10 @@ export const Select = ({
           leave="transition ease-in duration-100"
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
-          afterLeave={() => setSearchTerm("")}
+          afterLeave={() => setSearchTerm('')}
         >
           <Combobox.Options className="absolute mt-1 max-h-60 w-16 text-xs overflow-auto rounded-md bg-green-2 shadow-lg focus:outline-none">
-            {filteredOptions.length === 0 && searchTerm !== "" ? (
+            {filteredOptions.length === 0 && searchTerm !== '' ? (
               <div className="select-none py-2 px-4">Nothing found.</div>
             ) : (
               filteredOptions.map((option) => (
@@ -111,7 +110,7 @@ export const Select = ({
                   key={option.value}
                   className={({ active }) =>
                     `relative select-none py-1 cursor-pointer px-4 hover:bg-white ${
-                      active && "bg-white"
+                      active && 'bg-white'
                     }`
                   }
                   value={option}
@@ -120,7 +119,7 @@ export const Select = ({
                     <>
                       <span
                         className={`block truncate ${
-                          selected ? "font-medium" : "font-normal"
+                          selected ? 'font-medium' : 'font-normal'
                         }`}
                       >
                         {option.label}
@@ -134,5 +133,5 @@ export const Select = ({
         </Transition>
       </div>
     </Combobox>
-  );
-};
+  )
+}

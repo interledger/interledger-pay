@@ -9,6 +9,9 @@
     "fly:deploy": "fly deploy --remote-only --ha=false",
     "dev": "remix dev",
     "start": "remix-serve ./build/index.js",
+    "format": "pnpm prettier:write && pnpm lint:fix",
+    "prettier:write": "prettier --config \".prettierrc.cjs\" --write .",
+    "lint:fix": "eslint --max-warnings=0 --fix .",
     "typecheck": "tsc"
   },
   "dependencies": {

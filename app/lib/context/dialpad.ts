@@ -1,22 +1,22 @@
-import { createContext, useContext } from "react";
+import { createContext, useContext } from 'react'
 
 type DialPadContextProps = {
-  amountValue: string;
-  setAmountValue: (amount: string) => void;
-  assetCode: string;
-  setAssetCode: (assetCode: string) => void;
-};
+  amountValue: string
+  setAmountValue: (amount: string) => void
+  assetCode: string
+  setAssetCode: (assetCode: string) => void
+}
 
-export const DialPadContext = createContext<DialPadContextProps | null>(null);
+export const DialPadContext = createContext<DialPadContextProps | null>(null)
 
 export const useDialPadContext = () => {
-  const dialPadContext = useContext(DialPadContext);
+  const dialPadContext = useContext(DialPadContext)
 
   if (!dialPadContext) {
     throw new Error(
       '"useDialPadContext" is used outside the DialPadContextProvider.'
-    );
+    )
   }
 
-  return dialPadContext;
-};
+  return dialPadContext
+}

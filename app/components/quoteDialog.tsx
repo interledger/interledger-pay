@@ -1,36 +1,36 @@
-import { Dialog, Transition } from "@headlessui/react";
-import { Fragment } from "react/jsx-runtime";
-import { useDialogContext } from "~/lib/context/dialog";
-import { Header } from "./header";
-import { Field } from "./ui/form/form";
-import { Button } from "./ui/button";
-import { Form } from "@remix-run/react";
-import { useForm } from "@conform-to/react";
-import { Loader } from "./loader";
-import { useBackdropContext } from "~/lib/context/backdrop";
+import { Dialog, Transition } from '@headlessui/react'
+import { Fragment } from 'react/jsx-runtime'
+import { useDialogContext } from '~/lib/context/dialog'
+import { Header } from './header'
+import { Field } from './ui/form/form'
+import { Button } from './ui/button'
+import { Form } from '@remix-run/react'
+import { useForm } from '@conform-to/react'
+import { Loader } from './loader'
+import { useBackdropContext } from '~/lib/context/backdrop'
 
 export type QuoteArgs = {
-  receiverName: string;
-  receiveAmount: string;
-  debitAmount: string;
-};
+  receiverName: string
+  receiveAmount: string
+  debitAmount: string
+}
 
 export default function Quote({
   receiverName,
   receiveAmount,
-  debitAmount,
+  debitAmount
 }: QuoteArgs) {
-  const { open, setOpen } = useDialogContext();
-  const { setIsLoading } = useBackdropContext();
-  setIsLoading(true);
+  const { open, setOpen } = useDialogContext()
+  const { setIsLoading } = useBackdropContext()
+  setIsLoading(true)
 
   const [form] = useForm({
-    id: "quote-form",
-    shouldRevalidate: "onSubmit",
-  });
+    id: 'quote-form',
+    shouldRevalidate: 'onSubmit'
+  })
 
-  if (receiverName !== "") {
-    setIsLoading(false);
+  if (receiverName !== '') {
+    setIsLoading(false)
   }
 
   return (
@@ -107,5 +107,5 @@ export default function Quote({
         </div>
       </Dialog>
     </Transition.Root>
-  );
+  )
 }

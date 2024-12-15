@@ -1,51 +1,51 @@
-import { useForm } from "@conform-to/react";
-import { json, redirect, type LoaderFunctionArgs } from "@remix-run/node";
-import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
-import { AmountDisplay } from "~/components/dialpad";
-import { Header } from "~/components/header";
-import { BackNav } from "~/components/icons";
-import { Button } from "~/components/ui/button";
-import { CopyButton } from "~/components/ui/copyButton";
-import { Field } from "~/components/ui/form/form";
-import { ShareButton } from "~/components/ui/shareButton";
-import { destroySession, getSession } from "~/session";
-import { formatAmount, formatDate } from "~/utils/helpers";
+import { useForm } from '@conform-to/react'
+import { json, redirect, type LoaderFunctionArgs } from '@remix-run/node'
+import { Form, Link, useActionData, useLoaderData } from '@remix-run/react'
+import { AmountDisplay } from '~/components/dialpad'
+import { Header } from '~/components/header'
+import { BackNav } from '~/components/icons'
+import { Button } from '~/components/ui/button'
+import { CopyButton } from '~/components/ui/copyButton'
+import { Field } from '~/components/ui/form/form'
+import { ShareButton } from '~/components/ui/shareButton'
+import { destroySession, getSession } from '~/session'
+import { formatAmount, formatDate } from '~/utils/helpers'
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const session = await getSession(request.headers.get("Cookie"));
-  const incomingPayment = session.get("incoming-payment");
+  const session = await getSession(request.headers.get('Cookie'))
+  const incomingPayment = session.get('incoming-payment')
 
   if (incomingPayment === undefined) {
-    throw new Error("Payment session expired.");
+    throw new Error('Payment session expired.')
   }
 
   const requestAmount = formatAmount({
     value: incomingPayment.incomingAmount.value,
     assetCode: incomingPayment.incomingAmount.assetCode,
-    assetScale: incomingPayment.incomingAmount.assetScale,
-  });
+    assetScale: incomingPayment.incomingAmount.assetScale
+  })
 
   const dateRequested = formatDate({
-    date: incomingPayment.createdAt,
-  });
-  const url = `${process.env.INTERLEDGER_PAY_HOST}/payment?url=${incomingPayment.id}&receiver=${incomingPayment.walletAddress}`;
+    date: incomingPayment.createdAt
+  })
+  const url = `${process.env.INTERLEDGER_PAY_HOST}/payment?url=${incomingPayment.id}&receiver=${incomingPayment.walletAddress}`
 
   return json({
     requestAmount: requestAmount.amountWithCurrency,
     dateRequested: dateRequested,
     note: incomingPayment.metadata.description,
-    paymentUrl: url,
-  } as const);
+    paymentUrl: url
+  } as const)
 }
 
 export default function ShareRequest() {
-  const data = useLoaderData<typeof loader>();
-  const actionData = useActionData<typeof action>();
+  const data = useLoaderData<typeof loader>()
+  const actionData = useActionData<typeof action>()
 
   const [form] = useForm({
-    id: "shareRequest-form",
-    lastSubmission: actionData,
-  });
+    id: 'shareRequest-form',
+    lastSubmission: actionData
+  })
 
   return (
     <>
@@ -109,15 +109,15 @@ export default function ShareRequest() {
         </div>
       </div>
     </>
-  );
+  )
 }
 
 export async function action({ request }: LoaderFunctionArgs) {
-  const session = await getSession(request.headers.get("Cookie"));
+  const session = await getSession(request.headers.get('Cookie'))
 
-  return redirect("/", {
+  return redirect('/', {
     headers: {
-      "Set-Cookie": await destroySession(session),
-    },
-  });
+      'Set-Cookie': await destroySession(session)
+    }
+  })
 }
