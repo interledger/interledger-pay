@@ -1,21 +1,21 @@
-import { useEffect } from "react";
-import { cn } from "~/lib/cn";
-import { useDialPadContext } from "~/lib/context/dialpad";
-import { getCurrencySymbol } from "~/utils/helpers";
+import { useEffect } from 'react'
+import { cn } from '~/lib/cn'
+import { useDialPadContext } from '~/lib/context/dialpad'
+import { getCurrencySymbol } from '~/utils/helpers'
 
 export enum DialPadIds {
-  Backspace = "Backspace",
-  Dot = ".",
-  Zero = "0",
-  One = "1",
-  Two = "2",
-  Three = "3",
-  Four = "4",
-  Five = "5",
-  Six = "6",
-  Seven = "7",
-  Eight = "8",
-  Nine = "9",
+  Backspace = 'Backspace',
+  Dot = '.',
+  Zero = '0',
+  One = '1',
+  Two = '2',
+  Three = '3',
+  Four = '4',
+  Five = '5',
+  Six = '6',
+  Seven = '7',
+  Eight = '8',
+  Nine = '9'
 }
 
 export const DialPad = () => {
@@ -44,25 +44,25 @@ export const DialPad = () => {
         idThird={DialPadIds.Backspace}
       />
     </div>
-  );
-};
-DialPad.displayName = "Dialpad";
+  )
+}
+DialPad.displayName = 'Dialpad'
 
 type DialPadRowProps = {
-  first: string;
-  second: string;
-  third: string;
-  idFirst?: string;
-  idSecond?: string;
-  idThird?: string;
-};
+  first: string
+  second: string
+  third: string
+  idFirst?: string
+  idSecond?: string
+  idThird?: string
+}
 const DialPadRow = ({
   first,
   second,
   third,
   idFirst,
   idSecond,
-  idThird,
+  idThird
 }: DialPadRowProps) => {
   return (
     <ul>
@@ -72,59 +72,59 @@ const DialPadRow = ({
         <DialPadKey label={third} id={idThird ? idThird : third} />
       </div>
     </ul>
-  );
-};
-DialPadRow.displayName = "DialPadRow";
+  )
+}
+DialPadRow.displayName = 'DialPadRow'
 
 type DialPadKeyProps = {
-  label: string;
-  id: string;
-};
+  label: string
+  id: string
+}
 const DialPadKey = ({ label, id }: DialPadKeyProps) => {
-  const { amountValue, setAmountValue } = useDialPadContext();
+  const { amountValue, setAmountValue } = useDialPadContext()
 
   useEffect(() => {
     function handleKeyDown(e: any) {
-      handleDialPadInputs(e.key);
+      handleDialPadInputs(e.key)
     }
 
-    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener('keydown', handleKeyDown)
 
     return function cleanup() {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
+      document.removeEventListener('keydown', handleKeyDown)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [amountValue]);
+  }, [amountValue])
 
   const handleDialPadInputs = (id: string) => {
-    const label = id === DialPadIds.Backspace ? "<" : id;
+    const label = id === DialPadIds.Backspace ? '<' : id
     if (Object.values<string>(DialPadIds).includes(id)) {
       if (id === DialPadIds.Backspace) {
-        setAmountValue(`${amountValue.substring(0, amountValue.length - 1)}`);
-      } else if (amountValue === "0.00" && id !== DialPadIds.Dot) {
+        setAmountValue(`${amountValue.substring(0, amountValue.length - 1)}`)
+      } else if (amountValue === '0.00' && id !== DialPadIds.Dot) {
         setAmountValue(
-          `${amountValue.substring(0, amountValue.length - 4)}${label}`,
-        );
-      } else if (amountValue === "0" && id !== DialPadIds.Dot) {
+          `${amountValue.substring(0, amountValue.length - 4)}${label}`
+        )
+      } else if (amountValue === '0' && id !== DialPadIds.Dot) {
         setAmountValue(
-          `${amountValue.substring(0, amountValue.length - 1)}${label}`,
-        );
+          `${amountValue.substring(0, amountValue.length - 1)}${label}`
+        )
       } else if (
         (id === DialPadIds.Dot &&
           amountValue.indexOf(DialPadIds.Dot) === -1 &&
           amountValue.length !== 0) ||
         id !== DialPadIds.Dot
       ) {
-        setAmountValue(`${amountValue}${label}`);
+        setAmountValue(`${amountValue}${label}`)
       }
     }
-  };
+  }
 
   return (
     <li
       className={cn(
-        "cursor-pointer hover:text-green-1",
-        id === DialPadIds.Dot ? "pl-1" : "",
+        'cursor-pointer hover:text-green-1',
+        id === DialPadIds.Dot ? 'pl-1' : ''
       )}
       tabIndex={0}
       id={id}
@@ -132,25 +132,25 @@ const DialPadKey = ({ label, id }: DialPadKeyProps) => {
     >
       {label}
     </li>
-  );
-};
-DialPadKey.displayName = "DialPadKey";
+  )
+}
+DialPadKey.displayName = 'DialPadKey'
 
 type AmountDisplayProps = {
-  displayAmount?: string;
-};
+  displayAmount?: string
+}
 
 export const AmountDisplay = (args: AmountDisplayProps) => {
-  const { amountValue, assetCode } = useDialPadContext();
+  const { amountValue, assetCode } = useDialPadContext()
 
   const value = args.displayAmount
     ? args.displayAmount
-    : `${getCurrencySymbol(assetCode)} ${amountValue}`;
+    : `${getCurrencySymbol(assetCode)} ${amountValue}`
 
   return (
     <div className="amount-display w-full whitespace-nowrap flex items-center justify-center text-5xl text-green-1">
       {value}
     </div>
-  );
-};
-AmountDisplay.displayName = "AmountDisplay";
+  )
+}
+AmountDisplay.displayName = 'AmountDisplay'

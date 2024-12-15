@@ -1,13 +1,13 @@
-import { type ReactNode, useState } from "react";
-import { DialPadContext } from "~/lib/context/dialpad";
+import { type ReactNode, useState } from 'react'
+import { DialPadContext } from '~/lib/context/dialpad'
 
 type DialPadProviderProps = {
-  children: ReactNode;
-};
+  children: ReactNode
+}
 
 export const DialPadProvider = ({ children }: DialPadProviderProps) => {
-  const [amountValue, setAmountValue] = useState("0");
-  const [assetCode, setAssetCode] = useState("USD");
+  const [amountValue, setAmountValue] = useState('0')
+  const [assetCode, setAssetCode] = useState('USD')
 
   return (
     <DialPadContext.Provider
@@ -15,11 +15,11 @@ export const DialPadProvider = ({ children }: DialPadProviderProps) => {
         amountValue,
         setAmountValue,
         assetCode,
-        setAssetCode,
+        setAssetCode
       }}
     >
       {children}
     </DialPadContext.Provider>
-  );
-};
-DialPadProvider.displayName = "DialPadProvider";
+  )
+}
+DialPadProvider.displayName = 'DialPadProvider'
