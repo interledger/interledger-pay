@@ -21,7 +21,8 @@ const buttonVariants = cva(
         default: 'w-48',
         sm: 'w-40',
         lg: 'w-48',
-        xl: 'w-full',
+        xl: 'w-56',
+        xxl: 'w-full',
         icon: 'h-10 w-10'
       }
     },

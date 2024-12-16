@@ -14,6 +14,7 @@ import { Header } from '~/components/header'
 import Quote from '~/components/quoteDialog'
 import { Button } from '~/components/ui/button'
 import { Field } from '~/components/ui/form/form'
+import { PayWithInterledgerMark } from '~/components/ui/logo'
 import { useDialogContext } from '~/lib/context/dialog'
 import {
   fetchRequestQuote,
@@ -121,7 +122,7 @@ export default function PayRequest() {
               readOnly
             ></Field>
             <Field
-              label="Pay into"
+              label="Pay into Wallet Address"
               defaultValue={data.receiver}
               variant="highlight"
               readOnly
@@ -151,8 +152,15 @@ export default function PayRequest() {
               value={data.url || ''}
             />
             <div className="flex justify-center">
-              <Button aria-label="pay" type="submit" name="intent" value="pay">
-                Pay with Interledger
+              <Button
+                aria-label="pay"
+                type="submit"
+                name="intent"
+                value="pay"
+                size="xl"
+              >
+                <span className="text-md">Pay with</span>
+                <PayWithInterledgerMark className="h-8 w-40 mx-2" />
               </Button>
             </div>
           </Form>
