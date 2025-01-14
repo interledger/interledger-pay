@@ -158,11 +158,7 @@ export async function action({ request }: ActionFunctionArgs) {
       schema: schema.superRefine(async (data, context) => {
         try {
           walletAddress = await getValidWalletAddress(data.walletAddress)
-          console.log('WALLETADDRESS')
-          console.log(walletAddress)
           receiverWalletAddress = await getValidWalletAddress(data.receiver)
-          console.log('RECEIVERWA')
-          console.log(receiverWalletAddress)
         } catch (error) {
           context.addIssue({
             path: ['walletAddress'],
@@ -179,15 +175,13 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     const quote = await fetchQuote(submission.value, receiverWalletAddress)
-    console.log('QUOTE')
-    console.log(quote)
     session.set('quote', quote)
     session.set('wallet-address', {
       walletAddress: walletAddress
     })
     session.set('receiver-wallet-address', receiverWalletAddress)
 
-    return redirect(`/payWithInterledger?quote=true`, {
+    return redirect(`/pay-with-interledger?quote=true`, {
       headers: { 'Set-Cookie': await commitSession(session) }
     })
   } else if (intent === 'confirm') {
