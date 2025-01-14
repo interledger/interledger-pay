@@ -4,9 +4,9 @@ services:
       context: .
       dockerfile: Dockerfile.dev
     ports:
-      - "5280:5280"
+      - '5280:5280'
     expose:
-      - "5280"
+      - '5280'
     volumes:
       - .:/app
       - /app/node_modules
@@ -20,12 +20,10 @@ services:
   nginx:
     image: nginx:alpine
     ports:
-      - "80:80"
-      - "5200:5200"
+      - '80:80'
+      - '5200:5200'
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - ./.cert:/etc/nginx/ssl
     depends_on:
       - ilpay
-      # - cloud-nine-auth
-      # - cloud-nine-mock-ase
