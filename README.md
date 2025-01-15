@@ -32,6 +32,7 @@ Please read the [contribution guidelines](.github/contributing.md) before submit
 ### Prerequisites
 
 - [NVM](https://github.com/nvm-sh/nvm)
+- [Docker](https://docs.docker.com/get-docker/)
 
 ### Environment Setup
 
@@ -75,18 +76,20 @@ cp ./docker/dev/.env.example ./docker/dev/.env
 
 Using your preferred text editor, open the `./docker/dev/.env` file and configure the necessary environment variables.
 
-You will need to create a USD wallet address in the [Test Wallet](https://rafiki.money) application, then generate public and private key for the wallet address in the `Developer Keys` found in the `Settings` menu of Interledger Test Wallet. With the generated values you can proceed to update the following environment variables: `PRIVATE_KEY` to the generated base64 encoded private key, `KEY_ID` to the wallet address key id, and `WALLET_ADDRESS` to the created wallet address.
+You will need to create a USD wallet address in the [Test Wallet](https://wallet.interledger-test.dev) application, then generate public and private key for the wallet address in the `Developer Keys` found in the `Settings` menu of Interledger Test Wallet. With the generated values you can proceed to update the following environment variables: `PRIVATE_KEY` to the generated base64 encoded private key, `KEY_ID` to the wallet address key id, and `WALLET_ADDRESS` to the created wallet address.
 
-`REDIRECT_URL` variable is the url for the interaction with the Identity Provider Page, in our case, localy this would be `http://localhost:3000/finish`. `INTERLEDGER_PAY_HOST` is the url where Interledger Pay is hosted, localy the value is `http://localhost:3000`. We are using cookies to store some data, so a cookie secret key needs to be set in `SESSION_COOKIE_SECRET_KEY`.
+`REDIRECT_URL` variable is the url for the interaction with the Identity Provider Page, in our case, localy this would be `https://localhost:5200/finish`. `INTERLEDGER_PAY_HOST` is the url where Interledger Pay is hosted, localy the value is `https://localhost:5200`. We are using cookies to store some data, so a cookie secret key needs to be set in `SESSION_COOKIE_SECRET_KEY`.
 
 ### Local Interledger Pay
 
 Navigate to the project's root directory and execute:
 
 ```sh
-pnpm dev
+docker compose -f docker-compose.dev.yml up
 ```
 
-Upon executing the above command, the following will be available
+If you receive certificate error, then create a `.cert` folder in your `root` directory, and generate certificates `cert.pem` and `key.pem` that you need to copy into the created `.cert` directory. You can generate certicficate files using [THIS](https://github.com/interledger/web-monetization-tools/tree/op-integration?tab=readme-ov-file#https-required) guideline.
 
-- Interledger Pay application at [http://localhost:3000](http://localhost:3000)
+Upon executing the docker command, the following will be available
+
+- Interledger Pay application at [https://localhost:5200](https://localhost:5200)
