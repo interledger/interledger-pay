@@ -24,7 +24,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const searchParams = new URL(request.url).searchParams
   const isQuote = searchParams.get('quote') || false
   const receiver = searchParams.get('receiver') || ''
-
   const session = await getSession(request.headers.get('Cookie'))
 
   let receiverName = ''
@@ -52,6 +51,18 @@ export async function loader({ request }: LoaderFunctionArgs) {
       value: quote.debitAmount.value,
       assetCode: quote.debitAmount.assetCode,
       assetScale: quote.debitAmount.assetScale
+    })
+  } else if (receiver !== '') {
+    try {
+      await getValidWalletAddress(receiver)
+    } catch (error) {
+      throw new Error(
+        'Receiver Wallet Address is not valid. Please check and try again.'
+      )
+    }
+  } else {
+    return redirect('/', {
+      headers: { 'Set-Cookie': await destroySession(session) }
     })
   }
 
