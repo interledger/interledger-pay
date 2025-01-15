@@ -1,0 +1,29 @@
+services:
+  ilpay:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - '5280:5280'
+    expose:
+      - '5280'
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      NODE_ENV: development
+      PORT: 5280
+      HTTPS: true
+      SSL_CRT_FILE: /app/.cert/cert.pem
+      SSL_KEY_FILE: /app/.cert/key.pem
+    command: pnpm dev
+  nginx:
+    image: nginx:alpine
+    ports:
+      - '80:80'
+      - '5200:5200'
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./.cert:/etc/nginx/ssl
+    depends_on:
+      - ilpay
