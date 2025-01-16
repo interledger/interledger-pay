@@ -36,7 +36,7 @@ export default function Index() {
   })
 
   return (
-    <div className="flex justify-center flex-col h-full w-full gap-10 sm:px-20 px-4">
+    <div className="flex justify-center flex-col h-full w-full gap-10 md:px-4">
       <Header />
       <div className="text-3xl">Pay anyone, anywhere in the world.</div>
       <Form method="POST" {...form.props}>
