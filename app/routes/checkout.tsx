@@ -1,5 +1,5 @@
 import type { LoaderFunctionArgs } from '@remix-run/node'
-import { useLoaderData } from '@remix-run/react'
+import { Link, useLoaderData } from '@remix-run/react'
 import {
   Elements,
   PaymentElement,
@@ -10,6 +10,9 @@ import { loadStripe } from '@stripe/stripe-js'
 import { useEffect, useState } from 'react'
 import { createPaymentIntent } from '../lib/stripe.server'
 import { getSession } from '../session'
+import { Header } from '~/components/header'
+import { BackNav } from '~/components/icons'
+import { Button } from '~/components/ui/button'
 
 const stripePromise = loadStripe('pk_test_B4Mlg9z1svOsuVjovpcLaK0d00lWym58fF')
 
@@ -73,24 +76,26 @@ function CheckoutForm({ clientSecret }: CheckoutFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <PaymentElement />
-      <button
-        type="submit"
-        style={{
-          marginTop: '20px',
-          background: '#5469d4',
-          color: '#ffffff',
-          border: 'none',
-          borderRadius: '4px',
-          fontSize: '16px',
-          cursor: 'pointer',
-          padding: '10px 20px'
-        }}
-        disabled={!stripe || !elements}
-      >
-        Pay
-      </button>
-    </form>
+    <>
+      <Header />
+      <Link to="/" className="flex gap-2 items-center justify-end">
+        <BackNav />
+        <span className="hover:text-green-1">Home</span>
+      </Link>
+      <div className="flex justify-center items-center flex-col h-full">
+        <form onSubmit={handleSubmit}>
+          <PaymentElement />
+          <Button
+            aria-label="pay"
+            type="submit"
+            disabled={!stripe || !elements}
+            size="xl"
+            className="mt-5"
+          >
+            Pay
+          </Button>
+        </form>
+      </div>
+    </>
   )
 }

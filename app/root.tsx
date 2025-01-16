@@ -71,7 +71,7 @@ export default function App() {
       >
         <div
           className={cn(
-            isEmbeded ? 'w-full h-full pt-4' : 'w-full h-full p-20'
+            isEmbeded ? 'w-full h-full pt-4' : 'w-full h-full p-4 sm:p-20'
           )}
         >
           <BackdropProvider>
