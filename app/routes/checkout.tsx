@@ -1,5 +1,5 @@
 import type { LoaderFunctionArgs } from '@remix-run/node'
-import { Link, useLoaderData } from '@remix-run/react'
+import { json, Link, useLoaderData } from '@remix-run/react'
 import {
   Elements,
   PaymentElement,
@@ -7,56 +7,66 @@ import {
   useStripe
 } from '@stripe/react-stripe-js'
 import { loadStripe } from '@stripe/stripe-js'
-import { useEffect, useState } from 'react'
 import { createPaymentIntent } from '../lib/stripe.server'
-import { getSession } from '../session'
 import { Header } from '~/components/header'
-import { BackNav } from '~/components/icons'
+import { BackNav, Card } from '~/components/icons'
 import { Button } from '~/components/ui/button'
+import type { WalletAddress } from '@interledger/open-payments/dist/types'
+import { getValidWalletAddress } from '~/lib/validators.server'
+import { AmountDisplay } from '~/components/dialpad'
+import { formatAmount } from '~/utils/helpers'
 
 const stripePromise = loadStripe('pk_test_B4Mlg9z1svOsuVjovpcLaK0d00lWym58fF')
 
-export default function CheckoutPage() {
-  const [clientSecret, setClientSecret] = useState('')
+export async function loader({ request }: LoaderFunctionArgs) {
+  const searchParams = new URL(request.url).searchParams
+  const receiver = searchParams.get('receiver') || ''
+  const amount = searchParams.get('amount') || ''
 
-  const paymentIntent: any = useLoaderData()
-  const options = {
-    clientSecret: paymentIntent.client_secret
+  let receiverWalletAddress = {} as WalletAddress
+
+  if (receiver !== '') {
+    try {
+      receiverWalletAddress = await getValidWalletAddress(receiver)
+    } catch (error) {
+      throw new Error(
+        'Receiver Wallet Address is not valid. Please check and try again.'
+      )
+    }
   }
 
-  useEffect(() => {
-    if (paymentIntent && paymentIntent.client_secret) {
-      setClientSecret(paymentIntent.client_secret)
-    }
-  }, [paymentIntent])
+  return json({
+    paymentIntent: await createPaymentIntent(
+      Number(amount) * 100,
+      receiverWalletAddress.assetCode
+    ),
+    amountWithCurrency: formatAmount({
+      value: (Number(amount) * 100).toString(),
+      assetCode: receiverWalletAddress.assetCode,
+      assetScale: receiverWalletAddress.assetScale
+    }).amountWithCurrency
+  })
+}
+
+export default function CheckoutPage() {
+  const data: any = useLoaderData<typeof loader>()
+
+  const options = {
+    clientSecret: data.paymentIntent.client_secret
+  }
 
   return (
     <Elements stripe={stripePromise} options={options}>
-      <CheckoutForm clientSecret={clientSecret} />
+      <CheckoutForm amountWithCurrency={data.amountWithCurrency} />
     </Elements>
   )
 }
 
-export async function loader({ request }: LoaderFunctionArgs) {
-  const session = await getSession(request.headers.get('Cookie'))
-  const amount = session.get('amount')
-  return await createPaymentIntent(amount)
-}
-
 type CheckoutFormProps = {
-  clientSecret: string
+  amountWithCurrency: string
 }
 
-function CheckoutForm({ clientSecret }: CheckoutFormProps) {
-  console.log('clientSecret', clientSecret)
-  // Client secret might still need to be passed down as props in case of using the CardElement instead of PaymentElement (which allows for full customization)
-  /*
-		stripe.confirmCardPayment.(clientSecret, {
-			payment_method: {card: cardElement}
-		})`
-	*/
-  // Leaving it as frontend's choice
-
+function CheckoutForm({ amountWithCurrency }: CheckoutFormProps) {
   const stripe = useStripe()
   const elements = useElements()
 
@@ -83,7 +93,11 @@ function CheckoutForm({ clientSecret }: CheckoutFormProps) {
         <span className="hover:text-green-1">Home</span>
       </Link>
       <div className="flex justify-center items-center flex-col h-full">
-        <form onSubmit={handleSubmit}>
+        <AmountDisplay displayAmount={amountWithCurrency} />
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col items-center border-light-green border-4 rounded-lg p-10 mt-10"
+        >
           <PaymentElement />
           <Button
             aria-label="pay"
@@ -92,7 +106,8 @@ function CheckoutForm({ clientSecret }: CheckoutFormProps) {
             size="xl"
             className="mt-5"
           >
-            Pay
+            Pay with card
+            <Card width="20" height="20" className="ml-2" />
           </Button>
         </form>
       </div>

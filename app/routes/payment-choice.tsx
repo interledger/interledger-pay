@@ -54,7 +54,7 @@ export default function PaymentChoice() {
           </span>
         </Link>
         <Link
-          to={`/checkout?receiver=${data.receiver}`}
+          to={`/ilpay?receiver=${data.receiver}`}
           className={`w-56 h-32 text-right ease-in-out transition-[box-shadow,transform] duration-200 aspect-[5/3] rounded-lg flex flex-col p-3 border-2
           hover:scale-105 focus:scale-105 hover:bg-green-2 hover:border-green-2`}
         >
