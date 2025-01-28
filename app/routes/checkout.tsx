@@ -1,5 +1,5 @@
 import type { LoaderFunctionArgs } from '@remix-run/node'
-import { json, Link, useLoaderData } from '@remix-run/react'
+import { json, Link, redirect, useLoaderData } from '@remix-run/react'
 import {
   Elements,
   PaymentElement,
@@ -19,7 +19,8 @@ import { formatAmount } from '~/utils/helpers'
 const stripePromise = loadStripe('pk_test_B4Mlg9z1svOsuVjovpcLaK0d00lWym58fF')
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const searchParams = new URL(request.url).searchParams
+  const url = new URL(request.url)
+  const searchParams = url.searchParams
   const receiver = searchParams.get('receiver') || ''
   const amount = searchParams.get('amount') || ''
 
@@ -44,7 +45,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
       value: (Number(amount) * 100).toString(),
       assetCode: receiverWalletAddress.assetCode,
       assetScale: receiverWalletAddress.assetScale
-    }).amountWithCurrency
+    }).amountWithCurrency,
+    finishUrl: `${url.protocol}//${url.host}/card-payment-result`
   })
 }
 
@@ -57,16 +59,20 @@ export default function CheckoutPage() {
 
   return (
     <Elements stripe={stripePromise} options={options}>
-      <CheckoutForm amountWithCurrency={data.amountWithCurrency} />
+      <CheckoutForm
+        amountWithCurrency={data.amountWithCurrency}
+        finishUrl={data.finishUrl}
+      />
     </Elements>
   )
 }
 
 type CheckoutFormProps = {
   amountWithCurrency: string
+  finishUrl: string
 }
 
-function CheckoutForm({ amountWithCurrency }: CheckoutFormProps) {
+function CheckoutForm({ amountWithCurrency, finishUrl }: CheckoutFormProps) {
   const stripe = useStripe()
   const elements = useElements()
 
@@ -77,11 +83,11 @@ function CheckoutForm({ amountWithCurrency }: CheckoutFormProps) {
     const { error } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: 'http://localhost:3000/success' // TODO Success Page
+        return_url: finishUrl
       }
     })
     if (error) {
-      console.error(error.message)
+      redirect(`/card-payment-result?error=${error.message}`)
     }
   }
 
