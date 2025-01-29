@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { retrievePaymentIntent } from '../lib/stripe.server'
 import { FinishCheck, FinishError } from '~/components/icons'
 import { formatAmount } from '~/utils/helpers'
+import { Loader } from '~/components/loader'
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const params = new URL(request.url).searchParams
@@ -40,7 +41,11 @@ export default function CardPaymentResult() {
   }, [data.paymentIntent])
 
   if (!paymentIntent) {
-    return <div className="text-center text-gray-500">Loading...</div>
+    return (
+      <div className="text-center text-gray-500">
+        <Loader type="large" />
+      </div>
+    )
   }
 
   return (
