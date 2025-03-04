@@ -9,13 +9,19 @@ import {
 } from '@remix-run/node'
 import { Form, useActionData, useLoaderData } from '@remix-run/react'
 import { z } from 'zod'
+import { AmountDisplay } from '~/components/dialpad'
 import { Header } from '~/components/header'
 import Quote from '~/components/quoteDialog'
 import { Button } from '~/components/ui/button'
 import { Field } from '~/components/ui/form/form'
 import { PayWithInterledgerMark } from '~/components/ui/logo'
 import { useDialogContext } from '~/lib/context/dialog'
-import { fetchQuote, initializePayment } from '~/lib/open-payments.server'
+import { useDialPadContext } from '~/lib/context/dialpad'
+import {
+  createRequestPayment,
+  fetchRequestQuote,
+  initializePayment
+} from '~/lib/open-payments.server'
 import { getValidWalletAddress } from '~/lib/validators.server'
 import { commitSession, destroySession, getSession } from '~/session'
 import { formatAmount } from '~/utils/helpers'
@@ -89,6 +95,7 @@ export default function PayWithInterledger() {
   const data = useLoaderData<typeof loader>()
   const actionData = useActionData<typeof action>()
   const { setOpen } = useDialogContext()
+  const { amountValue } = useDialPadContext()
   const [form, fields] = useForm({
     id: 'pay-with-interledger-form',
     constraint: getFieldsetConstraint(schema),
@@ -102,6 +109,7 @@ export default function PayWithInterledger() {
     <>
       <Header />
       <div className="flex h-full flex-col justify-center gap-10">
+        <AmountDisplay />
         <div className="mx-auto w-full max-w-sm">
           <Form method="POST" {...form.props}>
             <div className="flex flex-col gap-4">
@@ -119,16 +127,15 @@ export default function PayWithInterledger() {
                 errors={fields.walletAddress.errors}
               />
               <Field
-                label="Amount"
-                placeholder="Amount"
-                {...conform.input(fields.amount)}
-                errors={fields.amount.errors}
-              />
-              <Field
                 label="Payment note"
                 placeholder="Note"
                 {...conform.input(fields.note)}
                 errors={fields.note.errors}
+              />
+              <input
+                type="hidden"
+                {...conform.input(fields.amount)}
+                value={Number(amountValue)}
               />
               <div className="flex justify-center">
                 <Button
@@ -185,7 +192,17 @@ export async function action({ request }: ActionFunctionArgs) {
       return json(submission)
     }
 
-    const quote = await fetchQuote(submission.value, receiverWalletAddress)
+    const incomingPayment = await createRequestPayment({
+      walletAddress: submission.value.receiver,
+      amount: submission.value.amount,
+      note: submission.value.note
+    })
+    const quote = await fetchRequestQuote({
+      walletAddress: submission.value.walletAddress,
+      incomingPaymentUrl: incomingPayment.id
+    })
+
+    // const quote = await fetchQuote(submission.value, receiverWalletAddress)
     session.set('quote', quote)
     session.set('wallet-address', {
       walletAddress: walletAddress
