@@ -135,7 +135,7 @@ export default function PayRequest() {
             ></Field>
             <Field
               label="Request note"
-              defaultValue={data.note}
+              defaultValue={data.note === 'undefined' ? '-' : data.note}
               variant="highlight"
               readOnly
             ></Field>
