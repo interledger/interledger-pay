@@ -70,7 +70,7 @@ export default function ShareRequest() {
             ></Field>
             <Field
               label="Request note"
-              defaultValue={data.note}
+              defaultValue={data.note === undefined ? '-' : data.note}
               variant="info"
             ></Field>
             <div className="mb-6 mx-4 flex gap-4 font-light text-sm justify-center items-center before:content-[''] after:content-[''] before:border after:border before:border-input after:border-inout before:flex-1 after:flex-1 before:border-solid after:border-solid">
