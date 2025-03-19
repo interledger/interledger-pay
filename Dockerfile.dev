@@ -7,7 +7,7 @@ FROM node:${NODE_VERSION}-slim as base
 WORKDIR /app
 
 # Install pnpm
-ARG PNPM_VERSION=8.15.5
+ARG PNPM_VERSION=9.1.4
 RUN npm install -g pnpm@$PNPM_VERSION
 
 
