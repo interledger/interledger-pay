@@ -108,7 +108,7 @@ export default function PayWithInterledger() {
   return (
     <>
       <Header />
-      <div className="flex h-full flex-col justify-center gap-10">
+      <div className="flex h-full flex-col mt-10 gap-10">
         <AmountDisplay />
         <div className="mx-auto w-full max-w-sm">
           <Form method="POST" {...form.props}>
