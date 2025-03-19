@@ -98,7 +98,7 @@ function CheckoutForm({ amountWithCurrency, finishUrl }: CheckoutFormProps) {
         <BackNav />
         <span className="hover:text-green-1">Home</span>
       </Link>
-      <div className="flex justify-center items-center flex-col h-full">
+      <div className="flex mt-10 items-center flex-col h-full">
         <AmountDisplay displayAmount={amountWithCurrency} />
         <form
           onSubmit={handleSubmit}
