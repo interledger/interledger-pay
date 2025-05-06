@@ -12,7 +12,6 @@ import { useEffect } from 'react'
 import type { WalletAddress } from '@interledger/open-payments'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
-  console.log(params.wallet)
   const receiver = params.wallet || ''
   const session = await getSession(request.headers.get('Cookie'))
   let receiverWalletAddress = {} as WalletAddress
