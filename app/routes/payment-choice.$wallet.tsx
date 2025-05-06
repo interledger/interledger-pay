@@ -11,9 +11,9 @@ import { useDialPadContext } from '~/lib/context/dialpad'
 import { useEffect } from 'react'
 import type { WalletAddress } from '@interledger/open-payments'
 
-export async function loader({ request }: LoaderFunctionArgs) {
-  const searchParams = new URL(request.url).searchParams
-  const receiver = searchParams.get('receiver') || ''
+export async function loader({ request, params }: LoaderFunctionArgs) {
+  console.log(params.wallet)
+  const receiver = params.wallet || ''
   const session = await getSession(request.headers.get('Cookie'))
   let receiverWalletAddress = {} as WalletAddress
 
