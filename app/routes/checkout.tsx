@@ -16,7 +16,7 @@ import { getValidWalletAddress } from '~/lib/validators.server'
 import { AmountDisplay } from '~/components/dialpad'
 import { formatAmount } from '~/utils/helpers'
 
-const stripePromise = loadStripe('pk_test_B4Mlg9z1svOsuVjovpcLaK0d00lWym58fF')
+const stripePromise = loadStripe('pk_test_51Qp3qzHvUT7XIz4Uk4wMbVqAor9zlZTesddKbkrm1tP2oorAueqM8BMHDbMcoYxv8UqSBbpSgU64vGPeGSEPzowT001nFQbqr2')
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url)
@@ -35,11 +35,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
       )
     }
   }
-
   return json({
     paymentIntent: await createPaymentIntent(
       Number(amount) * 100,
-      receiverWalletAddress.assetCode
+      receiverWalletAddress.assetCode,
+      {
+        receiving_address: receiver
+      }
     ),
     amountWithCurrency: formatAmount({
       value: (Number(amount) * 100).toString(),
