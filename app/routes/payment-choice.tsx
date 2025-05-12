@@ -40,7 +40,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export default function PaymentChoice() {
   const data = useLoaderData<typeof loader>()
 
-  const { setAssetCode } = useDialPadContext()
+  const { setAssetCode, amountValue } = useDialPadContext()
 
   useEffect(() => {
     setAssetCode(data.assetCode)
@@ -53,7 +53,7 @@ export default function PaymentChoice() {
         <BackNav />
         <span className="hover:text-green-1">Home</span>
       </Link>
-      <div className="flex justify-center items-center flex-col h-full px-5">
+      <div className="flex mt-10 items-center flex-col h-full px-5">
         <Field
           label="Pay into Wallet Address"
           variant="highlight"
@@ -78,7 +78,7 @@ export default function PaymentChoice() {
             </span>
           </Link>
           <Link
-            to={`/checkout?receiver=${data.receiver}`}
+            to={`/checkout?receiver=${data.receiver}&amount=${amountValue}`}
             className={`w-48 h-24 text-right ease-in-out transition-[box-shadow,transform] duration-200 aspect-[5/3] rounded-lg flex flex-col p-3 border-2
           hover:scale-105 focus:scale-105 hover:bg-green-2 hover:border-green-2`}
           >
