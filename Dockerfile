@@ -12,10 +12,6 @@ WORKDIR /app
 # Set production environment
 ENV NODE_ENV="production"
 
-# Add build arguments
-ARG STRIPE_PUBLIC_KEY
-ENV STRIPE_PUBLIC_KEY=$STRIPE_PUBLIC_KEY
-
 # Install pnpm
 ARG PNPM_VERSION=9.1.4
 RUN npm install -g pnpm@$PNPM_VERSION
