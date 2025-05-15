@@ -16,7 +16,7 @@ import { getValidWalletAddress } from '~/lib/validators.server'
 import { AmountDisplay } from '~/components/dialpad'
 import { formatAmount } from '~/utils/helpers'
 
-const stripePromise = loadStripe('pk_test_51Qp3qzHvUT7XIz4Uk4wMbVqAor9zlZTesddKbkrm1tP2oorAueqM8BMHDbMcoYxv8UqSBbpSgU64vGPeGSEPzowT001nFQbqr2')
+const stripePromise = loadStripe(process.env.STRIPE_PUBLIC_KEY || '')
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url)
