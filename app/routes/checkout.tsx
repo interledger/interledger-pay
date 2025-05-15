@@ -15,8 +15,7 @@ import type { WalletAddress } from '@interledger/open-payments/dist/types'
 import { getValidWalletAddress } from '~/lib/validators.server'
 import { AmountDisplay } from '~/components/dialpad'
 import { formatAmount } from '~/utils/helpers'
-
-const stripePromise = loadStripe('pk_test_51Qp3qzHvUT7XIz4Uk4wMbVqAor9zlZTesddKbkrm1tP2oorAueqM8BMHDbMcoYxv8UqSBbpSgU64vGPeGSEPzowT001nFQbqr2')
+import { useEffect, useState } from 'react'
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url)
@@ -53,10 +52,19 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export default function CheckoutPage() {
-  const data: any = useLoaderData<typeof loader>()
+  const data = useLoaderData<typeof loader>()
+  const [stripePromise, setStripePromise] = useState<ReturnType<typeof loadStripe> | null>(null)
+
+  useEffect(() => {
+    setStripePromise(loadStripe(window.ENV?.STRIPE_PUBLIC_KEY || ''))
+  }, [])
+
+  if (!stripePromise) {
+    return null
+  }
 
   const options = {
-    clientSecret: data.paymentIntent.client_secret
+    clientSecret: data.paymentIntent.client_secret || undefined
   }
 
   return (
