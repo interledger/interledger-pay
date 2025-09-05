@@ -240,14 +240,7 @@ type CreateOutgoingPaymentParams = {
 async function createOutgoingPaymentGrant(
   params: CreateOutgoingPaymentParams
 ): Promise<PendingGrant> {
-  const {
-    walletAddress,
-    debitAmount,
-    receiveAmount,
-    nonce,
-    paymentId,
-    opClient
-  } = params
+  const { walletAddress, debitAmount, nonce, paymentId, opClient } = params
 
   const grant = await opClient.grant
     .request(
@@ -262,8 +255,7 @@ async function createOutgoingPaymentGrant(
               type: 'outgoing-payment',
               actions: ['create', 'read', 'list'],
               limits: {
-                debitAmount: debitAmount,
-                receiveAmount: receiveAmount
+                debitAmount: debitAmount
               }
             }
           ]
