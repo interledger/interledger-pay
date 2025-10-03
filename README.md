@@ -16,7 +16,7 @@ See Interledger Pay in action [here](https://interledgerpay.com).
 Never heard of Interledger before, or you would like to learn more? Here are some good places to start:
 
 - [Interledger Website](https://interledger.org/)
-- [Interledger Specs](https://interledger.org/rfcs/0027-interledger-protocol-4/)
+- [Interledger Specs](https://interledger.org/developers/get-started/)
 - [Interledger Explainer Video](https://twitter.com/Interledger/status/1567916000074678272)
 - [Open Payments](https://openpayments.guide/)
 - [Web monetization](https://webmonetization.org/)
