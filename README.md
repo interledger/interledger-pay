@@ -88,7 +88,7 @@ Navigate to the project's root directory and execute:
 docker compose -f docker-compose.dev.yml up
 ```
 
-If you receive certificate error, then create a `.cert` folder in your `root` directory, and generate certificates `cert.pem` and `key.pem` that you need to copy into the created `.cert` directory. You can generate certicficate files using [THIS](https://github.com/interledger/web-monetization-tools/tree/op-integration?tab=readme-ov-file#https-required) guideline.
+If you receive certificate error, then create a `.cert` folder in your `root` directory, and generate certificates `cert.pem` and `key.pem` that you need to copy into the created `.cert` directory. You can generate certificate files using [THIS](https://github.com/interledger/web-monetization-tools/tree/op-integration?tab=readme-ov-file#https-required) guideline.
 
 Upon executing the docker command, the following will be available
 
