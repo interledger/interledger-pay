@@ -73,7 +73,7 @@ export default function PaymentChoice() {
             <span className="h-6 flex justify-end text-green-1">
               <InterledgerMark />
             </span>
-            <span className="text-md mt-6 font-semibold -tracking-wider text-green-1 text-xl">
+            <span className="mt-6 font-semibold -tracking-wider text-green-1 text-xl">
               Pay with Interledger
             </span>
           </Link>
