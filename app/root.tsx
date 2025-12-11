@@ -29,7 +29,7 @@ import { cn } from './lib/cn'
 export const links: LinksFunction = () => [
   {
     rel: 'icon',
-    href: '/favicon.iso',
+    href: '/favicon.ico',
     type: 'image/svg+xml'
   },
   { rel: 'stylesheet', href: stylesheet },
