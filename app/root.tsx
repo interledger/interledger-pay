@@ -29,7 +29,7 @@ import { cn } from './lib/cn'
 export const links: LinksFunction = () => [
   {
     rel: 'icon',
-    href: '/favicon.svg',
+    href: '/favicon.iso',
     type: 'image/svg+xml'
   },
   { rel: 'stylesheet', href: stylesheet },
@@ -40,15 +40,15 @@ export const links: LinksFunction = () => [
 export async function loader() {
   return json({
     ENV: {
-      STRIPE_PUBLIC_KEY: process.env.STRIPE_PUBLIC_KEY,
-    },
-  });
+      STRIPE_PUBLIC_KEY: process.env.STRIPE_PUBLIC_KEY
+    }
+  })
 }
 
 export default function App() {
   const navigation = useNavigation()
   const location = useLocation()
-  const data = useLoaderData<typeof loader>();
+  const data = useLoaderData<typeof loader>()
 
   // detect if it's loaded in wm tools
   const isEmbeded = location.pathname.indexOf('extension') !== -1
@@ -95,7 +95,7 @@ export default function App() {
         </div>
         <script
           dangerouslySetInnerHTML={{
-            __html: `window.ENV = ${JSON.stringify(data.ENV)}`,
+            __html: `window.ENV = ${JSON.stringify(data.ENV)}`
           }}
         />
         <ScrollRestoration />
