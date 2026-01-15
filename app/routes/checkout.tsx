@@ -34,6 +34,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
       )
     }
   }
+
   return json({
     paymentIntent: await createPaymentIntent(
       Number(amount) * 100,
