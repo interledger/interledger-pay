@@ -8,6 +8,7 @@ import { Form } from '@remix-run/react'
 import { useForm } from '@conform-to/react'
 import { Loader } from './loader'
 import { useBackdropContext } from '~/lib/context/backdrop'
+import { PayLogo } from './ui/logo'
 
 export type QuoteArgs = {
   receiverName: string
@@ -63,7 +64,10 @@ export default function Quote({
               leaveTo="opacity-0 translate-y-4"
             >
               <Dialog.Panel className="relative w-full max-w-sm space-y-4 overflow-hidden rounded-lg px-4 py-8 shadow-2xl bg-foreground">
-                <Header />
+                {/* <Header /> */}
+                <div className="flex justify-center items-center">
+                  <PayLogo />
+                </div>
                 <div className="flex h-full flex-col justify-center gap-10 pt-5">
                   <div className="mx-auto w-full max-w-sm">
                     <Loader type="small" />
