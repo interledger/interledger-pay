@@ -10,6 +10,7 @@ import { Field } from '~/components/ui/form/form'
 import { useDialPadContext } from '~/lib/context/dialpad'
 import { getValidWalletAddress } from '~/lib/validators.server'
 import { commitSession, getSession } from '~/session'
+import { toWalletAddressUrl } from '~/utils/helpers'
 
 export const meta: MetaFunction = () => {
   return [
@@ -21,7 +22,7 @@ export const meta: MetaFunction = () => {
 const schema = z.object({
   walletAddress: z
     .string()
-    .transform((val) => val.replace('$', 'https://'))
+    .transform(toWalletAddressUrl)
     .pipe(z.string().url({ message: 'Invalid wallet address.' }))
 })
 
@@ -43,7 +44,7 @@ export default function Index() {
         <div className="flex flex-col gap-4">
           <Field
             type="text"
-            label="Enter your wallet address"
+            label="Enter your wallet address or payment pointer"
             placeholder="Wallet address"
             className="max-w-96"
             autoFocus={true}

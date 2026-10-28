@@ -21,7 +21,7 @@ import { useDialPadContext } from '~/lib/context/dialpad'
 import { fetchQuote, initializePayment } from '~/lib/open-payments.server'
 import { getValidWalletAddress } from '~/lib/validators.server'
 import { commitSession, destroySession, getSession } from '~/session'
-import { formatAmount } from '~/utils/helpers'
+import { formatAmount, toWalletAddressUrl } from '~/utils/helpers'
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const searchParams = new URL(request.url).searchParams
@@ -75,7 +75,7 @@ const schema = z.object({
   walletAddress: z.string(),
   receiver: z
     .string()
-    .transform((val) => val.replace('$', 'https://'))
+    .transform(toWalletAddressUrl)
     .pipe(z.string().url({ message: 'The input is not a wallet address.' })),
   amount: z.coerce.number(),
   note: z.string().optional()
