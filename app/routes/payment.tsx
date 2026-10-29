@@ -23,7 +23,7 @@ import {
 } from '~/lib/open-payments.server'
 import { getValidWalletAddress } from '~/lib/validators.server'
 import { commitSession, destroySession, getSession } from '~/session'
-import { formatAmount, formatDate } from '~/utils/helpers'
+import { formatAmount, formatDate, toWalletAddressUrl } from '~/utils/helpers'
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const searchParams = new URL(request.url).searchParams
@@ -88,7 +88,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 const schema = z.object({
   walletAddress: z
     .string()
-    .transform((val) => val.replace('$', 'https://'))
+    .transform(toWalletAddressUrl)
     .pipe(z.string().url({ message: 'The input is not a wallet address.' })),
   incomingPaymentUrl: z.string()
 })

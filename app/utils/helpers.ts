@@ -68,6 +68,19 @@ export const formatAmount = (args: FormatAmountArgs): FormattedAmount => {
   }
 }
 
+// a payment pointer such as $wallet.example/alice stands for
+// https://wallet.example/alice, and one without a path, such as
+// $wallet.example, for https://wallet.example/.well-known/pay
+export const toWalletAddressUrl = (input: string): string => {
+  const value = input.trim()
+  if (!value.startsWith('$')) return value
+
+  const pointer = value.slice(1).replace(/\/+$/, '')
+  return pointer.includes('/')
+    ? `https://${pointer}`
+    : `https://${pointer}/.well-known/pay`
+}
+
 export const objectToUrlParams = (obj: { [key: string]: number | string }) => {
   const params = []
 

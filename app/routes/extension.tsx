@@ -30,7 +30,8 @@ import {
   formatAmount,
   objectToUrlParams,
   predefinedPaymentValues,
-  sanitizeAndAddCss
+  sanitizeAndAddCss,
+  toWalletAddressUrl
 } from '~/utils/helpers'
 import { useEffect, useState } from 'react'
 import { cn } from '~/lib/cn'
@@ -71,10 +72,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   try {
     if (receiver) {
-      const formattedReceiver = decodeURI(String(receiver)).replace(
-        '$',
-        'https://'
-      )
+      const formattedReceiver = toWalletAddressUrl(decodeURI(String(receiver)))
       receiverWalletAddressInfo = await getValidWalletAddress(formattedReceiver)
     }
   } catch (error) {
@@ -138,7 +136,7 @@ const schema = z.object({
   walletAddress: z.string(),
   receiver: z
     .string()
-    .transform((val) => val.replace('$', 'https://'))
+    .transform(toWalletAddressUrl)
     .pipe(z.string().url({ message: 'The input is not a wallet address.' })),
   amount: z.coerce
     .number()
@@ -336,10 +334,7 @@ export async function action({ request }: ActionFunctionArgs) {
     const submission = await parse(formData, {
       schema: schema.superRefine(async (data, context) => {
         try {
-          data.walletAddress = String(data.walletAddress).replace(
-            '$',
-            'https://'
-          )
+          data.walletAddress = toWalletAddressUrl(String(data.walletAddress))
 
           walletAddress = await getValidWalletAddress(data.walletAddress)
           receiver = await getValidWalletAddress(data.receiver)
