@@ -4,7 +4,7 @@ import { BackNav, Card } from '~/components/icons'
 import { json, redirect, type LoaderFunctionArgs } from '@remix-run/node'
 import { destroySession, getSession } from '~/session'
 import { getValidWalletAddress } from '~/lib/validators.server'
-import { InterledgerMark } from '~/components/ui/logo'
+import { InterledgerLogo } from '~/components/ui/logo'
 import { DialPad } from '~/components/dialpad'
 import { Field } from '~/components/ui/form/form'
 import { useDialPadContext } from '~/lib/context/dialpad'
@@ -71,7 +71,7 @@ export default function PaymentChoice() {
           hover:scale-105 focus:scale-105 hover:bg-green-2 hover:border-green-2`}
           >
             <span className="h-6 flex justify-end text-green-1">
-              <InterledgerMark />
+              <InterledgerLogo alt="" className="h-6 w-6 object-contain" />
             </span>
             <span className="mt-6 font-semibold -tracking-wider text-green-1 text-xl">
               Pay with Interledger

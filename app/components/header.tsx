@@ -1,13 +1,14 @@
 import { Link } from '@remix-run/react'
-import { InterledgerPayLogo } from './ui/logo'
+import { InterledgerLogo } from './ui/logo'
 
 export const Header = () => {
   return (
-    <Link to="/" className="flex items-center gap-1 text-2xl cursor-pointer">
-      <InterledgerPayLogo
-        className="h-20 w-72 flex-shrink-0 inline-flex"
-        aria-label="Logo"
-      />
+    <Link
+      to="/"
+      aria-label="Interledger Pay home"
+      className="flex items-center gap-1 text-2xl cursor-pointer"
+    >
+      <InterledgerLogo className="h-20 w-20 flex-shrink-0 object-contain" />
     </Link>
   )
 }

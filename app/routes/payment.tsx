@@ -14,7 +14,7 @@ import { Header } from '~/components/header'
 import Quote from '~/components/quoteDialog'
 import { Button } from '~/components/ui/button'
 import { Field } from '~/components/ui/form/form'
-import { PayWithInterledgerMark } from '~/components/ui/logo'
+import { InterledgerLogo } from '~/components/ui/logo'
 import { useDialogContext } from '~/lib/context/dialog'
 import {
   fetchRequestQuote,
@@ -160,7 +160,7 @@ export default function PayRequest() {
                 size="xl"
               >
                 <span className="text-md">Pay with</span>
-                <PayWithInterledgerMark className="h-8 w-40 mx-2" />
+                <InterledgerLogo className="h-8 w-8 mx-2 object-contain" />
               </Button>
             </div>
           </Form>
