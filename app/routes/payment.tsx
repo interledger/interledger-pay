@@ -153,14 +153,14 @@ export default function PayRequest() {
             />
             <div className="flex justify-center">
               <Button
-                aria-label="pay"
+                aria-label="Pay with Interledger"
                 type="submit"
                 name="intent"
                 value="pay"
                 size="xl"
               >
                 <span className="text-md">Pay with</span>
-                <PayWithInterledgerMark className="h-8 w-40 mx-2" />
+                <PayWithInterledgerMark className="h-8 w-32 ml-2 flex-shrink-0" />
               </Button>
             </div>
           </Form>
