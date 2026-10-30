@@ -15,7 +15,7 @@ import { BackNav } from '~/components/icons'
 import Quote from '~/components/quoteDialog'
 import { Button } from '~/components/ui/button'
 import { Field } from '~/components/ui/form/form'
-import { InterledgerLogo } from '~/components/ui/logo'
+import { PayWithInterledgerMark } from '~/components/ui/logo'
 import { useDialogContext } from '~/lib/context/dialog'
 import { useDialPadContext } from '~/lib/context/dialpad'
 import { fetchQuote, initializePayment } from '~/lib/open-payments.server'
@@ -135,14 +135,14 @@ export default function Pay() {
               />
               <div className="flex justify-center">
                 <Button
-                  aria-label="pay"
+                  aria-label="Pay with Interledger"
                   type="submit"
                   name="intent"
                   value="pay"
                   size="xl"
                 >
                   <span className="text-md">Pay with</span>
-                  <InterledgerLogo className="h-8 w-8 mx-2 object-contain" />
+                  <PayWithInterledgerMark className="h-8 w-32 ml-2 flex-shrink-0" />
                 </Button>
               </div>
             </div>
