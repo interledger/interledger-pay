@@ -1,6 +1,6 @@
 import { Header } from '~/components/header'
 import { Link, useLoaderData } from '@remix-run/react'
-import { BackNav } from '~/components/icons'
+import { BackNav, Card } from '~/components/icons'
 import { json, redirect, type LoaderFunctionArgs } from '@remix-run/node'
 import { destroySession, getSession } from '~/session'
 import { getValidWalletAddress } from '~/lib/validators.server'
@@ -40,11 +40,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export default function PaymentChoice() {
   const data = useLoaderData<typeof loader>()
 
-  const { setAssetCode } = useDialPadContext()
+  const { setAssetCode, amountValue } = useDialPadContext()
 
   useEffect(() => {
     setAssetCode(data.assetCode)
-  })
+  }, [data.assetCode, setAssetCode])
 
   return (
     <>
@@ -75,6 +75,18 @@ export default function PaymentChoice() {
             </span>
             <span className="mt-6 font-semibold -tracking-wider text-green-1 text-xl">
               Pay with Interledger
+            </span>
+          </Link>
+          <Link
+            to={`/checkout?receiver=${data.receiver}&amount=${amountValue}`}
+            className={`w-48 h-24 text-right ease-in-out transition-[box-shadow,transform] duration-200 aspect-[5/3] rounded-lg flex flex-col p-3 border-2
+          hover:scale-105 focus:scale-105 hover:bg-green-2 hover:border-green-2`}
+          >
+            <span className="h-6 flex justify-end text-[#222222]">
+              <Card />
+            </span>
+            <span className="text-md mt-6 font-semibold -tracking-wider text-green-1 text-xl">
+              Pay with card
             </span>
           </Link>
         </div>
