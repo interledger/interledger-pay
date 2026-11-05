@@ -9,11 +9,9 @@ import {
   Scripts,
   ScrollRestoration,
   isRouteErrorResponse,
-  json,
   useLocation,
   useNavigation,
-  useRouteError,
-  useLoaderData
+  useRouteError
 } from '@remix-run/react'
 import stylesheet from '~/tailwind.css'
 import { DialPadProvider } from './components/providers/dialPadProvider'
@@ -38,18 +36,9 @@ export const links: LinksFunction = () => [
   ...(cssBundleHref ? [{ rel: 'stylesheet', href: cssBundleHref }] : [])
 ]
 
-export async function loader() {
-  return json({
-    ENV: {
-      STRIPE_PUBLIC_KEY: process.env.STRIPE_PUBLIC_KEY
-    }
-  })
-}
-
 export default function App() {
   const navigation = useNavigation()
   const location = useLocation()
-  const data = useLoaderData<typeof loader>()
 
   // detect if it's loaded in wm tools
   const isEmbeded = location.pathname.indexOf('extension') !== -1
@@ -94,11 +83,6 @@ export default function App() {
             </DialogProvider>
           </BackdropProvider>
         </div>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `window.ENV = ${JSON.stringify(data.ENV)}`
-          }}
-        />
         <ScrollRestoration />
         <Scripts />
         <LiveReload />

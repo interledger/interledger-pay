@@ -5,8 +5,6 @@
   "type": "module",
   "scripts": {
     "build": "remix build",
-    "fly:start": "pnpm start",
-    "fly:deploy": "fly deploy --remote-only --ha=false",
     "dev": "remix dev",
     "start": "remix-serve ./build/index.js",
     "format": "pnpm prettier:write && pnpm lint:fix",
@@ -28,8 +26,6 @@
     "@remix-run/node": "^2.8.1",
     "@remix-run/react": "^2.8.1",
     "@remix-run/serve": "^2.8.1",
-    "@stripe/react-stripe-js": "^3.0.0",
-    "@stripe/stripe-js": "^5.2.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "framer-motion": "^11.1.7",
@@ -38,14 +34,12 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "remix": "^2.8.1",
-    "stripe": "^17.4.0",
     "tailwind-merge": "^2.2.1",
     "tailwindcss-animate": "^1.0.7",
     "web-share-shim": "^1.0.4",
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@flydotio/dockerfile": "^0.4.11",
     "@remix-run/dev": "^2.8.1",
     "@remix-run/eslint-config": "^2.8.1",
     "@types/koa": "^2.15.0",

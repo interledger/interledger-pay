@@ -4,8 +4,6 @@
 ARG NODE_VERSION=20.6.1
 FROM node:${NODE_VERSION}-slim as base
 
-LABEL fly_launch_runtime="Remix"
-
 # Remix app lives here
 WORKDIR /app
 
@@ -46,4 +44,4 @@ COPY --from=build /app /app
 
 # Start the server by default, this can be overwritten at runtime
 EXPOSE 3000
-CMD [ "pnpm", "run", "fly:start" ]
+CMD [ "pnpm", "run", "start" ]
