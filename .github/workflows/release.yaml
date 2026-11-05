@@ -25,7 +25,7 @@ jobs:
     outputs:
       release_tag: ${{ steps.tags_after.outputs.latest != steps.tags_before.outputs.latest && steps.tags_after.outputs.latest || '' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Fetch tags
@@ -33,13 +33,16 @@ jobs:
       - name: Latest tag before release
         id: tags_before
         run: echo "latest=$(git tag --list 'v*' --sort=-v:refname | head -n 1)" >> "$GITHUB_OUTPUT"
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 'lts/*'
       - name: Release
         run: >-
           npx --yes
           -p semantic-release@25.0.9
+          -p @semantic-release/commit-analyzer@13.0.1
+          -p @semantic-release/release-notes-generator@14.1.1
+          -p @semantic-release/github@12.0.10
           -p @semantic-release/exec@7.1.0
           -p conventional-changelog-conventionalcommits@9.3.1
           semantic-release ${{ inputs.dry_run && '--dry-run' || '' }}
@@ -66,22 +69,22 @@ jobs:
           - platform: linux/arm64
             runner: ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.release.outputs.release_tag }}
       - name: Prepare platform pair
         run: |
           platform="${{ matrix.platform }}"
           echo "PLATFORM_PAIR=${platform//\//-}" >> "$GITHUB_ENV"
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and push by digest
         id: build
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: ${{ matrix.platform }}
@@ -93,7 +96,7 @@ jobs:
           mkdir -p /tmp/digests
           digest="${{ steps.build.outputs.digest }}"
           touch "/tmp/digests/${digest#sha256:}"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: digests-${{ env.PLATFORM_PAIR }}
           path: /tmp/digests/*
@@ -108,13 +111,13 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           path: /tmp/digests
           pattern: digests-*
           merge-multiple: true
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
