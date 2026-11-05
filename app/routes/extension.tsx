@@ -176,7 +176,13 @@ export default function Extension() {
     setAssetCode(data.currency)
     const formattedNumber = data.amount.amount.toFixed(data.assetScale)
     setAmountValue(String(formattedNumber))
-  }, [data.amount])
+  }, [
+    data.amount,
+    data.assetScale,
+    data.currency,
+    setAmountValue,
+    setAssetCode
+  ])
 
   useEffect(() => {
     if (data.css) {
