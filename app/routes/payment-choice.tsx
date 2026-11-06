@@ -44,7 +44,7 @@ export default function PaymentChoice() {
 
   useEffect(() => {
     setAssetCode(data.assetCode)
-  })
+  }, [data.assetCode, setAssetCode])
 
   return (
     <>

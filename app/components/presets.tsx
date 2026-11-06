@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import { cn } from '~/lib/cn'
 import { useDialPadContext } from '~/lib/context/dialpad'
 

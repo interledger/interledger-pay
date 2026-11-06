@@ -27,6 +27,8 @@ Never heard of Interledger before, or you would like to learn more? Here are som
 
 Please read the [contribution guidelines](.github/contributing.md) before submitting contributions. All contributions must adhere to our [code of conduct](.github/CODE_OF_CONDUCT.md).
 
+PR titles must follow [Conventional Commits](https://www.conventionalcommits.org/). Releases are created by running the `Release` workflow on `main`, which derives the next version from these titles.
+
 ## Local Development Environment
 
 ### Prerequisites
