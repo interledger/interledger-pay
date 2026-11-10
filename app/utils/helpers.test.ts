@@ -67,8 +67,34 @@ describe('getPaymentStatus', () => {
     )
   })
 
-  it('is completed when the receiver got the full amount', () => {
+  it('is completed when the receiver got the full amount and sending stopped', () => {
     // sentAmount can leave out fees, so it may stay below debitAmount
+    assert.equal(
+      getPaymentStatus({
+        failed: false,
+        sentAmount: '198',
+        debitAmount: '200',
+        previousSentAmount: '198',
+        receivedAmount: '198',
+        receiveAmount: '198'
+      }),
+      'completed'
+    )
+  })
+
+  it('is sending when the receiver got the quoted amount but sending goes on', () => {
+    // receiveAmount is the quoted minimum; the sender may still send more
+    assert.equal(
+      getPaymentStatus({
+        failed: false,
+        sentAmount: '1900000',
+        debitAmount: '2000000',
+        previousSentAmount: '1700000',
+        receivedAmount: '1900000',
+        receiveAmount: '1900000'
+      }),
+      'sending'
+    )
     assert.equal(
       getPaymentStatus({
         failed: false,
@@ -77,7 +103,7 @@ describe('getPaymentStatus', () => {
         receivedAmount: '198',
         receiveAmount: '198'
       }),
-      'completed'
+      'sending'
     )
   })
 
@@ -88,6 +114,7 @@ describe('getPaymentStatus', () => {
         failed: false,
         sentAmount: '1100000',
         debitAmount: '2000000',
+        previousSentAmount: '1100000',
         receivedAmount: '1100000',
         receiveAmount: '2000000'
       }),
@@ -123,6 +150,7 @@ describe('getPaymentStatus', () => {
         failed: false,
         sentAmount: '100',
         debitAmount: '200',
+        previousSentAmount: '100',
         receivedAmount: '100'
       }),
       'sending'

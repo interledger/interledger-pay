@@ -122,6 +122,8 @@ type PaymentStatusArgs = {
   failed: boolean
   sentAmount: string
   debitAmount: string
+  // sentAmount from the previous check
+  previousSentAmount?: string
   // receiver side: what the incoming payment got and what it should get
   receivedAmount?: string
   receiveAmount?: string
@@ -129,7 +131,10 @@ type PaymentStatusArgs = {
 
 // status of an outgoing payment, from its amounts and failed flag
 // - completed: the full amount was sent, or the receiver got all of it
-//   (some wallets report sentAmount without fees, so check both sides)
+//   and the sender stopped sending (some wallets report sentAmount without
+//   fees, so it may never reach debitAmount; receiveAmount is only the
+//   quoted minimum, so the receiver side counts only once sentAmount
+//   stopped changing)
 // - partial / failed: the wallet stopped sending, with or without
 //   sending part of the amount
 // - sending: not final yet, the wallet may still be sending
@@ -140,6 +145,7 @@ export const getPaymentStatus = (args: PaymentStatusArgs): PaymentStatus => {
 
   const fullySent = debit > zero && sent >= debit
   const fullyReceived =
+    args.previousSentAmount === args.sentAmount &&
     args.receivedAmount !== undefined &&
     args.receiveAmount !== undefined &&
     BigInt(args.receiveAmount) > zero &&
