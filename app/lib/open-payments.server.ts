@@ -12,7 +12,6 @@ import { createId } from '@paralleldrive/cuid2'
 import { randomUUID } from 'crypto'
 import {
   type PaymentStatus,
-  formatAmount,
   getPaymentStatus,
   toWalletAddressUrl
 } from '~/utils/helpers'
@@ -448,35 +447,18 @@ export async function checkOutgoingPayment(
       })
   }
 
-  return getPaymentResult(status, outgoingPayment)
+  return getPaymentResult(status)
 }
 
-function formatPaymentAmount(amount: Amount): string {
-  try {
-    return formatAmount(amount).amountWithCurrency
-  } catch {
-    // Intl only formats 3 letter currency codes
-    return `${amount.assetCode} ${Number(
-      `${amount.value}e-${amount.assetScale}`
-    )}`
-  }
-}
-
-function getPaymentResult(
-  status: PaymentStatus,
-  outgoingPayment: OutgoingPayment
-): PaymentResultType {
-  const progress = () =>
-    `${formatPaymentAmount(
-      outgoingPayment.sentAmount
-    )} of ${formatPaymentAmount(outgoingPayment.debitAmount)}`
-
+// sentAmount and debitAmount are not shown: debitAmount includes fees and
+// sentAmount may not, so the two do not compare well
+function getPaymentResult(status: PaymentStatus): PaymentResultType {
   switch (status) {
     case 'completed':
       return { message: 'Payment successful', color: 'green', error: false }
     case 'partial':
       return {
-        message: `Payment partially sent: ${progress()}.`,
+        message: 'Payment was only partly sent. Check your wallet for details.',
         color: 'red',
         error: true
       }
@@ -488,7 +470,8 @@ function getPaymentResult(
       }
     case 'sending':
       return {
-        message: `Payment is still in progress (${progress()} sent so far). Check your wallet for the final status.`,
+        message:
+          'Payment is still in progress. Check your wallet for the final status.',
         color: 'red',
         error: false
       }
