@@ -126,6 +126,21 @@ describe('getPaymentStatus', () => {
     )
   })
 
+  it('is sending when nothing was sent, even if others already paid the receiver', () => {
+    // request link paid in part by someone else before
+    assert.equal(
+      getPaymentStatus({
+        failed: false,
+        sentAmount: '0',
+        debitAmount: '400',
+        previousSentAmount: '0',
+        receivedAmount: '600',
+        receiveAmount: '400'
+      }),
+      'sending'
+    )
+  })
+
   it('is partial when the payment failed after sending part of it', () => {
     assert.equal(
       getPaymentStatus({

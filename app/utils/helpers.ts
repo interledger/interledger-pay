@@ -144,7 +144,10 @@ export const getPaymentStatus = (args: PaymentStatusArgs): PaymentStatus => {
   const debit = BigInt(args.debitAmount)
 
   const fullySent = debit > zero && sent >= debit
+  // receivedAmount is the total of the incoming payment, which others may
+  // have paid into too (request links), so only count it once we sent
   const fullyReceived =
+    sent > zero &&
     args.previousSentAmount === args.sentAmount &&
     args.receivedAmount !== undefined &&
     args.receiveAmount !== undefined &&
