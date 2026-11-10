@@ -9,6 +9,7 @@ import {
 } from '@interledger/open-payments'
 import { createId } from '@paralleldrive/cuid2'
 import { randomUUID } from 'crypto'
+import { toWalletAddressUrl } from '~/utils/helpers'
 
 async function createClient() {
   return await createAuthenticatedClient({
@@ -425,9 +426,10 @@ export async function getWalletAddress(
   opClient?: AuthenticatedClient
 ) {
   opClient = opClient ? opClient : await createClient()
+  // accepts a wallet address URL or a payment pointer ($wallet.example/alice)
   const walletAddress = await opClient.walletAddress
     .get({
-      url: url
+      url: toWalletAddressUrl(url)
     })
     .catch(() => {
       throw new Error('Invalid wallet address.')
