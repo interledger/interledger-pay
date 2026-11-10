@@ -1,5 +1,6 @@
 import { createAuthenticatedClient } from '@interledger/open-payments'
 import { getWalletAddress } from './open-payments.server'
+import { toWalletAddressUrl } from '~/utils/helpers'
 
 async function createClient() {
   return await createAuthenticatedClient({
@@ -9,8 +10,12 @@ async function createClient() {
   })
 }
 
+// accepts a wallet address URL or a payment pointer ($wallet.example/alice)
 export async function getValidWalletAddress(walletAddress: string) {
   const opClient = await createClient()
-  const response = await getWalletAddress(walletAddress, opClient)
+  const response = await getWalletAddress(
+    toWalletAddressUrl(walletAddress),
+    opClient
+  )
   return response
 }
