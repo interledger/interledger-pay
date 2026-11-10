@@ -12,7 +12,9 @@ import { RemixServer } from '@remix-run/react'
 import isbot from 'isbot'
 import { renderToPipeableStream } from 'react-dom/server'
 
-const ABORT_DELAY = 10_000
+// must stay above the payment status wait on the finish page
+// (PAYMENT_STATUS_TIMEOUT in app/lib/open-payments.server.ts)
+const ABORT_DELAY = 60_000
 
 export default function handleRequest(
   request: Request,

@@ -1,5 +1,6 @@
 import {
   type AuthenticatedClient,
+  type OutgoingPayment,
   type PendingGrant,
   type Quote,
   type WalletAddress,
@@ -9,6 +10,11 @@ import {
 } from '@interledger/open-payments'
 import { createId } from '@paralleldrive/cuid2'
 import { randomUUID } from 'crypto'
+import {
+  type PaymentStatus,
+  formatAmount,
+  getPaymentStatus
+} from '~/utils/helpers'
 
 async function createClient() {
   return await createAuthenticatedClient({
@@ -339,6 +345,13 @@ export type PaymentResultType = {
   error: boolean
 }
 
+// how often and how long the finish page checks the outgoing payment;
+// some payments take a while (slow or multi-hop paths, settlement first),
+// so wait long enough. ABORT_DELAY in app/entry.server.tsx must stay above
+// PAYMENT_STATUS_TIMEOUT
+const PAYMENT_STATUS_INTERVAL = 1_500
+export const PAYMENT_STATUS_TIMEOUT = 45_000
+
 export async function checkOutgoingPayment(
   url: string,
   accessToken: string,
@@ -347,48 +360,96 @@ export async function checkOutgoingPayment(
   isRequestPayment?: boolean
 ): Promise<PaymentResultType> {
   const opClient = await createClient()
-  await timeout(3000)
+  const deadline = Date.now() + PAYMENT_STATUS_TIMEOUT
 
-  // get outgoing payment, to check if there was enough balance
-  const checkOutgoingPaymentResponse = await opClient.outgoingPayment
-    .get({
-      url: url,
-      accessToken: accessToken
-    })
-    .then((op) => {
-      let paymentResult: PaymentResultType
-      if (Number(op.sentAmount.value) > 0) {
-        paymentResult = {
-          message: 'Payment successful',
-          color: 'green',
-          error: false
-        }
-      } else {
-        paymentResult = {
-          message: 'Payment failed. Check your balance and try again.',
-          color: 'red',
-          error: true
-        }
+  let outgoingPayment: OutgoingPayment | undefined
+  let status: PaymentStatus = 'sending'
+
+  // check until the payment is final, or until we stop waiting
+  for (;;) {
+    await timeout(PAYMENT_STATUS_INTERVAL)
+
+    const op = await opClient.outgoingPayment
+      .get({ url: url, accessToken: accessToken })
+      .catch(() => undefined)
+
+    if (op) {
+      outgoingPayment = op
+      status = getPaymentStatus({
+        failed: op.failed ?? false,
+        sentAmount: op.sentAmount.value,
+        debitAmount: op.debitAmount.value
+      })
+
+      // the sender may report sentAmount without fees,
+      // so also check what the receiver got
+      if (status === 'sending' && !isRequestPayment) {
+        const incomingPayment = await opClient.incomingPayment
+          .get({ url: receiver, accessToken: accessTokenIncomingPayment })
+          .catch(() => undefined)
+
+        status = getPaymentStatus({
+          failed: op.failed ?? false,
+          sentAmount: op.sentAmount.value,
+          debitAmount: op.debitAmount.value,
+          receivedAmount: incomingPayment?.receivedAmount?.value,
+          receiveAmount: op.receiveAmount.value
+        })
       }
 
-      return paymentResult
-    })
-
-  if (!checkOutgoingPaymentResponse.error) {
-    if (!isRequestPayment) {
-      // complete incoming payment created without receive amount
-      await opClient.incomingPayment
-        .complete({
-          url: receiver,
-          accessToken: accessTokenIncomingPayment
-        })
-        .catch(() => {
-          throw new Error('Could not complete incoming payment.')
-        })
+      if (status !== 'sending') break
     }
+
+    if (Date.now() + PAYMENT_STATUS_INTERVAL >= deadline) break
   }
 
-  return checkOutgoingPaymentResponse
+  if (outgoingPayment === undefined) {
+    throw new Error('Could not check outgoing payment.')
+  }
+
+  // complete the incoming payment created without receive amount, only once
+  // the sender is done; completing it earlier cuts off a payment in progress
+  if (!isRequestPayment && (status === 'completed' || status === 'partial')) {
+    await opClient.incomingPayment
+      .complete({ url: receiver, accessToken: accessTokenIncomingPayment })
+      .catch(() => {
+        // the payment itself is done, so still show its result
+        console.error(`Could not complete incoming payment ${receiver}.`)
+      })
+  }
+
+  return getPaymentResult(status, outgoingPayment)
+}
+
+function getPaymentResult(
+  status: PaymentStatus,
+  outgoingPayment: OutgoingPayment
+): PaymentResultType {
+  const sent = formatAmount(outgoingPayment.sentAmount).amountWithCurrency
+  const total = formatAmount(outgoingPayment.debitAmount).amountWithCurrency
+
+  switch (status) {
+    case 'completed':
+      return { message: 'Payment successful', color: 'green', error: false }
+    case 'partial':
+      return {
+        message: `Payment partially sent: ${sent} of ${total}.`,
+        color: 'red',
+        error: true
+      }
+    case 'failed':
+      return {
+        message: 'Payment failed. Check your balance and try again.',
+        color: 'red',
+        error: true
+      }
+    case 'sending':
+      return {
+        message: `Payment is still in progress (${sent} of ${total} sent so far). Check your wallet for the final status.`,
+        color: 'red',
+        error: false
+      }
+  }
 }
 
 export async function getRequestPaymentDetails(
