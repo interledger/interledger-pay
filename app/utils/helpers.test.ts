@@ -152,6 +152,13 @@ describe('getPaymentStatus', () => {
     )
   })
 
+  it('is partial when the payment failed, even with the full amount sent', () => {
+    assert.equal(
+      getPaymentStatus({ failed: true, sentAmount: '200', debitAmount: '200' }),
+      'partial'
+    )
+  })
+
   it('is failed when the payment failed without sending anything', () => {
     assert.equal(
       getPaymentStatus({ failed: true, sentAmount: '0', debitAmount: '200' }),

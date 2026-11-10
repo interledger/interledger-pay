@@ -135,13 +135,15 @@ type PaymentStatusArgs = {
 //   fees, so it may never reach debitAmount; receiveAmount is only the
 //   quoted minimum, so the receiver side counts only once sentAmount
 //   stopped changing)
-// - partial / failed: the wallet stopped sending, with or without
-//   sending part of the amount
+// - partial / failed: the wallet marked the payment as failed, with or
+//   without sending part of the amount; failed wins over the amounts
 // - sending: not final yet, the wallet may still be sending
 export const getPaymentStatus = (args: PaymentStatusArgs): PaymentStatus => {
   const zero = BigInt(0)
   const sent = BigInt(args.sentAmount)
   const debit = BigInt(args.debitAmount)
+
+  if (args.failed) return sent > zero ? 'partial' : 'failed'
 
   const fullySent = debit > zero && sent >= debit
   // receivedAmount is the total of the incoming payment, which others may
@@ -154,7 +156,5 @@ export const getPaymentStatus = (args: PaymentStatusArgs): PaymentStatus => {
     BigInt(args.receiveAmount) > zero &&
     BigInt(args.receivedAmount) >= BigInt(args.receiveAmount)
 
-  if (fullySent || fullyReceived) return 'completed'
-  if (args.failed) return sent > zero ? 'partial' : 'failed'
-  return 'sending'
+  return fullySent || fullyReceived ? 'completed' : 'sending'
 }
