@@ -71,7 +71,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
       finishPaymentResponse.accessToken,
       quote.incomingPaymentGrantToken,
       quote.receiver,
-      isRequestPayment
+      isRequestPayment,
+      finishPaymentResponse.receivedBefore
     )
 
     return defer({

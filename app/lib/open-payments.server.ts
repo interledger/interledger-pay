@@ -293,7 +293,11 @@ export async function finishPayment(
   quote: Quote,
   walletAddress: WalletAddress,
   interactRef: string
-): Promise<{ url: string; accessToken: string }> {
+): Promise<{
+  url: string
+  accessToken: string
+  receivedBefore: string | undefined
+}> {
   const opClient = await createClient()
 
   const continuation = await opClient.grant.continue(
@@ -309,6 +313,13 @@ export async function finishPayment(
   if (!isFinalizedGrant(continuation)) {
     throw new Error('Expected finalized grant. Received non-finalized grant.')
   }
+
+  // what the receiver already got before this payment; the incoming
+  // payment total can include other payments (request links)
+  const receivedBefore = await opClient.incomingPayment
+    .getPublic({ url: quote.receiver })
+    .then((incomingPayment) => incomingPayment.receivedAmount?.value ?? '0')
+    .catch(() => undefined)
 
   const url = walletAddress.resourceServer
 
@@ -332,7 +343,8 @@ export async function finishPayment(
 
   return {
     url: outgoingPayment.id,
-    accessToken: continuation.access_token.value
+    accessToken: continuation.access_token.value,
+    receivedBefore
   }
 }
 
@@ -361,7 +373,8 @@ export async function checkOutgoingPayment(
   accessToken: string,
   accessTokenIncomingPayment: string | undefined,
   receiver: string,
-  isRequestPayment?: boolean
+  isRequestPayment?: boolean,
+  receivedBefore?: string
 ): Promise<PaymentResultType> {
   const opClient = await createClient()
   const deadline = Date.now() + PAYMENT_STATUS_TIMEOUT
@@ -401,6 +414,7 @@ export async function checkOutgoingPayment(
           sentAmount: op.sentAmount.value,
           debitAmount: op.debitAmount.value,
           previousSentAmount: previousSentAmount,
+          receivedBefore: receivedBefore,
           receivedAmount: incomingPayment?.receivedAmount?.value,
           receiveAmount: op.receiveAmount.value
         })

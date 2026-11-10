@@ -124,7 +124,9 @@ type PaymentStatusArgs = {
   debitAmount: string
   // sentAmount from the previous check
   previousSentAmount?: string
-  // receiver side: what the incoming payment got and what it should get
+  // receiver side: what the incoming payment had before this payment,
+  // what it has now, and what this payment should add
+  receivedBefore?: string
   receivedAmount?: string
   receiveAmount?: string
 }
@@ -147,14 +149,17 @@ export const getPaymentStatus = (args: PaymentStatusArgs): PaymentStatus => {
 
   const fullySent = debit > zero && sent >= debit
   // receivedAmount is the total of the incoming payment, which others may
-  // have paid into too (request links), so only count it once we sent
+  // have paid into too (request links), so count only what came in since
+  // this payment started
   const fullyReceived =
     sent > zero &&
     args.previousSentAmount === args.sentAmount &&
+    args.receivedBefore !== undefined &&
     args.receivedAmount !== undefined &&
     args.receiveAmount !== undefined &&
     BigInt(args.receiveAmount) > zero &&
-    BigInt(args.receivedAmount) >= BigInt(args.receiveAmount)
+    BigInt(args.receivedAmount) - BigInt(args.receivedBefore) >=
+      BigInt(args.receiveAmount)
 
   return fullySent || fullyReceived ? 'completed' : 'sending'
 }

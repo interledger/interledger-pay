@@ -75,6 +75,7 @@ describe('getPaymentStatus', () => {
         sentAmount: '198',
         debitAmount: '200',
         previousSentAmount: '198',
+        receivedBefore: '0',
         receivedAmount: '198',
         receiveAmount: '198'
       }),
@@ -90,6 +91,7 @@ describe('getPaymentStatus', () => {
         sentAmount: '1900000',
         debitAmount: '2000000',
         previousSentAmount: '1700000',
+        receivedBefore: '0',
         receivedAmount: '1900000',
         receiveAmount: '1900000'
       }),
@@ -100,6 +102,7 @@ describe('getPaymentStatus', () => {
         failed: false,
         sentAmount: '198',
         debitAmount: '200',
+        receivedBefore: '0',
         receivedAmount: '198',
         receiveAmount: '198'
       }),
@@ -115,6 +118,7 @@ describe('getPaymentStatus', () => {
         sentAmount: '1100000',
         debitAmount: '2000000',
         previousSentAmount: '1100000',
+        receivedBefore: '0',
         receivedAmount: '1100000',
         receiveAmount: '2000000'
       }),
@@ -149,6 +153,48 @@ describe('getPaymentStatus', () => {
         debitAmount: '2000000'
       }),
       'partial'
+    )
+  })
+
+  it('counts only what the receiver got since this payment started', () => {
+    // request link that already had 600 before this payment of 400
+    assert.equal(
+      getPaymentStatus({
+        failed: false,
+        sentAmount: '50',
+        debitAmount: '400',
+        previousSentAmount: '50',
+        receivedBefore: '600',
+        receivedAmount: '650',
+        receiveAmount: '400'
+      }),
+      'sending'
+    )
+    assert.equal(
+      getPaymentStatus({
+        failed: false,
+        sentAmount: '396',
+        debitAmount: '400',
+        previousSentAmount: '396',
+        receivedBefore: '600',
+        receivedAmount: '1000',
+        receiveAmount: '400'
+      }),
+      'completed'
+    )
+  })
+
+  it('ignores the receiver side when the amount before is not known', () => {
+    assert.equal(
+      getPaymentStatus({
+        failed: false,
+        sentAmount: '396',
+        debitAmount: '400',
+        previousSentAmount: '396',
+        receivedAmount: '400',
+        receiveAmount: '400'
+      }),
+      'sending'
     )
   })
 
