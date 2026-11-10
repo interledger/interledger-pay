@@ -351,9 +351,12 @@ function timeout(delay: number) {
   return new Promise((res) => setTimeout(res, delay))
 }
 
+// red: failed, green: successful, orange: partly sent, yellow: still sending
+export type PaymentResultColor = 'red' | 'green' | 'orange' | 'yellow'
+
 export type PaymentResultType = {
   message: string
-  color: 'red' | 'green'
+  color: PaymentResultColor
   error: boolean
 }
 
@@ -459,7 +462,7 @@ function getPaymentResult(status: PaymentStatus): PaymentResultType {
     case 'partial':
       return {
         message: 'Payment was only partly sent. Check your wallet for details.',
-        color: 'red',
+        color: 'orange',
         error: true
       }
     case 'failed':
@@ -472,7 +475,7 @@ function getPaymentResult(status: PaymentStatus): PaymentResultType {
       return {
         message:
           'Payment is still in progress. Check your wallet for the final status.',
-        color: 'red',
+        color: 'yellow',
         error: false
       }
   }

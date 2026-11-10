@@ -10,6 +10,7 @@ import { Button } from '~/components/ui/button'
 import { useBackdropContext } from '~/lib/context/backdrop'
 import { useDialogContext } from '~/lib/context/dialog'
 import {
+  type PaymentResultColor,
   type PaymentResultType,
   finishPayment,
   checkOutgoingPayment
@@ -87,6 +88,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
   })
 }
 
+const textColors: Record<PaymentResultColor, string> = {
+  red: 'text-destructive',
+  green: 'text-green-1',
+  orange: 'text-orange-500',
+  yellow: 'text-yellow-500'
+}
+
 export default function Finish() {
   const data = useLoaderData<typeof loader>()
   const actionData = useActionData<typeof action>()
@@ -115,8 +123,13 @@ export default function Finish() {
                 {setIsLoading(false)}
                 {outgoingPaymentCheck.error ? (
                   <>
-                    <FinishError />
-                    <div className="text-destructive uppercase sm:text-2xl font-medium text-center">
+                    <FinishError color={outgoingPaymentCheck.color} />
+                    <div
+                      className={cx(
+                        'uppercase sm:text-2xl font-medium text-center',
+                        textColors[outgoingPaymentCheck.color]
+                      )}
+                    >
                       {outgoingPaymentCheck.message}
                     </div>
                     <Form method="POST" {...form.props}>
@@ -136,9 +149,7 @@ export default function Finish() {
                     <div
                       className={cx(
                         'uppercase sm:text-2xl font-medium text-center',
-                        outgoingPaymentCheck.color === 'red'
-                          ? 'text-destructive'
-                          : 'text-green-1'
+                        textColors[outgoingPaymentCheck.color]
                       )}
                     >
                       {outgoingPaymentCheck.message}
