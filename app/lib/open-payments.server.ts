@@ -347,15 +347,18 @@ export type PaymentResultType = {
 
 // how often and how long the finish page checks the outgoing payment;
 // some payments take a while (slow or multi-hop paths, settlement first),
-// so wait long enough. ABORT_DELAY in app/entry.server.tsx must stay above
-// PAYMENT_STATUS_TIMEOUT
+// so wait long enough. The last check can still take a few requests
+// (up to 5 s each), so ABORT_DELAY in app/entry.server.tsx must stay
+// well above PAYMENT_STATUS_TIMEOUT
 const PAYMENT_STATUS_INTERVAL = 1_500
-export const PAYMENT_STATUS_TIMEOUT = 45_000
+export const PAYMENT_STATUS_TIMEOUT = 40_000
+// stop early when the outgoing payment cannot be read this many times in a row
+const MAX_FAILED_CHECKS = 5
 
 export async function checkOutgoingPayment(
   url: string,
   accessToken: string,
-  accessTokenIncomingPayment: string,
+  accessTokenIncomingPayment: string | undefined,
   receiver: string,
   isRequestPayment?: boolean
 ): Promise<PaymentResultType> {
@@ -364,6 +367,7 @@ export async function checkOutgoingPayment(
 
   let outgoingPayment: OutgoingPayment | undefined
   let status: PaymentStatus = 'sending'
+  let failedChecks = 0
 
   // check until the payment is final, or until we stop waiting
   for (;;) {
@@ -374,7 +378,10 @@ export async function checkOutgoingPayment(
       .catch(() => undefined)
 
     if (op) {
+      failedChecks = 0
+      const previousSentAmount = outgoingPayment?.sentAmount.value
       outgoingPayment = op
+
       status = getPaymentStatus({
         failed: op.failed ?? false,
         sentAmount: op.sentAmount.value,
@@ -382,22 +389,25 @@ export async function checkOutgoingPayment(
       })
 
       // the sender may report sentAmount without fees,
-      // so also check what the receiver got
-      if (status === 'sending' && !isRequestPayment) {
+      // so also check what the receiver got (public read, no token needed)
+      if (status === 'sending' && previousSentAmount === op.sentAmount.value) {
         const incomingPayment = await opClient.incomingPayment
-          .get({ url: receiver, accessToken: accessTokenIncomingPayment })
+          .getPublic({ url: receiver })
           .catch(() => undefined)
 
         status = getPaymentStatus({
           failed: op.failed ?? false,
           sentAmount: op.sentAmount.value,
           debitAmount: op.debitAmount.value,
+          previousSentAmount: previousSentAmount,
           receivedAmount: incomingPayment?.receivedAmount?.value,
           receiveAmount: op.receiveAmount.value
         })
       }
 
       if (status !== 'sending') break
+    } else if (++failedChecks >= MAX_FAILED_CHECKS) {
+      break
     }
 
     if (Date.now() + PAYMENT_STATUS_INTERVAL >= deadline) break
@@ -407,9 +417,14 @@ export async function checkOutgoingPayment(
     throw new Error('Could not check outgoing payment.')
   }
 
-  // complete the incoming payment created without receive amount, only once
-  // the sender is done; completing it earlier cuts off a payment in progress
-  if (!isRequestPayment && (status === 'completed' || status === 'partial')) {
+  // complete the incoming payment we created without receive amount, only
+  // once the sender is done; completing it earlier cuts off a payment in
+  // progress. Request payments have an amount and complete by themselves.
+  if (
+    !isRequestPayment &&
+    accessTokenIncomingPayment &&
+    (status === 'completed' || status === 'partial')
+  ) {
     await opClient.incomingPayment
       .complete({ url: receiver, accessToken: accessTokenIncomingPayment })
       .catch(() => {
@@ -421,19 +436,32 @@ export async function checkOutgoingPayment(
   return getPaymentResult(status, outgoingPayment)
 }
 
+function formatPaymentAmount(amount: Amount): string {
+  try {
+    return formatAmount(amount).amountWithCurrency
+  } catch {
+    // Intl only formats 3 letter currency codes
+    return `${amount.assetCode} ${Number(
+      `${amount.value}e-${amount.assetScale}`
+    )}`
+  }
+}
+
 function getPaymentResult(
   status: PaymentStatus,
   outgoingPayment: OutgoingPayment
 ): PaymentResultType {
-  const sent = formatAmount(outgoingPayment.sentAmount).amountWithCurrency
-  const total = formatAmount(outgoingPayment.debitAmount).amountWithCurrency
+  const progress = () =>
+    `${formatPaymentAmount(
+      outgoingPayment.sentAmount
+    )} of ${formatPaymentAmount(outgoingPayment.debitAmount)}`
 
   switch (status) {
     case 'completed':
       return { message: 'Payment successful', color: 'green', error: false }
     case 'partial':
       return {
-        message: `Payment partially sent: ${sent} of ${total}.`,
+        message: `Payment partially sent: ${progress()}.`,
         color: 'red',
         error: true
       }
@@ -445,7 +473,7 @@ function getPaymentResult(
       }
     case 'sending':
       return {
-        message: `Payment is still in progress (${sent} of ${total} sent so far). Check your wallet for the final status.`,
+        message: `Payment is still in progress (${progress()} sent so far). Check your wallet for the final status.`,
         color: 'red',
         error: false
       }
