@@ -29,7 +29,7 @@ import { formatAmount, toWalletAddressUrl } from '~/utils/helpers'
 export async function loader({ request }: LoaderFunctionArgs) {
   const searchParams = new URL(request.url).searchParams
   const isQuote = searchParams.get('quote') || false
-  const receiver = searchParams.get('receiver') || ''
+  let receiver = searchParams.get('receiver') || ''
   const session = await getSession(request.headers.get('Cookie'))
 
   let receiverName = ''
@@ -60,7 +60,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     })
   } else if (receiver !== '') {
     try {
-      await getValidWalletAddress(receiver)
+      receiver = (await getValidWalletAddress(receiver)).id
     } catch (error) {
       throw new Error(
         'Receiver Wallet Address is not valid. Please check and try again.'
@@ -82,7 +82,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 const schema = z.object({
-  receiver: z.string(),
+  receiver: z.string().transform(toWalletAddressUrl),
   walletAddress: z
     .string()
     .transform(toWalletAddressUrl)
