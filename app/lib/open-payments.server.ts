@@ -13,7 +13,8 @@ import { randomUUID } from 'crypto'
 import {
   type PaymentStatus,
   formatAmount,
-  getPaymentStatus
+  getPaymentStatus,
+  toWalletAddressUrl
 } from '~/utils/helpers'
 
 async function createClient() {
@@ -514,9 +515,10 @@ export async function getWalletAddress(
   opClient?: AuthenticatedClient
 ) {
   opClient = opClient ? opClient : await createClient()
+  // accepts a wallet address URL or a payment pointer ($wallet.example/alice)
   const walletAddress = await opClient.walletAddress
     .get({
-      url: url
+      url: toWalletAddressUrl(url)
     })
     .catch(() => {
       throw new Error('Invalid wallet address.')
