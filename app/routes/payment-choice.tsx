@@ -32,7 +32,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   }
 
   return json({
-    receiver: receiver,
+    receiver: receiverWalletAddress.id,
     assetCode: receiverWalletAddress.assetCode
   } as const)
 }

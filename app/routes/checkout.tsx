@@ -40,7 +40,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
       Number(amount) * 100,
       receiverWalletAddress.assetCode,
       {
-        receiving_address: receiver
+        receiving_address: receiverWalletAddress.id
       }
     ),
     amountWithCurrency: formatAmount({
