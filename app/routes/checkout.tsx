@@ -54,7 +54,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function CheckoutPage() {
   const data = useLoaderData<typeof loader>()
-  const [stripePromise, setStripePromise] = useState<ReturnType<typeof loadStripe> | null>(null)
+  const [stripePromise, setStripePromise] = useState<ReturnType<
+    typeof loadStripe
+  > | null>(null)
 
   useEffect(() => {
     setStripePromise(loadStripe(window.ENV?.STRIPE_PUBLIC_KEY || ''))
