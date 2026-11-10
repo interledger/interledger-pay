@@ -115,3 +115,37 @@ export const sanitizeAndAddCss = (css: string) => {
     document.head.appendChild(sanitizedCss)
   }
 }
+
+export type PaymentStatus = 'completed' | 'partial' | 'failed' | 'sending'
+
+type PaymentStatusArgs = {
+  failed: boolean
+  sentAmount: string
+  debitAmount: string
+  // receiver side: what the incoming payment got and what it should get
+  receivedAmount?: string
+  receiveAmount?: string
+}
+
+// status of an outgoing payment, from its amounts and failed flag
+// - completed: the full amount was sent, or the receiver got all of it
+//   (some wallets report sentAmount without fees, so check both sides)
+// - partial / failed: the wallet stopped sending, with or without
+//   sending part of the amount
+// - sending: not final yet, the wallet may still be sending
+export const getPaymentStatus = (args: PaymentStatusArgs): PaymentStatus => {
+  const zero = BigInt(0)
+  const sent = BigInt(args.sentAmount)
+  const debit = BigInt(args.debitAmount)
+
+  const fullySent = debit > zero && sent >= debit
+  const fullyReceived =
+    args.receivedAmount !== undefined &&
+    args.receiveAmount !== undefined &&
+    BigInt(args.receiveAmount) > zero &&
+    BigInt(args.receivedAmount) >= BigInt(args.receiveAmount)
+
+  if (fullySent || fullyReceived) return 'completed'
+  if (args.failed) return sent > zero ? 'partial' : 'failed'
+  return 'sending'
+}
