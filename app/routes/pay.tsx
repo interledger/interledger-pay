@@ -189,6 +189,8 @@ export async function action({ request }: ActionFunctionArgs) {
 
     const quote = await fetchQuote(submission.value, receiver)
     session.set('quote', quote)
+    // a request link opened earlier in this session must not count here
+    session.unset('isRequestPayment')
 
     return redirect(`/pay?quote=true`, {
       headers: { 'Set-Cookie': await commitSession(session) }
