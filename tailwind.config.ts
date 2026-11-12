@@ -37,6 +37,8 @@ export default {
           DEFAULT: "hsl(var(--destructive))",
           1: "hsl(var(--destructive-light))",
         },
+        warning: "hsl(var(--warning))",
+        pending: "hsl(var(--pending))",
         muted: "hsl(var(--muted))",
       },
       borderRadius: {

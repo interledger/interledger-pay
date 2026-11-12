@@ -91,8 +91,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 const textColors: Record<PaymentResultColor, string> = {
   red: 'text-destructive',
   green: 'text-green-1',
-  orange: 'text-orange-500',
-  yellow: 'text-yellow-500'
+  orange: 'text-warning',
+  yellow: 'text-pending'
 }
 
 export default function Finish() {
