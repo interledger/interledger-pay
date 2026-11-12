@@ -405,8 +405,14 @@ export async function checkOutgoingPayment(
       })
 
       // the sender may report sentAmount without fees,
-      // so also check what the receiver got (public read, no token needed)
-      if (status === 'sending' && previousSentAmount === op.sentAmount.value) {
+      // so also check what the receiver got (public read, no token needed).
+      // Not for request payments: others can pay the same request link at
+      // the same time, so what the receiver got may not come from this payment
+      if (
+        !isRequestPayment &&
+        status === 'sending' &&
+        previousSentAmount === op.sentAmount.value
+      ) {
         const incomingPayment = await opClient.incomingPayment
           .getPublic({ url: receiver })
           .catch(() => undefined)
