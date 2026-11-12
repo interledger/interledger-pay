@@ -10,6 +10,7 @@ import { Button } from '~/components/ui/button'
 import { useBackdropContext } from '~/lib/context/backdrop'
 import { useDialogContext } from '~/lib/context/dialog'
 import {
+  type PaymentResultColor,
   type PaymentResultType,
   finishPayment,
   checkOutgoingPayment
@@ -71,7 +72,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
       finishPaymentResponse.accessToken,
       quote.incomingPaymentGrantToken,
       quote.receiver,
-      isRequestPayment
+      isRequestPayment,
+      finishPaymentResponse.receivedBefore
     )
 
     return defer({
@@ -84,6 +86,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
     checkOutgoingPayment: Promise.resolve(paymentResult),
     isFromExtension: false
   })
+}
+
+const textColors: Record<PaymentResultColor, string> = {
+  red: 'text-destructive',
+  green: 'text-green-1',
+  orange: 'text-warning',
+  yellow: 'text-pending'
 }
 
 export default function Finish() {
@@ -114,8 +123,13 @@ export default function Finish() {
                 {setIsLoading(false)}
                 {outgoingPaymentCheck.error ? (
                   <>
-                    <FinishError />
-                    <div className="text-destructive uppercase sm:text-2xl font-medium text-center">
+                    <FinishError color={outgoingPaymentCheck.color} />
+                    <div
+                      className={cx(
+                        'uppercase sm:text-2xl font-medium text-center',
+                        textColors[outgoingPaymentCheck.color]
+                      )}
+                    >
                       {outgoingPaymentCheck.message}
                     </div>
                     <Form method="POST" {...form.props}>
@@ -135,9 +149,7 @@ export default function Finish() {
                     <div
                       className={cx(
                         'uppercase sm:text-2xl font-medium text-center',
-                        outgoingPaymentCheck.color === 'red'
-                          ? 'text-destructive'
-                          : 'text-green-1'
+                        textColors[outgoingPaymentCheck.color]
                       )}
                     >
                       {outgoingPaymentCheck.message}

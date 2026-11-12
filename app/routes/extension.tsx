@@ -368,6 +368,8 @@ export async function action({ request }: ActionFunctionArgs) {
 
     const quote = await fetchQuote(submission.value, receiver)
     session.set('quote', quote)
+    // a request link opened earlier in this session must not count here
+    session.unset('isRequestPayment')
     session.set('submission', submission)
 
     return redirect(

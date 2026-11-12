@@ -1,5 +1,6 @@
 import {
   type AuthenticatedClient,
+  type OutgoingPayment,
   type PendingGrant,
   type Quote,
   type WalletAddress,
@@ -9,7 +10,11 @@ import {
 } from '@interledger/open-payments'
 import { createId } from '@paralleldrive/cuid2'
 import { randomUUID } from 'crypto'
-import { toWalletAddressUrl } from '~/utils/helpers'
+import {
+  type PaymentStatus,
+  getPaymentStatus,
+  toWalletAddressUrl
+} from '~/utils/helpers'
 
 async function createClient() {
   return await createAuthenticatedClient({
@@ -287,7 +292,11 @@ export async function finishPayment(
   quote: Quote,
   walletAddress: WalletAddress,
   interactRef: string
-): Promise<{ url: string; accessToken: string }> {
+): Promise<{
+  url: string
+  accessToken: string
+  receivedBefore: string | undefined
+}> {
   const opClient = await createClient()
 
   const continuation = await opClient.grant.continue(
@@ -303,6 +312,13 @@ export async function finishPayment(
   if (!isFinalizedGrant(continuation)) {
     throw new Error('Expected finalized grant. Received non-finalized grant.')
   }
+
+  // what the receiver already got before this payment, so the finish page
+  // counts only what comes in after it
+  const receivedBefore = await opClient.incomingPayment
+    .getPublic({ url: quote.receiver })
+    .then((incomingPayment) => incomingPayment.receivedAmount?.value ?? '0')
+    .catch(() => undefined)
 
   const url = walletAddress.resourceServer
 
@@ -326,7 +342,8 @@ export async function finishPayment(
 
   return {
     url: outgoingPayment.id,
-    accessToken: continuation.access_token.value
+    accessToken: continuation.access_token.value,
+    receivedBefore
   }
 }
 
@@ -334,62 +351,140 @@ function timeout(delay: number) {
   return new Promise((res) => setTimeout(res, delay))
 }
 
+// red: failed, green: successful, orange: partly sent, yellow: still sending
+export type PaymentResultColor = 'red' | 'green' | 'orange' | 'yellow'
+
 export type PaymentResultType = {
   message: string
-  color: 'red' | 'green'
+  color: PaymentResultColor
   error: boolean
 }
+
+// how often and how long the finish page checks the outgoing payment;
+// some payments take a while (slow or multi-hop paths, settlement first),
+// so wait long enough. The last check can still take a few requests
+// (up to 5 s each), so ABORT_DELAY in app/entry.server.tsx must stay
+// well above PAYMENT_STATUS_TIMEOUT
+const PAYMENT_STATUS_INTERVAL = 1_500
+export const PAYMENT_STATUS_TIMEOUT = 40_000
+// stop early when the outgoing payment cannot be read this many times in a row
+const MAX_FAILED_CHECKS = 5
 
 export async function checkOutgoingPayment(
   url: string,
   accessToken: string,
-  accessTokenIncomingPayment: string,
+  accessTokenIncomingPayment: string | undefined,
   receiver: string,
-  isRequestPayment?: boolean
+  isRequestPayment?: boolean,
+  receivedBefore?: string
 ): Promise<PaymentResultType> {
   const opClient = await createClient()
-  await timeout(3000)
+  const deadline = Date.now() + PAYMENT_STATUS_TIMEOUT
 
-  // get outgoing payment, to check if there was enough balance
-  const checkOutgoingPaymentResponse = await opClient.outgoingPayment
-    .get({
-      url: url,
-      accessToken: accessToken
-    })
-    .then((op) => {
-      let paymentResult: PaymentResultType
-      if (Number(op.sentAmount.value) > 0) {
-        paymentResult = {
-          message: 'Payment successful',
-          color: 'green',
-          error: false
-        }
-      } else {
-        paymentResult = {
-          message: 'Payment failed. Check your balance and try again.',
-          color: 'red',
-          error: true
-        }
+  let outgoingPayment: OutgoingPayment | undefined
+  let status: PaymentStatus = 'sending'
+  let failedChecks = 0
+
+  // check until the payment is final, or until we stop waiting
+  for (;;) {
+    await timeout(PAYMENT_STATUS_INTERVAL)
+
+    const op = await opClient.outgoingPayment
+      .get({ url: url, accessToken: accessToken })
+      .catch(() => undefined)
+
+    if (op) {
+      failedChecks = 0
+      const previousSentAmount = outgoingPayment?.sentAmount.value
+      outgoingPayment = op
+
+      status = getPaymentStatus({
+        failed: op.failed ?? false,
+        sentAmount: op.sentAmount.value,
+        debitAmount: op.debitAmount.value
+      })
+
+      // the sender may report sentAmount without fees,
+      // so also check what the receiver got (public read, no token needed).
+      // Not for request payments: others can pay the same request link at
+      // the same time, so what the receiver got may not come from this payment
+      if (
+        !isRequestPayment &&
+        status === 'sending' &&
+        previousSentAmount === op.sentAmount.value
+      ) {
+        const incomingPayment = await opClient.incomingPayment
+          .getPublic({ url: receiver })
+          .catch(() => undefined)
+
+        status = getPaymentStatus({
+          failed: op.failed ?? false,
+          sentAmount: op.sentAmount.value,
+          debitAmount: op.debitAmount.value,
+          previousSentAmount: previousSentAmount,
+          receivedBefore: receivedBefore,
+          receivedAmount: incomingPayment?.receivedAmount?.value,
+          receiveAmount: op.receiveAmount.value
+        })
       }
 
-      return paymentResult
-    })
-
-  if (!checkOutgoingPaymentResponse.error) {
-    if (!isRequestPayment) {
-      // complete incoming payment created without receive amount
-      await opClient.incomingPayment
-        .complete({
-          url: receiver,
-          accessToken: accessTokenIncomingPayment
-        })
-        .catch(() => {
-          throw new Error('Could not complete incoming payment.')
-        })
+      if (status !== 'sending') break
+    } else if (++failedChecks >= MAX_FAILED_CHECKS) {
+      break
     }
+
+    if (Date.now() + PAYMENT_STATUS_INTERVAL >= deadline) break
   }
 
-  return checkOutgoingPaymentResponse
+  if (outgoingPayment === undefined) {
+    throw new Error('Could not check outgoing payment.')
+  }
+
+  // complete the incoming payment we created without receive amount, only
+  // once the sender is done; completing it earlier cuts off a payment in
+  // progress. Request payments have an amount and complete by themselves.
+  if (
+    !isRequestPayment &&
+    accessTokenIncomingPayment &&
+    (status === 'completed' || status === 'partial')
+  ) {
+    await opClient.incomingPayment
+      .complete({ url: receiver, accessToken: accessTokenIncomingPayment })
+      .catch(() => {
+        // the payment itself is done, so still show its result
+        console.error(`Could not complete incoming payment ${receiver}.`)
+      })
+  }
+
+  return getPaymentResult(status)
+}
+
+// sentAmount and debitAmount are not shown: debitAmount includes fees and
+// sentAmount may not, so the two do not compare well
+function getPaymentResult(status: PaymentStatus): PaymentResultType {
+  switch (status) {
+    case 'completed':
+      return { message: 'Payment successful', color: 'green', error: false }
+    case 'partial':
+      return {
+        message: 'Payment was only partly sent. Check your wallet for details.',
+        color: 'orange',
+        error: true
+      }
+    case 'failed':
+      return {
+        message: 'Payment failed. Check your balance and try again.',
+        color: 'red',
+        error: true
+      }
+    case 'sending':
+      return {
+        message:
+          'Payment is still in progress. Check your wallet for the final status.',
+        color: 'yellow',
+        error: false
+      }
+  }
 }
 
 export async function getRequestPaymentDetails(

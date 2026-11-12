@@ -115,3 +115,50 @@ export const sanitizeAndAddCss = (css: string) => {
     document.head.appendChild(sanitizedCss)
   }
 }
+
+export type PaymentStatus = 'completed' | 'partial' | 'failed' | 'sending'
+
+type PaymentStatusArgs = {
+  failed: boolean
+  sentAmount: string
+  debitAmount: string
+  // sentAmount from the previous check
+  previousSentAmount?: string
+  // receiver side: what the incoming payment had before this payment,
+  // what it has now, and what this payment should add
+  receivedBefore?: string
+  receivedAmount?: string
+  receiveAmount?: string
+}
+
+// status of an outgoing payment, from its amounts and failed flag
+// - completed: the full amount was sent, or the receiver got all of it
+//   and the sender stopped sending (some wallets report sentAmount without
+//   fees, so it may never reach debitAmount; receiveAmount is only the
+//   quoted minimum, so the receiver side counts only once sentAmount
+//   stopped changing)
+// - partial / failed: the wallet marked the payment as failed, with or
+//   without sending part of the amount; failed wins over the amounts
+// - sending: not final yet, the wallet may still be sending
+export const getPaymentStatus = (args: PaymentStatusArgs): PaymentStatus => {
+  const zero = BigInt(0)
+  const sent = BigInt(args.sentAmount)
+  const debit = BigInt(args.debitAmount)
+
+  if (args.failed) return sent > zero ? 'partial' : 'failed'
+
+  const fullySent = debit > zero && sent >= debit
+  // receivedAmount is the total of the incoming payment, so count only
+  // what came in since this payment started
+  const fullyReceived =
+    sent > zero &&
+    args.previousSentAmount === args.sentAmount &&
+    args.receivedBefore !== undefined &&
+    args.receivedAmount !== undefined &&
+    args.receiveAmount !== undefined &&
+    BigInt(args.receiveAmount) > zero &&
+    BigInt(args.receivedAmount) - BigInt(args.receivedBefore) >=
+      BigInt(args.receiveAmount)
+
+  return fullySent || fullyReceived ? 'completed' : 'sending'
+}
