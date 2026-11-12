@@ -313,8 +313,8 @@ export async function finishPayment(
     throw new Error('Expected finalized grant. Received non-finalized grant.')
   }
 
-  // what the receiver already got before this payment; the incoming
-  // payment total can include other payments (request links)
+  // what the receiver already got before this payment, so the finish page
+  // counts only what comes in after it
   const receivedBefore = await opClient.incomingPayment
     .getPublic({ url: quote.receiver })
     .then((incomingPayment) => incomingPayment.receivedAmount?.value ?? '0')

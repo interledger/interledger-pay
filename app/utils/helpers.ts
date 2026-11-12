@@ -148,9 +148,8 @@ export const getPaymentStatus = (args: PaymentStatusArgs): PaymentStatus => {
   if (args.failed) return sent > zero ? 'partial' : 'failed'
 
   const fullySent = debit > zero && sent >= debit
-  // receivedAmount is the total of the incoming payment, which others may
-  // have paid into too (request links), so count only what came in since
-  // this payment started
+  // receivedAmount is the total of the incoming payment, so count only
+  // what came in since this payment started
   const fullyReceived =
     sent > zero &&
     args.previousSentAmount === args.sentAmount &&
