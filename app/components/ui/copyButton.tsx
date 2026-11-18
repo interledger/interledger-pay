@@ -33,6 +33,7 @@ export const CopyButton = forwardRef<HTMLButtonElement, CopyButtonProps>(
 
     return (
       <Button
+        type="button"
         size="sm"
         variant={variant}
         onClick={() => {
