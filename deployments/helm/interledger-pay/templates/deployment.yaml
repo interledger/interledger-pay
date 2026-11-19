@@ -1,0 +1,16 @@
+{{- define "interledger-pay.deployment" -}}
+{{- $top := first . }}
+{{- if not $top.Values.secretsExternal }}
+spec:
+  template:
+    metadata:
+      annotations:
+        interledger-pay-secret-sha256: {{ $top.Values.secret | toJson | sha256sum | quote }}
+{{- end }}
+{{- end }}
+{{- if .Values.app.enabled }}
+{{- include "interledger-pay.secret" . }}
+{{- $app := deepCopy .Values.app }}
+{{- $_ := set $app "env" (include "interledger-pay.env" . | fromJsonArray) }}
+{{- include "common.deployment" (list . $app .Values.app.autoscaling .Values.app.serviceAccount "interledger-pay.deployment") }}
+{{- end }}

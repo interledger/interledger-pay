@@ -1,0 +1,5 @@
+.DS_Store
+.git/
+*.tgz.prov
+tests/
+ci/

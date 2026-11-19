@@ -30,3 +30,21 @@ jobs:
         run: pnpm build
       - name: Test
         run: pnpm test
+
+  helm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: deployments/helm/interledger-pay
+    steps:
+      - uses: actions/checkout@v7
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.19.0
+      - name: Install helm-unittest
+        run: helm plugin install https://github.com/helm-unittest/helm-unittest.git --version v1.1.2
+      - name: Lint
+        run: helm lint . --values ci/minimal-values.yaml
+      - name: Unit tests
+        run: helm unittest .

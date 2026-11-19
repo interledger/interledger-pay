@@ -128,3 +128,32 @@ jobs:
           docker buildx imagetools create \
             -t ghcr.io/${{ github.repository_owner }}/interledger-pay:${{ needs.release.outputs.release_tag }} \
             $(printf 'ghcr.io/${{ github.repository_owner }}/interledger-pay@sha256:%s ' *)
+
+  publish-chart:
+    name: Publish chart
+    needs: [release, publish-image]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.release.outputs.release_tag }}
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.19.0
+      - name: Package chart
+        run: |
+          tag="${{ needs.release.outputs.release_tag }}"
+          helm package deployments/helm/interledger-pay \
+            --version "${tag#v}" \
+            --app-version "$tag" \
+            --destination dist
+      - name: Push chart
+        run: |
+          tag="${{ needs.release.outputs.release_tag }}"
+          echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io \
+            --username "${{ github.repository_owner }}" --password-stdin
+          helm push "dist/interledger-pay-${tag#v}.tgz" \
+            "oci://ghcr.io/${{ github.repository_owner }}/charts"

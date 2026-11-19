@@ -1,0 +1,16 @@
+apiVersion: v2
+name: interledger-pay
+description: Helm chart for Interledger Pay.
+home: https://github.com/interledger/interledger-pay
+type: application
+
+# Placeholders for local development and `helm lint`. The release workflow
+# packages the chart with --version and --app-version from the release tag
+# and never edits this file.
+version: 0.1.0
+appVersion: "v0.0.0"
+
+dependencies:
+  - name: common
+    version: 0.11.0
+    repository: https://interledger.github.io/charts/interledger

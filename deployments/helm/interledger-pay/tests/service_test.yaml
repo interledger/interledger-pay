@@ -1,0 +1,21 @@
+suite: interledger-pay - service
+templates:
+  - service.yaml
+values:
+  - ../ci/minimal-values.yaml
+tests:
+  - it: is named <fullname>-service with an http port
+    set:
+      fullnameOverride: interledger-pay
+    asserts:
+      - equal:
+          path: metadata.name
+          value: interledger-pay-service
+      - equal:
+          path: spec.ports[0].name
+          value: http
+      - equal:
+          path: spec.selector
+          value:
+            app.kubernetes.io/name: interledger-pay
+            app.kubernetes.io/instance: interledger-pay

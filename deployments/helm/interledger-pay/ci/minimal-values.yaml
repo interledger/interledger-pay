@@ -1,0 +1,11 @@
+config:
+  host: https://pay.example.com
+  walletAddress:
+    url: https://ilp.example.com/pay
+    keyId: key-1
+  stripe:
+    publishableKey: pk_test_abc
+secret:
+  key.privateKey: cHJpdmF0ZS1rZXk=
+  sessionCookieKey: 0123456789abcdef0123456789abcdef
+  stripe.secretKey: sk_test_abc

@@ -1,0 +1,167 @@
+suite: interledger-pay - deployment
+templates:
+  - deployment.yaml
+values:
+  - ../ci/minimal-values.yaml
+tests:
+  - it: sets the environment from config and secret
+    asserts:
+      - isKind:
+          of: Deployment
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: { name: INTERLEDGER_PAY_HOST, value: https://pay.example.com }
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: { name: WALLET_ADDRESS, value: https://ilp.example.com/pay }
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: { name: KEY_ID, value: key-1 }
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: { name: STRIPE_PUBLIC_KEY, value: pk_test_abc }
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: { name: PORT, value: '3000' }
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: PRIVATE_KEY
+            valueFrom:
+              secretKeyRef:
+                name: RELEASE-NAME-interledger-pay-secret
+                key: key.privateKey
+      - exists:
+          path: spec.template.metadata.annotations.interledger-pay-secret-sha256
+
+  - it: defaults redirectUrl to <host>/finish
+    set:
+      config.host: https://pay.example.com/
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: { name: REDIRECT_URL, value: https://pay.example.com/finish }
+
+  - it: keeps an explicit redirectUrl
+    set:
+      config.redirectUrl: https://other.example.com/done
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: { name: REDIRECT_URL, value: https://other.example.com/done }
+
+  - it: appends app.env after the chart's variables
+    set:
+      app.env:
+        - name: EXTRA
+          value: '1'
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[10]
+          value: { name: EXTRA, value: '1' }
+
+  - it: reads secrets from secretsExternal
+    set:
+      secretsExternal: pay-secrets
+      secret:
+        key.privateKey: ''
+        sessionCookieKey: ''
+        stripe.secretKey: ''
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SESSION_COOKIE_SECRET_KEY
+            valueFrom:
+              secretKeyRef:
+                name: pay-secrets
+                key: sessionCookieKey
+      - notExists:
+          path: spec.template.metadata.annotations.interledger-pay-secret-sha256
+
+  - it: runs the image of the chart's appVersion
+    chart:
+      appVersion: v1.2.3
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: ghcr.io/interledger/interledger-pay:v1.2.3
+
+  - it: probes /health
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: /health
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /health
+
+  - it: renders nothing when disabled
+    set:
+      app.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: rejects a key that is not a setting
+    set:
+      config.interledgerPayHost: https://pay.example.com
+    asserts:
+      - failedTemplate:
+          errorPattern: config.interledgerPayHost is not a known key
+
+  - it: rejects a secret in config
+    set:
+      config.walletAddress.privateKey: abc
+    asserts:
+      - failedTemplate:
+          errorPattern: config.walletAddress.privateKey is not a known key
+
+  - it: requires the host
+    set:
+      config.host: ''
+    asserts:
+      - failedTemplate:
+          errorMessage: config.host is required
+
+  - it: rejects a host with a path
+    set:
+      config.host: https://pay.example.com/pay
+    asserts:
+      - failedTemplate:
+          errorPattern: config.host must be an https origin without a path
+
+  - it: rejects an http wallet address
+    set:
+      config.walletAddress.url: http://ilp.example.com/pay
+    asserts:
+      - failedTemplate:
+          errorPattern: config.walletAddress.url must be an https URL
+
+  - it: rejects a Stripe secret key as publishable key
+    set:
+      config.stripe.publishableKey: sk_test_abc
+    asserts:
+      - failedTemplate:
+          errorPattern: config.stripe.publishableKey must be a Stripe publishable key
+
+  - it: requires every secret without secretsExternal
+    set:
+      secret.sessionCookieKey: ''
+    asserts:
+      - failedTemplate:
+          errorMessage: secret.sessionCookieKey is required unless secretsExternal is set
+
+  - it: rejects a short session cookie key
+    set:
+      secret.sessionCookieKey: short
+    asserts:
+      - failedTemplate:
+          errorMessage: secret.sessionCookieKey must be at least 32 characters
+
+  - it: rejects secret values next to secretsExternal
+    set:
+      secretsExternal: pay-secrets
+    asserts:
+      - failedTemplate:
+          errorPattern: secretsExternal names an existing Secret

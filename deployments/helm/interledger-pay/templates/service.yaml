@@ -1,0 +1,5 @@
+{{- define "interledger-pay.service" -}}
+{{- end }}
+{{- if .Values.app.enabled }}
+{{- include "common.svc" (list . .Values.app.service .Values.app "interledger-pay.service") }}
+{{- end }}

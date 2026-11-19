@@ -29,6 +29,10 @@ Please read the [contribution guidelines](.github/contributing.md) before submit
 
 PR titles must follow [Conventional Commits](https://www.conventionalcommits.org/). Releases are created by running the `Release` workflow on `main`, which derives the next version from these titles.
 
+## Deployment
+
+Interledger Pay is deployed with its Helm chart, `oci://ghcr.io/interledger/charts/interledger-pay`. See [the chart README](deployments/helm/interledger-pay/README.md).
+
 ## Local Development Environment
 
 ### Prerequisites
