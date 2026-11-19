@@ -8,6 +8,7 @@ import { Button } from '~/components/ui/button'
 import { CopyButton } from '~/components/ui/copyButton'
 import { Field } from '~/components/ui/form/form'
 import { ShareButton } from '~/components/ui/shareButton'
+import { config } from '~/lib/config.server'
 import { destroySession, getSession } from '~/session'
 import { formatAmount, formatDate } from '~/utils/helpers'
 
@@ -28,7 +29,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const dateRequested = formatDate({
     date: incomingPayment.createdAt
   })
-  const url = `${process.env.INTERLEDGER_PAY_HOST}/payment?url=${incomingPayment.id}&receiver=${incomingPayment.walletAddress}`
+  const url = `${config.host}/payment?url=${incomingPayment.id}&receiver=${incomingPayment.walletAddress}`
 
   return json({
     requestAmount: requestAmount.amountWithCurrency,

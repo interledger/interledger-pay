@@ -67,24 +67,34 @@ To install dependencies, execute:
 pnpm i
 ```
 
-### Environment Variables
+### Configuration
 
-In order for the Interledger Pay to function, it is necessary to configure the environment variables appropriately. You must duplicate the example environment file, `.env.example`, into your local environment file, `.env`.
+Interledger Pay reads its configuration from YAML files. It reads `CONFIG_FILE` (default `config.yaml`) and, if set, `SECRETS_FILE`, and merges them. A key must be set in one file only. The application validates the configuration at startup and does not start if it is not valid; it lists every problem it finds.
 
 > **Note**
-> The local environment file (`.env`) is **NOT** tracked in the version control system, and should **NOT** be included in any commits.
+> `config.yaml` and `secrets.yaml` are **NOT** tracked in the version control system, and should **NOT** be included in any commits.
 
-Navigate to the project's root directory and enter the following command:
+Copy the examples in the project's root directory:
 
 ```sh
-cp ./docker/dev/.env.example ./docker/dev/.env
+cp config.example.yaml config.yaml
+cp secrets.example.yaml secrets.yaml
 ```
 
-Using your preferred text editor, open the `./docker/dev/.env` file and configure the necessary environment variables.
+You will need to create a USD wallet address in the [Test Wallet](https://wallet.interledger-test.dev) application, then generate public and private key for the wallet address in the `Developer Keys` found in the `Settings` menu of Interledger Test Wallet.
 
-You will need to create a USD wallet address in the [Test Wallet](https://wallet.interledger-test.dev) application, then generate public and private key for the wallet address in the `Developer Keys` found in the `Settings` menu of Interledger Test Wallet. With the generated values you can proceed to update the following environment variables: `PRIVATE_KEY` to the generated base64 encoded private key, `KEY_ID` to the wallet address key id, and `WALLET_ADDRESS` to the created wallet address.
+| Key | File | Description |
+| --- | --- | --- |
+| `host` | config | URL where Interledger Pay is hosted, locally `https://localhost:5200` |
+| `redirectUrl` | config | URL of the finish page after the interaction with the identity provider. Optional, defaults to `<host>/finish` |
+| `walletAddress.url` | config | The wallet address Interledger Pay uses as its client |
+| `walletAddress.keyId` | config | The key id of the wallet address key |
+| `walletAddress.privateKey` | secrets | The Ed25519 private key of the wallet address, in PEM (or the base64 encoded PEM that Test Wallet generates) |
+| `session.cookieSecret` | secrets | Secret that signs the session cookie, at least 32 characters |
+| `stripe.publishableKey` | config | Stripe publishable key (`pk_test_…` or `pk_live_…`) |
+| `stripe.secretKey` | secrets | Stripe secret key, of the same mode as the publishable key |
 
-`REDIRECT_URL` variable is the url for the interaction with the Identity Provider Page, in our case, localy this would be `https://localhost:5200/finish`. `INTERLEDGER_PAY_HOST` is the url where Interledger Pay is hosted, localy the value is `https://localhost:5200`. We are using cookies to store some data, so a cookie secret key needs to be set in `SESSION_COOKIE_SECRET_KEY`.
+In production (`NODE_ENV=production`) every URL must use `https`.
 
 ### Local Interledger Pay
 

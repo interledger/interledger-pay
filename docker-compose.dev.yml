@@ -16,6 +16,8 @@ services:
       HTTPS: true
       SSL_CRT_FILE: /app/.cert/cert.pem
       SSL_KEY_FILE: /app/.cert/key.pem
+      CONFIG_FILE: /app/config.yaml
+      SECRETS_FILE: /app/secrets.yaml
     command: pnpm dev
   nginx:
     image: nginx:alpine
