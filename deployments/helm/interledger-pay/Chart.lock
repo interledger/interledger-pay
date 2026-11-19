@@ -1,0 +1,6 @@
+dependencies:
+- name: common
+  repository: https://interledger.github.io/charts/interledger
+  version: 0.11.0
+digest: sha256:4b30b52aa231effd80367ab6cb3c06233bbeebc94ad95ed5378d81148a219f1a
+generated: "2026-11-19T10:23:55.678017023+02:00"

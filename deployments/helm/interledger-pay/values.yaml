@@ -1,0 +1,86 @@
+# Settings of Interledger Pay. The chart rejects keys it does not know.
+config:
+  # Public URL of Interledger Pay, an origin without a path.
+  host: ""
+  # Where the identity provider returns the user after an interaction.
+  # Defaults to <host>/finish.
+  redirectUrl: ""
+  # The wallet address Interledger Pay signs its Open Payments requests as.
+  walletAddress:
+    url: ""
+    keyId: ""
+  stripe:
+    publishableKey: ""
+
+# Name of an existing Secret that holds the keys under `secret`. When set, the
+# chart creates no Secret and `secret` must be empty.
+secretsExternal: ""
+secret:
+  # Base64 encoded Ed25519 private key (PEM) of config.walletAddress.keyId.
+  key.privateKey: ""
+  # Signs the session cookie. At least 32 characters.
+  sessionCookieKey: ""
+  stripe.secretKey: ""
+
+app:
+  name: ""
+  enabled: true
+  replicaCount: 1
+  # No tag: it defaults to the chart's appVersion.
+  image:
+    repository: ghcr.io/interledger
+    name: interledger-pay
+  imagePullPolicy: IfNotPresent
+  ports:
+    - name: http
+      containerPort: 3000
+      protocol: TCP
+  service:
+    name: service
+    type: ClusterIP
+    ports:
+      - name: http
+        port: 80
+        targetPort: http
+        protocol: TCP
+    annotations: {}
+  livenessProbe:
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    httpGet:
+      path: /health
+      port: http
+  readinessProbe:
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    httpGet:
+      path: /health
+      port: http
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+  # Added after the variables the chart sets from `config` and `secret`.
+  env: []
+  serviceAccount: {}
+  autoscaling: {}
+  podAnnotations: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+securityContext:
+  capabilities:
+    drop:
+      - ALL
+  runAsUser: 1337
+  runAsNonRoot: true
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+
+podSecurityContext:
+  fsGroup: 1337
+  seccompProfile:
+    type: RuntimeDefault
