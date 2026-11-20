@@ -29,8 +29,8 @@ function parse(
 ) {
   return parseConfig(
     {
-      'config.yaml': stringify(overrides.settings ?? settings),
-      'secrets.yaml': stringify(overrides.secrets ?? secrets)
+      settings: stringify(overrides.settings ?? settings),
+      secrets: stringify(overrides.secrets ?? secrets)
     },
     production
   )
@@ -47,7 +47,7 @@ function problems(fn: () => unknown) {
 }
 
 describe('parseConfig', () => {
-  it('merges the files and derives the redirect URL from the host', () => {
+  it('combines the files and derives the redirect URL from the host', () => {
     const config = parse()
     assert.equal(config.redirectUrl, 'https://pay.example.com/finish')
     assert.equal(config.walletAddress.keyId, 'key-1')
@@ -72,21 +72,21 @@ describe('parseConfig', () => {
     const message = problems(() =>
       parse({ secrets: { ...secrets, walletAddress: { privateKey: rsa } } })
     )
-    assert.match(message, /walletAddress\.privateKey: must be an Ed25519 key/)
+    assert.match(message, /secrets: walletAddress\.privateKey: must be an Ed25519/)
   })
 
   it('rejects Stripe keys of different modes', () => {
     const message = problems(() =>
       parse({ secrets: { ...secrets, stripe: { secretKey: 'sk_live_abc' } } })
     )
-    assert.match(message, /stripe\.secretKey: .*both be test or live/)
+    assert.match(message, /stripe: .*both be test or live/)
   })
 
-  it('rejects a key set in more than one file', () => {
+  it('rejects a secret in the config file', () => {
     const message = problems(() =>
       parse({ settings: { ...settings, session: { cookieSecret: 'y' } } })
     )
-    assert.match(message, /session\.cookieSecret: is set in more than one file/)
+    assert.match(message, /config: Unrecognized key\(s\) in object: 'session'/)
   })
 
   it('reports every problem at once', () => {
@@ -96,9 +96,9 @@ describe('parseConfig', () => {
         secrets: { ...secrets, session: { cookieSecret: 'short' } }
       })
     )
-    assert.match(message, /host: must be an https URL/)
+    assert.match(message, /config: host: must be an https URL/)
     assert.match(message, /Unrecognized key\(s\) in object: 'unknown'/)
-    assert.match(message, /session\.cookieSecret:/)
+    assert.match(message, /secrets: session\.cookieSecret:/)
   })
 
   it('allows http URLs outside production', () => {

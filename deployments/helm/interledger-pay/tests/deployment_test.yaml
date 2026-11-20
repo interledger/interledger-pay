@@ -87,24 +87,3 @@ tests:
     asserts:
       - hasDocuments:
           count: 0
-
-  - it: requires every secret without secretsExternal
-    set:
-      secret.session.cookieSecret: ''
-    asserts:
-      - failedTemplate:
-          errorMessage: secret.session.cookieSecret is required unless secretsExternal is set
-
-  - it: rejects a short session cookie secret
-    set:
-      secret.session.cookieSecret: short
-    asserts:
-      - failedTemplate:
-          errorMessage: secret.session.cookieSecret must be at least 32 characters
-
-  - it: rejects secret values next to secretsExternal
-    set:
-      secretsExternal: pay-secrets
-    asserts:
-      - failedTemplate:
-          errorPattern: secretsExternal names an existing Secret

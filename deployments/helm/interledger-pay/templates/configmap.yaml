@@ -6,5 +6,5 @@ metadata:
   {{- include "common.metadata" (list . .Values.app) | nindent 2 }}
 data:
   config.yaml: |
-    {{- include "interledger-pay.config" . | nindent 4 }}
+    {{- toYaml .Values.config | nindent 4 }}
 {{- end }}

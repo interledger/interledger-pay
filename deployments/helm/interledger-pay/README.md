@@ -12,9 +12,8 @@ helm install interledger-pay oci://ghcr.io/interledger/charts/interledger-pay \
 
 Interledger Pay reads a config file and a secrets file. The chart writes
 `config` to a ConfigMap and `secret` to a Secret, mounts both, and points
-`CONFIG_FILE` and `SECRETS_FILE` at them. The chart rejects unknown keys and
-invalid values when it renders; the application validates both files again
-when it starts.
+`CONFIG_FILE` and `SECRETS_FILE` at them. Interledger Pay validates both files
+when it starts, and does not start if either is not valid.
 
 | Key | Description |
 | --- | --- |
@@ -26,7 +25,7 @@ when it starts.
 | `secret.walletAddress.privateKey` | Ed25519 private key (PEM, or base64 encoded PEM) of `config.walletAddress.keyId` |
 | `secret.session.cookieSecret` | Signs the session cookie, at least 32 characters |
 | `secret.stripe.secretKey` | Stripe secret key, of the same mode as the publishable key |
-| `secretsExternal` | Name of an existing Secret that holds the secrets file under a `secrets.yaml` key. The chart then creates no Secret |
+| `secretsExternal` | Name of an existing Secret that holds the secrets file under a `secrets.yaml` key. The chart then creates no Secret and ignores `secret` |
 | `app` | The Deployment and Service, see [values.yaml](values.yaml) |
 
 A minimal values file with an existing Secret:

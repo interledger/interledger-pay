@@ -69,7 +69,7 @@ pnpm i
 
 ### Configuration
 
-Interledger Pay reads its configuration from YAML files. It reads `CONFIG_FILE` (default `config.yaml`) and, if set, `SECRETS_FILE`, and merges them. A key must be set in one file only. The application validates the configuration at startup and does not start if it is not valid; it lists every problem it finds.
+Interledger Pay reads its configuration from two YAML files: the settings in `CONFIG_FILE` (default `config.yaml`) and the secrets in `SECRETS_FILE` (default `secrets.yaml`). Each file accepts only its own keys. The application validates both at startup and does not start if they are not valid; it lists every problem it finds.
 
 > **Note**
 > `config.yaml` and `secrets.yaml` are **NOT** tracked in the version control system, and should **NOT** be included in any commits.

@@ -4,16 +4,15 @@ spec:
   template:
     metadata:
       annotations:
-        interledger-pay-config-sha256: {{ include "interledger-pay.config" $top | sha256sum | quote }}
+        interledger-pay-config-sha256: {{ $top.Values.config | toJson | sha256sum | quote }}
         {{- if not $top.Values.secretsExternal }}
         interledger-pay-secret-sha256: {{ $top.Values.secret | toJson | sha256sum | quote }}
         {{- end }}
 {{- end }}
 {{- if .Values.app.enabled }}
-{{- include "interledger-pay.secret" . }}
 {{- $app := deepCopy .Values.app }}
 {{- $env := list
-  (dict "name" "PORT" "value" (include "interledger-pay.port" .))
+  (dict "name" "PORT" "value" (toString (first .Values.app.ports).containerPort))
   (dict "name" "CONFIG_FILE" "value" "/etc/interledger-pay/config/config.yaml")
   (dict "name" "SECRETS_FILE" "value" "/etc/interledger-pay/secrets/secrets.yaml")
 }}

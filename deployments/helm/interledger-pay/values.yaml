@@ -1,11 +1,12 @@
-# The config file of Interledger Pay, held in a ConfigMap. The chart rejects
-# keys it does not know.
+# The config file of Interledger Pay, held in a ConfigMap. Interledger Pay
+# validates it, and the secrets file, when it starts and does not start if
+# either is not valid.
 config:
   # Public URL of Interledger Pay, an origin without a path.
   host: ""
   # Where the identity provider returns the user after an interaction.
   # Defaults to <host>/finish.
-  redirectUrl: ""
+  # redirectUrl: ""
   # The wallet address Interledger Pay signs its Open Payments requests as.
   walletAddress:
     url: ""
@@ -14,8 +15,8 @@ config:
     publishableKey: ""
 
 # Name of an existing Secret to mount instead of the one the chart creates. It
-# must hold the secrets file under a `secrets.yaml` key, and `secret` must be
-# empty.
+# must hold the secrets file under a `secrets.yaml` key; `secret` is then
+# ignored.
 secretsExternal: ""
 # The secrets file of Interledger Pay, held in a Secret.
 secret:
