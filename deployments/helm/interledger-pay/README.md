@@ -10,8 +10,11 @@ helm install interledger-pay oci://ghcr.io/interledger/charts/interledger-pay \
 
 ## Values
 
-`config` holds the settings, `secret` the secrets. The chart rejects unknown
-keys and invalid values when it renders.
+Interledger Pay reads a config file and a secrets file. The chart writes
+`config` to a ConfigMap and `secret` to a Secret, mounts both, and points
+`CONFIG_FILE` and `SECRETS_FILE` at them. The chart rejects unknown keys and
+invalid values when it renders; the application validates both files again
+when it starts.
 
 | Key | Description |
 | --- | --- |
@@ -20,10 +23,10 @@ keys and invalid values when it renders.
 | `config.walletAddress.url` | The wallet address Interledger Pay signs its Open Payments requests as |
 | `config.walletAddress.keyId` | The key ID of that wallet address |
 | `config.stripe.publishableKey` | Stripe publishable key |
-| `secret.key.privateKey` | Base64 encoded Ed25519 private key (PEM) of `config.walletAddress.keyId` |
-| `secret.sessionCookieKey` | Signs the session cookie, at least 32 characters |
-| `secret.stripe.secretKey` | Stripe secret key |
-| `secretsExternal` | Name of an existing Secret with the three `secret` keys. The chart then creates no Secret |
+| `secret.walletAddress.privateKey` | Ed25519 private key (PEM, or base64 encoded PEM) of `config.walletAddress.keyId` |
+| `secret.session.cookieSecret` | Signs the session cookie, at least 32 characters |
+| `secret.stripe.secretKey` | Stripe secret key, of the same mode as the publishable key |
+| `secretsExternal` | Name of an existing Secret that holds the secrets file under a `secrets.yaml` key. The chart then creates no Secret |
 | `app` | The Deployment and Service, see [values.yaml](values.yaml) |
 
 A minimal values file with an existing Secret:
@@ -37,6 +40,20 @@ config:
   stripe:
     publishableKey: pk_live_...
 secretsExternal: interledger-pay-secret
+```
+
+The `secrets.yaml` key of that Secret:
+
+```yaml
+walletAddress:
+  privateKey: |
+    -----BEGIN PRIVATE KEY-----
+    ...
+    -----END PRIVATE KEY-----
+session:
+  cookieSecret: ...
+stripe:
+  secretKey: sk_live_...
 ```
 
 The Service is `<fullname>-service`, with the port `http`.

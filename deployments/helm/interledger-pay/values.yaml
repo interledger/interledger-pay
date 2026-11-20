@@ -1,4 +1,5 @@
-# Settings of Interledger Pay. The chart rejects keys it does not know.
+# The config file of Interledger Pay, held in a ConfigMap. The chart rejects
+# keys it does not know.
 config:
   # Public URL of Interledger Pay, an origin without a path.
   host: ""
@@ -12,15 +13,21 @@ config:
   stripe:
     publishableKey: ""
 
-# Name of an existing Secret that holds the keys under `secret`. When set, the
-# chart creates no Secret and `secret` must be empty.
+# Name of an existing Secret to mount instead of the one the chart creates. It
+# must hold the secrets file under a `secrets.yaml` key, and `secret` must be
+# empty.
 secretsExternal: ""
+# The secrets file of Interledger Pay, held in a Secret.
 secret:
-  # Base64 encoded Ed25519 private key (PEM) of config.walletAddress.keyId.
-  key.privateKey: ""
-  # Signs the session cookie. At least 32 characters.
-  sessionCookieKey: ""
-  stripe.secretKey: ""
+  walletAddress:
+    # Ed25519 private key (PEM, or base64 encoded PEM) of
+    # config.walletAddress.keyId.
+    privateKey: ""
+  session:
+    # Signs the session cookie. At least 32 characters.
+    cookieSecret: ""
+  stripe:
+    secretKey: ""
 
 app:
   name: ""
@@ -62,8 +69,11 @@ app:
       memory: 256Mi
     limits:
       memory: 512Mi
-  # Added after the variables the chart sets from `config` and `secret`.
+  # Added after PORT, CONFIG_FILE and SECRETS_FILE.
   env: []
+  # Added after the config and secrets mounts.
+  volumeMounts: []
+  volumes: []
   serviceAccount: {}
   autoscaling: {}
   podAnnotations: {}

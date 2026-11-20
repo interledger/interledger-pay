@@ -6,6 +6,9 @@ config:
   stripe:
     publishableKey: pk_test_abc
 secret:
-  key.privateKey: cHJpdmF0ZS1rZXk=
-  sessionCookieKey: 0123456789abcdef0123456789abcdef
-  stripe.secretKey: sk_test_abc
+  walletAddress:
+    privateKey: cHJpdmF0ZS1rZXk=
+  session:
+    cookieSecret: 0123456789abcdef0123456789abcdef
+  stripe:
+    secretKey: sk_test_abc

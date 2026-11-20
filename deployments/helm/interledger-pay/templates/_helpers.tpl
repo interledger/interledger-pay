@@ -28,8 +28,8 @@ interledger-pay.httpsUrl fails unless the value is an https URL. Call it with
 {{- end -}}
 {{- end -}}
 
-{{- define "interledger-pay.secretKeys" -}}
-{{- list "key.privateKey" "sessionCookieKey" "stripe.secretKey" | toJson -}}
+{{- define "interledger-pay.configMapName" -}}
+{{- printf "%s-config" (include "common.fullname" .) -}}
 {{- end -}}
 
 {{- define "interledger-pay.secretName" -}}
@@ -37,11 +37,10 @@ interledger-pay.httpsUrl fails unless the value is an https URL. Call it with
 {{- end -}}
 
 {{/*
-interledger-pay.config validates .Values.config and returns it as JSON, with
-redirectUrl filled in.
+interledger-pay.config validates .Values.config and returns the config file.
 */}}
 {{- define "interledger-pay.config" -}}
-{{- $config := deepCopy (.Values.config | default dict) -}}
+{{- $config := .Values.config | default dict -}}
 {{- include "interledger-pay.checkKeys" (list $config "config" (list "host" "redirectUrl" "walletAddress" "stripe")) -}}
 {{- $walletAddress := $config.walletAddress | default dict -}}
 {{- include "interledger-pay.checkKeys" (list $walletAddress "config.walletAddress" (list "url" "keyId")) -}}
@@ -52,9 +51,6 @@ redirectUrl filled in.
 {{- if not (regexMatch "^https://[^/?#\\s]+/?$" $host) -}}
 {{- fail (printf "config.host must be an https origin without a path, got %q" $host) -}}
 {{- end -}}
-{{- $host = trimSuffix "/" $host -}}
-{{- $redirectUrl := $config.redirectUrl | default (printf "%s/finish" $host) -}}
-{{- include "interledger-pay.httpsUrl" (list $redirectUrl "config.redirectUrl") -}}
 {{- $url := required "config.walletAddress.url is required" $walletAddress.url -}}
 {{- include "interledger-pay.httpsUrl" (list $url "config.walletAddress.url") -}}
 {{- $keyId := required "config.walletAddress.keyId is required" $walletAddress.keyId -}}
@@ -63,7 +59,12 @@ redirectUrl filled in.
 {{- fail "config.stripe.publishableKey must be a Stripe publishable key (pk_test_… or pk_live_…)" -}}
 {{- end -}}
 
-{{- dict "host" $host "redirectUrl" $redirectUrl "walletAddress" (dict "url" $url "keyId" $keyId) "stripe" (dict "publishableKey" $publishableKey) | toJson -}}
+{{- $file := dict "host" $host "walletAddress" (dict "url" $url "keyId" $keyId) "stripe" (dict "publishableKey" $publishableKey) -}}
+{{- with $config.redirectUrl -}}
+{{- include "interledger-pay.httpsUrl" (list . "config.redirectUrl") -}}
+{{- $_ := set $file "redirectUrl" . -}}
+{{- end -}}
+{{- toYaml $file -}}
 {{- end -}}
 
 {{/*
@@ -71,33 +72,29 @@ interledger-pay.secret validates .Values.secret against secretsExternal.
 */}}
 {{- define "interledger-pay.secret" -}}
 {{- $secret := .Values.secret | default dict -}}
-{{- $keys := include "interledger-pay.secretKeys" . | fromJsonArray -}}
-{{- include "interledger-pay.checkKeys" (list $secret "secret" $keys) -}}
-{{- if .Values.secretsExternal -}}
-{{- range $key, $value := $secret -}}
+{{- $fields := dict "walletAddress" "privateKey" "session" "cookieSecret" "stripe" "secretKey" -}}
+{{- include "interledger-pay.checkKeys" (list $secret "secret" (keys $fields | sortAlpha)) -}}
+{{- range $group, $key := $fields -}}
+{{- $map := index $secret $group | default dict -}}
+{{- include "interledger-pay.checkKeys" (list $map (printf "secret.%s" $group) (list $key)) -}}
+{{- $value := index $map $key -}}
+{{- if $.Values.secretsExternal -}}
 {{- if $value -}}
-{{- fail (printf "secret.%s is set, but secretsExternal names an existing Secret; set the key there instead" $key) -}}
+{{- fail (printf "secret.%s.%s is set, but secretsExternal names an existing Secret; set the key there instead" $group $key) -}}
+{{- end -}}
+{{- else if not $value -}}
+{{- fail (printf "secret.%s.%s is required unless secretsExternal is set" $group $key) -}}
 {{- end -}}
 {{- end -}}
-{{- else -}}
-{{- range $key := $keys -}}
-{{- if not (index $secret $key) -}}
-{{- fail (printf "secret.%s is required unless secretsExternal is set" $key) -}}
-{{- end -}}
-{{- end -}}
-{{- if lt (len (index $secret "sessionCookieKey")) 32 -}}
-{{- fail "secret.sessionCookieKey must be at least 32 characters" -}}
-{{- end -}}
+{{- if and (not .Values.secretsExternal) (lt (len .Values.secret.session.cookieSecret) 32) -}}
+{{- fail "secret.session.cookieSecret must be at least 32 characters" -}}
 {{- end -}}
 {{- end -}}
 
 {{/*
-interledger-pay.env is the environment the application reads its settings
-from, followed by app.env.
+interledger-pay.port is the containerPort of the port named http.
 */}}
-{{- define "interledger-pay.env" -}}
-{{- $config := include "interledger-pay.config" . | fromJson -}}
-{{- $secretName := include "interledger-pay.secretName" . -}}
+{{- define "interledger-pay.port" -}}
 {{- $port := 0 -}}
 {{- range .Values.app.ports -}}
 {{- if eq .name "http" -}}
@@ -107,17 +104,5 @@ from, followed by app.env.
 {{- if eq (int $port) 0 -}}
 {{- fail "app.ports must contain a port named http" -}}
 {{- end -}}
-{{- $env := list
-  (dict "name" "NODE_ENV" "value" "production")
-  (dict "name" "PORT" "value" (toString (int $port)))
-  (dict "name" "INTERLEDGER_PAY_HOST" "value" $config.host)
-  (dict "name" "REDIRECT_URL" "value" $config.redirectUrl)
-  (dict "name" "WALLET_ADDRESS" "value" $config.walletAddress.url)
-  (dict "name" "KEY_ID" "value" $config.walletAddress.keyId)
-  (dict "name" "STRIPE_PUBLIC_KEY" "value" $config.stripe.publishableKey)
-  (dict "name" "PRIVATE_KEY" "valueFrom" (dict "secretKeyRef" (dict "name" $secretName "key" "key.privateKey")))
-  (dict "name" "SESSION_COOKIE_SECRET_KEY" "valueFrom" (dict "secretKeyRef" (dict "name" $secretName "key" "sessionCookieKey")))
-  (dict "name" "STRIPE_SECRET_KEY" "valueFrom" (dict "secretKeyRef" (dict "name" $secretName "key" "stripe.secretKey")))
--}}
-{{- concat $env (.Values.app.env | default list) | toJson -}}
+{{- int $port -}}
 {{- end -}}
