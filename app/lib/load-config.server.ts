@@ -41,6 +41,7 @@ function settingsSchema(production: boolean) {
   return z
     .object({
       host: url(production).refine((value) => {
+        if (!URL.canParse(value)) return true
         const { pathname, search, hash } = new URL(value)
         return pathname === '/' && !search && !hash
       }, 'must be an origin without a path, query or fragment'),
@@ -75,10 +76,14 @@ const secretsSchema = z
 
 function read<T extends z.ZodTypeAny>(
   name: string,
-  text: string,
+  text: string | Error,
   schema: T,
   problems: string[]
 ): z.infer<T> | undefined {
+  if (text instanceof Error) {
+    problems.push(`${name}: ${text.message}`)
+    return undefined
+  }
   let document: unknown
   try {
     document = parse(text, { uniqueKeys: true })
@@ -98,7 +103,7 @@ function read<T extends z.ZodTypeAny>(
 const stripeMode = (key: string) => /_(test|live)_/.exec(key)?.[1]
 
 export function parseConfig(
-  files: { settings: string; secrets: string },
+  files: { settings: string | Error; secrets: string | Error },
   production: boolean
 ) {
   const problems: string[] = []
@@ -132,11 +137,15 @@ export function loadConfig(
   secretsFile: string,
   production: boolean
 ): Config {
+  const readText = (file: string) => {
+    try {
+      return readFileSync(file, 'utf8')
+    } catch (error) {
+      return error as Error
+    }
+  }
   return parseConfig(
-    {
-      settings: readFileSync(settingsFile, 'utf8'),
-      secrets: readFileSync(secretsFile, 'utf8')
-    },
+    { settings: readText(settingsFile), secrets: readText(secretsFile) },
     production
   )
 }

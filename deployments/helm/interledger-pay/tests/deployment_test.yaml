@@ -11,6 +11,7 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].env
           value:
+            - { name: NODE_ENV, value: production }
             - { name: PORT, value: '3000' }
             - { name: CONFIG_FILE, value: /etc/interledger-pay/config/config.yaml }
             - { name: SECRETS_FILE, value: /etc/interledger-pay/secrets/secrets.yaml }
@@ -31,6 +32,24 @@ tests:
       - exists:
           path: spec.template.metadata.annotations.interledger-pay-secret-sha256
 
+  - it: sets PORT from the port named http
+    set:
+      app.ports:
+        - { name: metrics, containerPort: 9090, protocol: TCP }
+        - { name: http, containerPort: 8080, protocol: TCP }
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: { name: PORT, value: '8080' }
+
+  - it: fails without a port named http
+    set:
+      app.ports:
+        - { name: web, containerPort: 8080, protocol: TCP }
+    asserts:
+      - failedTemplate:
+          errorMessage: app.ports must contain a port named http
+
   - it: appends app.env, app.volumeMounts and app.volumes
     set:
       app.env:
@@ -44,7 +63,7 @@ tests:
           emptyDir: {}
     asserts:
       - equal:
-          path: spec.template.spec.containers[0].env[3]
+          path: spec.template.spec.containers[0].env[4]
           value: { name: EXTRA, value: '1' }
       - equal:
           path: spec.template.spec.containers[0].volumeMounts[2]

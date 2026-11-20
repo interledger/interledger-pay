@@ -11,8 +11,14 @@ spec:
 {{- end }}
 {{- if .Values.app.enabled }}
 {{- $app := deepCopy .Values.app }}
+{{- $port := "" }}
+{{- range .Values.app.ports }}
+{{- if eq .name "http" }}{{ $port = toString .containerPort }}{{ end }}
+{{- end }}
+{{- if not $port }}{{ fail "app.ports must contain a port named http" }}{{ end }}
 {{- $env := list
-  (dict "name" "PORT" "value" (toString (first .Values.app.ports).containerPort))
+  (dict "name" "NODE_ENV" "value" "production")
+  (dict "name" "PORT" "value" $port)
   (dict "name" "CONFIG_FILE" "value" "/etc/interledger-pay/config/config.yaml")
   (dict "name" "SECRETS_FILE" "value" "/etc/interledger-pay/secrets/secrets.yaml")
 }}

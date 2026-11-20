@@ -39,6 +39,7 @@ app:
     repository: ghcr.io/interledger
     name: interledger-pay
   imagePullPolicy: IfNotPresent
+  # PORT is the containerPort of the port named http.
   ports:
     - name: http
       containerPort: 3000
@@ -70,7 +71,7 @@ app:
       memory: 256Mi
     limits:
       memory: 512Mi
-  # Added after PORT, CONFIG_FILE and SECRETS_FILE.
+  # Added after NODE_ENV, PORT, CONFIG_FILE and SECRETS_FILE.
   env: []
   # Added after the config and secrets mounts.
   volumeMounts: []

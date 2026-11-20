@@ -1,8 +1,11 @@
 import assert from 'node:assert/strict'
 import { generateKeyPairSync } from 'node:crypto'
+import { mkdtempSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { describe, it } from 'node:test'
 import { stringify } from 'yaml'
-import { ConfigError, parseConfig } from './load-config.server'
+import { ConfigError, loadConfig, parseConfig } from './load-config.server'
 
 const ed25519 = generateKeyPairSync('ed25519')
   .privateKey.export({ type: 'pkcs8', format: 'pem' })
@@ -107,5 +110,18 @@ describe('parseConfig', () => {
       false
     )
     assert.equal(config.redirectUrl, 'http://localhost:5280/finish')
+  })
+})
+
+describe('loadConfig', () => {
+  it('reports a file it cannot read with the problems of the other', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'interledger-pay-'))
+    const settingsFile = join(dir, 'config.yaml')
+    writeFileSync(settingsFile, stringify({ ...settings, host: 'nope' }))
+    const message = problems(() =>
+      loadConfig(settingsFile, join(dir, 'missing.yaml'), true)
+    )
+    assert.match(message, /config: host:/)
+    assert.match(message, /secrets: ENOENT: .*missing\.yaml/)
   })
 })
