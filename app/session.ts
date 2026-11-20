@@ -1,4 +1,5 @@
 import { createCookieSessionStorage } from '@remix-run/node'
+import { config } from '~/lib/config.server'
 
 const { getSession, commitSession, destroySession } =
   createCookieSessionStorage({
@@ -7,9 +8,7 @@ const { getSession, commitSession, destroySession } =
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production' ? true : false,
       sameSite: 'none',
-      secrets: [
-        process.env.SESSION_COOKIE_SECRET_KEY || 'supersecretilpaystring'
-      ],
+      secrets: [config.session.cookieSecret],
       maxAge: 300
     }
   })

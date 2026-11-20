@@ -25,6 +25,7 @@ import { FinishError } from './components/icons'
 import { DialogProvider } from './components/providers/dialogProvider'
 import { BackdropProvider } from './components/providers/backdropProvider'
 import { cn } from './lib/cn'
+import { config } from './lib/config.server'
 
 export const links: LinksFunction = () => [
   {
@@ -41,7 +42,7 @@ export const links: LinksFunction = () => [
 export async function loader() {
   return json({
     ENV: {
-      STRIPE_PUBLIC_KEY: process.env.STRIPE_PUBLIC_KEY
+      STRIPE_PUBLIC_KEY: config.stripe.publishableKey
     }
   })
 }

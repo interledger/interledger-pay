@@ -1,0 +1,7 @@
+host: https://localhost:5200
+# redirectUrl defaults to <host>/finish
+walletAddress:
+  url: https://ilp.interledger-test.dev/your-wallet
+  keyId: your-key-id
+stripe:
+  publishableKey: pk_test_XXXXXXXXXXXXXXXX

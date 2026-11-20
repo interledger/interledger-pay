@@ -12,7 +12,7 @@
     "lint": "eslint --max-warnings=0 .",
     "lint:fix": "eslint --max-warnings=0 --fix .",
     "typecheck": "tsc",
-    "test": "node --import tsx --test app/utils/helpers.test.ts"
+    "test": "node --import tsx --test app/utils/helpers.test.ts app/lib/load-config.server.test.ts"
   },
   "dependencies": {
     "@conform-to/dom": "0.9.2",
@@ -41,6 +41,7 @@
     "tailwind-merge": "^2.2.1",
     "tailwindcss-animate": "^1.0.7",
     "web-share-shim": "^1.0.4",
+    "yaml": "^2.4.2",
     "zod": "^3.22.4"
   },
   "devDependencies": {

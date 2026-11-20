@@ -1,6 +1,7 @@
 import Stripe from 'stripe'
+import { config } from '~/lib/config.server'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+const stripe = new Stripe(config.stripe.secretKey)
 
 export async function createPaymentIntent(amount: number, assetCode: string, metadata?: Record<string, string>) {
   try{
