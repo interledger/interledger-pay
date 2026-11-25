@@ -39,7 +39,7 @@ export default function Index() {
   return (
     <div className="flex justify-center flex-col h-full w-full gap-10 md:px-4">
       <Header />
-      <div className="text-3xl">Pay anyone, anywhere in the world.</div>
+      <h1 className="text-3xl">Pay anyone, anywhere in the world.</h1>
       <Form method="POST" {...form.props}>
         <div className="flex flex-col gap-4">
           <Field
@@ -52,7 +52,6 @@ export default function Index() {
             errors={fields.walletAddress.errors}
           />
           <Button
-            aria-label="pay-now"
             type="submit"
             onClick={() => setAmountValue('0')}
           >
