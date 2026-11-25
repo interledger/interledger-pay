@@ -1,0 +1,10 @@
+{{- if .Values.app.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "interledger-pay.configMapName" . }}
+  {{- include "common.metadata" (list . .Values.app) | nindent 2 }}
+data:
+  config.yaml: |
+    {{- toYaml .Values.config | nindent 4 }}
+{{- end }}

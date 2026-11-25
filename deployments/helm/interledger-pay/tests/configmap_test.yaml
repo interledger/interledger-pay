@@ -1,0 +1,30 @@
+suite: interledger-pay - configmap
+templates:
+  - configmap.yaml
+values:
+  - ../ci/minimal-values.yaml
+tests:
+  - it: holds the config file
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-interledger-pay-config
+      - equal:
+          path: data["config.yaml"]
+          value: |
+            host: https://pay.example.com
+            stripe:
+              publishableKey: pk_test_abc
+            walletAddress:
+              keyId: key-1
+              url: https://ilp.example.com/pay
+
+  - it: keeps an explicit redirectUrl
+    set:
+      config.redirectUrl: https://other.example.com/done
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: '(?m)^redirectUrl: https://other.example.com/done$'

@@ -7,3 +7,5 @@ build
 /.cert
 /.exclude
 .idea
+/config.yaml
+/secrets.yaml

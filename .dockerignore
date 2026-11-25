@@ -7,3 +7,5 @@ Dockerfile
 .dockerignore
 .git
 /.cert
+/config.yaml
+/secrets.yaml

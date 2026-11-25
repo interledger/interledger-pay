@@ -1,5 +1,10 @@
 import { useForm } from '@conform-to/react'
-import { json, redirect, type LoaderFunctionArgs, type ActionFunctionArgs } from '@remix-run/node'
+import {
+  json,
+  redirect,
+  type LoaderFunctionArgs,
+  type ActionFunctionArgs
+} from '@remix-run/node'
 import { Form, Link, useActionData, useLoaderData } from '@remix-run/react'
 import { type MouseEvent, useState } from 'react'
 import { AmountDisplay } from '~/components/dialpad'
@@ -9,6 +14,7 @@ import { Button } from '~/components/ui/button'
 import { CopyButton } from '~/components/ui/copyButton'
 import { Field } from '~/components/ui/form/form'
 import { ShareButton } from '~/components/ui/shareButton'
+import { config } from '~/lib/config.server'
 import { useDialPadContext } from '~/lib/context/dialpad'
 import { commitSession, getSession } from '~/session'
 import { formatAmount, formatDate } from '~/utils/helpers'
@@ -30,7 +36,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const dateRequested = formatDate({
     date: incomingPayment.createdAt
   })
-  const url = `${process.env.INTERLEDGER_PAY_HOST}/payment?url=${incomingPayment.id}&receiver=${incomingPayment.walletAddress}`
+  const url = `${config.host}/payment?url=${incomingPayment.id}&receiver=${incomingPayment.walletAddress}`
 
   return json({
     requestAmount: requestAmount.amountWithCurrency,
@@ -118,13 +124,13 @@ export default function ShareRequest() {
                 </>
               }
             ></Field>
-            <div className="flex justify-center">
+            <div className="mt-8 flex flex-col items-center gap-2">
               {copyError && (
-              <p role="alert" className="text-destructive text-center">
-                {copyError}
-              </p>
-            )}
-              <Button type="button" className="mt-8" onClick={copyAndClose}>
+                <p role="alert" className="text-destructive text-center">
+                  {copyError}
+                </p>
+              )}
+              <Button type="button" onClick={copyAndClose}>
                 Copy & Close
               </Button>
             </div>

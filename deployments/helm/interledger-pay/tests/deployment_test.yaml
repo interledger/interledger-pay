@@ -4,78 +4,82 @@ templates:
 values:
   - ../ci/minimal-values.yaml
 tests:
-  - it: sets the environment from config and secret
+  - it: mounts the config and secrets files
     asserts:
       - isKind:
           of: Deployment
-      - contains:
+      - equal:
           path: spec.template.spec.containers[0].env
-          content: { name: INTERLEDGER_PAY_HOST, value: https://pay.example.com }
+          value:
+            - { name: NODE_ENV, value: production }
+            - { name: PORT, value: '3000' }
+            - { name: CONFIG_FILE, value: /etc/interledger-pay/config/config.yaml }
+            - { name: SECRETS_FILE, value: /etc/interledger-pay/secrets/secrets.yaml }
       - contains:
-          path: spec.template.spec.containers[0].env
-          content: { name: WALLET_ADDRESS, value: https://ilp.example.com/pay }
+          path: spec.template.spec.containers[0].volumeMounts
+          content: { name: config, mountPath: /etc/interledger-pay/config, readOnly: true }
       - contains:
-          path: spec.template.spec.containers[0].env
-          content: { name: KEY_ID, value: key-1 }
+          path: spec.template.spec.containers[0].volumeMounts
+          content: { name: secrets, mountPath: /etc/interledger-pay/secrets, readOnly: true }
       - contains:
-          path: spec.template.spec.containers[0].env
-          content: { name: STRIPE_PUBLIC_KEY, value: pk_test_abc }
+          path: spec.template.spec.volumes
+          content: { name: config, configMap: { name: RELEASE-NAME-interledger-pay-config } }
       - contains:
-          path: spec.template.spec.containers[0].env
-          content: { name: PORT, value: '3000' }
-      - contains:
-          path: spec.template.spec.containers[0].env
-          content:
-            name: PRIVATE_KEY
-            valueFrom:
-              secretKeyRef:
-                name: RELEASE-NAME-interledger-pay-secret
-                key: key.privateKey
+          path: spec.template.spec.volumes
+          content: { name: secrets, secret: { secretName: RELEASE-NAME-interledger-pay-secret } }
+      - exists:
+          path: spec.template.metadata.annotations.interledger-pay-config-sha256
       - exists:
           path: spec.template.metadata.annotations.interledger-pay-secret-sha256
 
-  - it: defaults redirectUrl to <host>/finish
+  - it: sets PORT from the port named http
     set:
-      config.host: https://pay.example.com/
+      app.ports:
+        - { name: metrics, containerPort: 9090, protocol: TCP }
+        - { name: http, containerPort: 8080, protocol: TCP }
     asserts:
       - contains:
           path: spec.template.spec.containers[0].env
-          content: { name: REDIRECT_URL, value: https://pay.example.com/finish }
+          content: { name: PORT, value: '8080' }
 
-  - it: keeps an explicit redirectUrl
+  - it: fails without a port named http
     set:
-      config.redirectUrl: https://other.example.com/done
+      app.ports:
+        - { name: web, containerPort: 8080, protocol: TCP }
     asserts:
-      - contains:
-          path: spec.template.spec.containers[0].env
-          content: { name: REDIRECT_URL, value: https://other.example.com/done }
+      - failedTemplate:
+          errorMessage: app.ports must contain a port named http
 
-  - it: appends app.env after the chart's variables
+  - it: appends app.env, app.volumeMounts and app.volumes
     set:
       app.env:
         - name: EXTRA
           value: '1'
+      app.volumeMounts:
+        - name: extra
+          mountPath: /extra
+      app.volumes:
+        - name: extra
+          emptyDir: {}
     asserts:
       - equal:
-          path: spec.template.spec.containers[0].env[10]
+          path: spec.template.spec.containers[0].env[4]
           value: { name: EXTRA, value: '1' }
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[2]
+          value: { name: extra, mountPath: /extra }
+      - equal:
+          path: spec.template.spec.volumes[2]
+          value: { name: extra, emptyDir: {} }
 
-  - it: reads secrets from secretsExternal
+  - it: mounts secretsExternal
     set:
       secretsExternal: pay-secrets
-      secret:
-        key.privateKey: ''
-        sessionCookieKey: ''
-        stripe.secretKey: ''
+      secret: null
     asserts:
       - contains:
-          path: spec.template.spec.containers[0].env
-          content:
-            name: SESSION_COOKIE_SECRET_KEY
-            valueFrom:
-              secretKeyRef:
-                name: pay-secrets
-                key: sessionCookieKey
+          path: spec.template.spec.volumes
+          content: { name: secrets, secret: { secretName: pay-secrets } }
       - notExists:
           path: spec.template.metadata.annotations.interledger-pay-secret-sha256
 
@@ -102,66 +106,3 @@ tests:
     asserts:
       - hasDocuments:
           count: 0
-
-  - it: rejects a key that is not a setting
-    set:
-      config.interledgerPayHost: https://pay.example.com
-    asserts:
-      - failedTemplate:
-          errorPattern: config.interledgerPayHost is not a known key
-
-  - it: rejects a secret in config
-    set:
-      config.walletAddress.privateKey: abc
-    asserts:
-      - failedTemplate:
-          errorPattern: config.walletAddress.privateKey is not a known key
-
-  - it: requires the host
-    set:
-      config.host: ''
-    asserts:
-      - failedTemplate:
-          errorMessage: config.host is required
-
-  - it: rejects a host with a path
-    set:
-      config.host: https://pay.example.com/pay
-    asserts:
-      - failedTemplate:
-          errorPattern: config.host must be an https origin without a path
-
-  - it: rejects an http wallet address
-    set:
-      config.walletAddress.url: http://ilp.example.com/pay
-    asserts:
-      - failedTemplate:
-          errorPattern: config.walletAddress.url must be an https URL
-
-  - it: rejects a Stripe secret key as publishable key
-    set:
-      config.stripe.publishableKey: sk_test_abc
-    asserts:
-      - failedTemplate:
-          errorPattern: config.stripe.publishableKey must be a Stripe publishable key
-
-  - it: requires every secret without secretsExternal
-    set:
-      secret.sessionCookieKey: ''
-    asserts:
-      - failedTemplate:
-          errorMessage: secret.sessionCookieKey is required unless secretsExternal is set
-
-  - it: rejects a short session cookie key
-    set:
-      secret.sessionCookieKey: short
-    asserts:
-      - failedTemplate:
-          errorMessage: secret.sessionCookieKey must be at least 32 characters
-
-  - it: rejects secret values next to secretsExternal
-    set:
-      secretsExternal: pay-secrets
-    asserts:
-      - failedTemplate:
-          errorPattern: secretsExternal names an existing Secret
