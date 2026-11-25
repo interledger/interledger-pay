@@ -5,7 +5,7 @@ import { Link, useLoaderData } from '@remix-run/react'
 import { useDialPadContext } from '~/lib/context/dialpad'
 import { BackNav, Card } from '~/components/icons'
 import { json, type LoaderFunctionArgs } from '@remix-run/node'
-import { getSession } from '~/session'
+import { commitSession, getSession } from '~/session'
 import { useEffect } from 'react'
 import { getValidWalletAddress } from '~/lib/validators.server'
 import type { WalletAddress } from '@interledger/open-payments/dist/types'
@@ -13,6 +13,10 @@ import type { WalletAddress } from '@interledger/open-payments/dist/types'
 export async function loader({ request }: LoaderFunctionArgs) {
   const session = await getSession(request.headers.get('Cookie'))
   const walletAddressInfo = session.get('wallet-address')
+  session.unset('quote')
+  session.unset('payment-grant')
+  session.unset('receiver-wallet-address')
+  session.unset('isRequestPayment')
   const searchParams = new URL(request.url).searchParams
   const receiver = searchParams.get('receiver') || ''
 
@@ -32,13 +36,18 @@ export async function loader({ request }: LoaderFunctionArgs) {
     throw new Error('Payment session expired.')
   }
 
-  return json({
-    assetCode: isPayWithCard
-      ? receiverWalletAddress.assetCode
-      : walletAddressInfo.walletAddress.assetCode,
-    isPayWithCard: isPayWithCard,
-    receiver: receiverWalletAddress.id
-  } as const)
+  return json(
+    {
+      assetCode: isPayWithCard
+        ? receiverWalletAddress.assetCode
+        : walletAddressInfo.walletAddress.assetCode,
+      isPayWithCard: isPayWithCard,
+      receiver: receiverWalletAddress.id
+    } as const,
+    {
+      headers: { 'Set-Cookie': await commitSession(session) }
+    }
+  )
 }
 
 export default function Ilpay() {

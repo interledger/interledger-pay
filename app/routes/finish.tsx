@@ -1,13 +1,20 @@
 import { useForm } from '@conform-to/react'
 import { type LoaderFunctionArgs, redirect, defer } from '@remix-run/node'
-import { Await, Form, useActionData, useLoaderData } from '@remix-run/react'
+import {
+  Await,
+  Form,
+  useActionData,
+  useLoaderData,
+  useNavigate
+} from '@remix-run/react'
 import { cx } from 'class-variance-authority'
-import { Suspense } from 'react'
+import { Suspense, useEffect } from 'react'
 import { Header } from '~/components/header'
 import { FinishCheck, FinishError } from '~/components/icons'
 import { Fallback, Loader } from '~/components/loader'
 import { Button } from '~/components/ui/button'
 import { useBackdropContext } from '~/lib/context/backdrop'
+import { useDialPadContext } from '~/lib/context/dialpad'
 import { useDialogContext } from '~/lib/context/dialog'
 import {
   type PaymentResultColor,
@@ -120,6 +127,10 @@ export default function Finish() {
           >
             {(outgoingPaymentCheck) => (
               <>
+                <RedirectAfterSuccess
+                  color={outgoingPaymentCheck.color}
+                  isFromExtension={data.isFromExtension}
+                />
                 {setIsLoading(false)}
                 {outgoingPaymentCheck.error ? (
                   <>
@@ -173,6 +184,26 @@ export default function Finish() {
       </div>
     </>
   )
+}
+
+function RedirectAfterSuccess({
+  color,
+  isFromExtension
+}: {
+  color: PaymentResultColor
+  isFromExtension: boolean
+}) {
+  const navigate = useNavigate()
+  const { setAmountValue } = useDialPadContext()
+
+  useEffect(() => {
+    if (color === 'green' && !isFromExtension) {
+      setAmountValue('0')
+      navigate('/ilpay', { replace: true })
+    }
+  }, [color, isFromExtension, navigate, setAmountValue])
+
+  return null
 }
 
 export async function action({ request }: LoaderFunctionArgs) {

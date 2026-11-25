@@ -1,6 +1,12 @@
 import { useForm } from '@conform-to/react'
-import { json, redirect, type LoaderFunctionArgs } from '@remix-run/node'
+import {
+  json,
+  redirect,
+  type LoaderFunctionArgs,
+  type ActionFunctionArgs
+} from '@remix-run/node'
 import { Form, Link, useActionData, useLoaderData } from '@remix-run/react'
+import { type MouseEvent, useState } from 'react'
 import { AmountDisplay } from '~/components/dialpad'
 import { Header } from '~/components/header'
 import { BackNav } from '~/components/icons'
@@ -9,7 +15,8 @@ import { CopyButton } from '~/components/ui/copyButton'
 import { Field } from '~/components/ui/form/form'
 import { ShareButton } from '~/components/ui/shareButton'
 import { config } from '~/lib/config.server'
-import { destroySession, getSession } from '~/session'
+import { useDialPadContext } from '~/lib/context/dialpad'
+import { commitSession, getSession } from '~/session'
 import { formatAmount, formatDate } from '~/utils/helpers'
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -42,11 +49,27 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export default function ShareRequest() {
   const data = useLoaderData<typeof loader>()
   const actionData = useActionData<typeof action>()
+  const { setAmountValue } = useDialPadContext()
+  const [copyError, setCopyError] = useState('')
 
   const [form] = useForm({
     id: 'shareRequest-form',
     lastSubmission: actionData
   })
+
+  const copyAndClose = async (event: MouseEvent<HTMLButtonElement>) => {
+    const form = event.currentTarget.form
+
+    try {
+      await navigator.clipboard.writeText(data.paymentUrl)
+    } catch {
+      setCopyError('Failed to copy link.')
+      return
+    }
+
+    setAmountValue('0')
+    form?.requestSubmit()
+  }
 
   return (
     <>
@@ -101,9 +124,14 @@ export default function ShareRequest() {
                 </>
               }
             ></Field>
-            <div className="flex justify-center">
-              <Button type="submit" className="mt-8">
-                Close
+            <div className="mt-8 flex flex-col items-center gap-2">
+              {copyError && (
+                <p role="alert" className="text-destructive text-center">
+                  {copyError}
+                </p>
+              )}
+              <Button type="button" onClick={copyAndClose}>
+                Copy & Close
               </Button>
             </div>
           </Form>
@@ -113,12 +141,13 @@ export default function ShareRequest() {
   )
 }
 
-export async function action({ request }: LoaderFunctionArgs) {
+export async function action({ request }: ActionFunctionArgs) {
   const session = await getSession(request.headers.get('Cookie'))
+  session.unset('incoming-payment')
 
-  return redirect('/', {
+  return redirect('/ilpay', {
     headers: {
-      'Set-Cookie': await destroySession(session)
+      'Set-Cookie': await commitSession(session)
     }
   })
 }
