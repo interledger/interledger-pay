@@ -80,6 +80,7 @@ export default function Quote({
                       ></Field>
                       <div className="flex justify-center items-center gap-3">
                         <Button
+                          aria-label="confirm-pay"
                           type="submit"
                           value="confirm"
                           name="intent"
@@ -87,6 +88,7 @@ export default function Quote({
                           Confirm payment
                         </Button>
                         <Button
+                          aria-label="cancel-pay"
                           type="submit"
                           variant="destructive"
                           value="cancel"
