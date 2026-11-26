@@ -74,7 +74,7 @@ export default function Request() {
                 value={amountValue}
               />
               <div className="flex justify-center">
-                <Button aria-label="pay" type="submit" variant="outline">
+                <Button type="submit" variant="outline">
                   Create Request
                 </Button>
               </div>

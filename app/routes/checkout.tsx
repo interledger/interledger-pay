@@ -119,7 +119,6 @@ function CheckoutForm({ amountWithCurrency, finishUrl }: CheckoutFormProps) {
         >
           <PaymentElement />
           <Button
-            aria-label="pay"
             type="submit"
             disabled={!stripe || !elements}
             size="xl"
