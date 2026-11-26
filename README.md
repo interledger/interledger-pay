@@ -7,7 +7,7 @@
 ## What is Interledger Pay?
 
 Interledger Pay is a simplified payments platform, where you can easily send or request money from anyone anywhere in the world, if you own a Wallet Address.
-A Wallet Address is a standardized identifier for a payment account. In the same way that an email address provides an identifier for a mailbox in the email ecosystem, a wallet address is used by an account holder to share the details of their account with a counter-party. If you don't already own one, you can create one at [Interledger Test Wallet](https://rafiki.money).
+A Wallet Address is a standardized identifier for a payment account. In the same way that an email address provides an identifier for a mailbox in the email ecosystem, a wallet address is used by an account holder to share the details of their account with a counter-party. If you don't already own one, you can create one at [Interledger Test Wallet](https://wallet.interledger-test.dev).
 
 See Interledger Pay in action [here](https://interledgerpay.com).
 
@@ -20,8 +20,8 @@ Never heard of Interledger before, or you would like to learn more? Here are som
 - [Interledger Explainer Video](https://twitter.com/Interledger/status/1567916000074678272)
 - [Open Payments](https://openpayments.guide/)
 - [Web monetization](https://webmonetization.org/)
-- [Interledger Test Wallet](https://rafiki.money)
-- [Interledger Boutique](https://rafiki.boutique)
+- [Interledger Test Wallet](https://wallet.interledger-test.dev)
+- [Interledger Boutique](https://boutique.interledger-test.dev)
 
 ## Contributing
 
@@ -83,6 +83,8 @@ cp secrets.example.yaml secrets.yaml
 
 You will need to create a USD wallet address in the [Test Wallet](https://wallet.interledger-test.dev) application, then generate public and private key for the wallet address in the `Developer Keys` found in the `Settings` menu of Interledger Test Wallet.
 
+Stripe configuration is required for the application to start. Set `stripe.publishableKey` in `config.yaml` and `stripe.secretKey` in `secrets.yaml` to matching test-mode or live-mode keys. These keys enable card payments.
+
 | Key | File | Description |
 | --- | --- | --- |
 | `host` | config | URL where Interledger Pay is hosted, locally `https://localhost:5200` |
@@ -104,7 +106,15 @@ Navigate to the project's root directory and execute:
 docker compose -f docker-compose.dev.yml up
 ```
 
-If you receive certificate error, then create a `.cert` folder in your `root` directory, and generate certificates `cert.pem` and `key.pem` that you need to copy into the created `.cert` directory. You can generate certificate files using [THIS](https://github.com/interledger/web-monetization-tools/tree/op-integration?tab=readme-ov-file#https-required) guideline.
+If you receive certificate error, then create a `.cert` folder in your `root` directory, and generate certificates `cert.pem` and `key.pem` into the created `.cert` directory.
+
+```sh
+mkdir -p .cert
+openssl req -x509 -newkey rsa:2048 -nodes -days 365 \
+  -keyout ./.cert/key.pem -out ./.cert/cert.pem \
+  -subj "/CN=localhost" \
+  -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
+```
 
 Upon executing the docker command, the following will be available
 
