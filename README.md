@@ -21,7 +21,7 @@ Never heard of Interledger before, or you would like to learn more? Here are som
 - [Open Payments](https://openpayments.guide/)
 - [Web monetization](https://webmonetization.org/)
 - [Interledger Test Wallet](https://wallet.interledger-test.dev)
-- [Interledger Boutique](https://rafiki.boutique)
+- [Interledger Boutique](https://boutique.interledger-test.dev)
 
 ## Contributing
 
@@ -106,11 +106,14 @@ Navigate to the project's root directory and execute:
 docker compose -f docker-compose.dev.yml up
 ```
 
-If you receive certificate error, then create a `.cert` folder in your `root` directory, and generate certificates `cert.pem` and `key.pem` that you need to copy into the created `.cert` directory.
+If you receive certificate error, then create a `.cert` folder in your `root` directory, and generate certificates `cert.pem` and `key.pem` into the created `.cert` directory.
 
 ```sh
 mkdir -p .cert
-openssl req -x509 -newkey rsa:2048 -keyout ./.cert/key.pem -out ./.cert/cert.pem -days 365 -nodes
+openssl req -x509 -newkey rsa:2048 -nodes -days 365 \
+  -keyout ./.cert/key.pem -out ./.cert/cert.pem \
+  -subj "/CN=localhost" \
+  -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
 ```
 
 Upon executing the docker command, the following will be available
